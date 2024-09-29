@@ -155,6 +155,8 @@ def _sm_ctab(
     """
     base.df_config.melt = True
     target.df_config.melt = True
+    base.df_config.value = 'text'
+    target.df_config.melt = 'text'
 
     merge_df = pd.merge(base.dataframe, target.dataframe, on='resp_id')
 
