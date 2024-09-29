@@ -346,7 +346,9 @@ class Survey(BaseModel):
     def spss_syntaxs(self) -> List[str]:
         syntaxs = []
         for question in self.questions:
-            syntaxs.extend(question.spss_syntax)
+            for syntax in question.spss_syntax:
+                if syntax not in syntaxs:
+                    syntaxs.append(syntax)
         if self.control_variables:
             calculate_dict = {}
             for code in self.question_codes:
