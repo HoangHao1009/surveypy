@@ -129,41 +129,6 @@ class Question(BaseModel):
         question.reset()
 
         return question
-
-    def compute(self, function: Callable, question_arg = None):
-        def get_new_response(new_response_value):
-            if new_response_value not in new_response_map:
-                new_response =  Response(
-                    value=new_response_value,
-                    scale=len(new_responses)+1,
-                    root=self.code
-                )
-                new_responses.append(new_response)
-                new_response_map[new_response_value] = new_response
-            return new_response_map[new_response_value]
-        
-        if question_arg:
-            arg_dict = {}
-            for response in question_arg:
-                for respondent in response.respondents:
-                    arg_dict[respondent] = response.value
-
-        new_responses = []
-        new_response_map = {}
-
-        for response in self.responses:
-            for respondent in response.respondents:
-                if question_arg:
-                    arg = arg_dict[respondent]
-                    new_response_value = function(response.value, arg)
-                else:
-                    new_response_value = function(response.value)
-                new_response = get_new_response(new_response_value)
-                new_response.respondents.append(respondent)
-
-        new = deepcopy(self)
-        new.responses = new_responses
-        return new
    
     def to_excel(self, excel_path: str, sheet_name: str=None):
         if not sheet_name:
