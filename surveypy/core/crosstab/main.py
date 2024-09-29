@@ -5,7 +5,7 @@ import numpy as np
 from concurrent.futures import ThreadPoolExecutor
 from statsmodels.stats.proportion import proportions_ztest
 from ..question import MultipleAnswer, SingleAnswer, Number, Rank
-from ...utils import report_function, Ctab_Config
+from ...utils import report_function, CtabConfig
 
 BaseType = Union[SingleAnswer, MultipleAnswer, Rank]
 TargetType = Union[SingleAnswer, MultipleAnswer, Rank, Number]
@@ -13,7 +13,7 @@ TargetType = Union[SingleAnswer, MultipleAnswer, Rank, Number]
 class CrossTab(BaseModel):
     bases: List[BaseType]
     targets: List[TargetType] = []
-    config: Ctab_Config = Ctab_Config()
+    config: CtabConfig = CtabConfig()
     _dataframe: Union[pd.DataFrame, None] = None
     
     @property
@@ -98,19 +98,6 @@ class CrossTab(BaseModel):
                     type=type,
                     title=title,
                 )
-
-    @property
-    def description(self):
-        return f"""
-This is a crosstab between variable: {self.title}
-Variable is a question with text:
-- Column variable in crosstab: {self.bases[0].text}
-- Row variable in crosstab: {self.targets[0].text}
-"""
-
-
-
-
 
 def sig_test(df: pd.DataFrame, sig: float):
     test_df = pd.DataFrame("", index=df.index, columns=df.columns)
@@ -214,7 +201,6 @@ def _sm_ctab(
         pv = pv.div(total_df.values, axis=1)
         if round_perc:
             pv = pv.map(lambda x: f'{round(x*100)}%')
-        # total_df = total_df / total_df  # Normalize total_df
     
     if sig:
         pv = pv.astype(str) + " " + test_df
@@ -282,7 +268,7 @@ def _rank_ctab(
     if not isinstance(target, Rank) or isinstance(base, Rank):
         raise ValueError('Need base or target is Rank')
 
-    config = Ctab_Config(total=total, perc=perc, 
+    config = CtabConfig(total=total, perc=perc, 
                          cat_aggfunc=cat_aggfunc, sig=sig, dropna=dropna)
 
     if isinstance(target, Rank):
@@ -297,7 +283,7 @@ def _rank_ctab(
     dfs = [ctab.dataframe for ctab in ctabs] 
     return pd.concat(dfs, axis=axis)
 
-def _process_target(base, target, config: Ctab_Config):
+def _process_target(base, target, config: CtabConfig):
     if isinstance(target, (SingleAnswer, MultipleAnswer)):
         return _sm_ctab(base, target, **config.cat_format)
     elif isinstance(target, Rank):
@@ -307,7 +293,7 @@ def _process_target(base, target, config: Ctab_Config):
     else:
         raise ValueError(f'Target required type: SingleAnswer, MultipleAnswer, Rank or Number. Your input type: {type(target)}: {target}')
     
-def _process_rank(base, target, config: Ctab_Config):
+def _process_rank(base, target, config: CtabConfig):
     if isinstance(target, (SingleAnswer, MultipleAnswer)):
         return _rank_ctab(target, base, **config.cat_format)
     elif isinstance(target, Rank):
