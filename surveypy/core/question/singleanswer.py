@@ -71,7 +71,6 @@ class SingleAnswer(Question):
             loop_on=self.loop_on,
             responses=self.responses,
             df_config=self.df_config,
-            code_mode=self.code_mode
         )
     
     @property
@@ -85,7 +84,7 @@ class SingleAnswer(Question):
         df = pd.DataFrame(flattened_results)
         
         df.set_index('resp_id', inplace=True)
-        df.columns = pd.MultiIndex.from_product([[self.root, df.columns]], names=['root', 'core'])
+        df.columns = pd.MultiIndex.from_product([[self.root], df.columns.tolist()], names=['root', 'core'])
         
         if self.df_config.melt:
             df = _melt_dataframe(self.code, df)
