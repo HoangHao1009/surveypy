@@ -4,7 +4,7 @@ import pandas as pd
 
 class DfConfig(BaseModel):
     value: Literal['text', 'num'] = 'text'
-    col_name: Literal['code', 'value']
+    col_name: Literal['code', 'value'] = 'code'
     col_type: Literal['multi', 'single'] = 'multi'
     melt: bool = False
     loop_on: Optional[str] = None
