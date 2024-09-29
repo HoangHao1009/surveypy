@@ -1,11 +1,11 @@
 import pandas as pd
 
-def _melt_dataframe(self, df: pd.DataFrame) -> pd.DataFrame:
+def _melt_dataframe(code, df: pd.DataFrame) -> pd.DataFrame:
     """Handle the melting of the DataFrame as required by df_config."""
     df = df.reset_index().melt(id_vars='resp_id')
     df = df[df['value'] != 0]
-    df = df.add_prefix(f'{self.code}_')
-    df.rename(columns={f'{self.code}_resp_id': 'resp_id'}, inplace=True)
+    df = df.add_prefix(f'{code}_')
+    df.rename(columns={f'{code}_resp_id': 'resp_id'}, inplace=True)
     return df
 
 def _get_duplicates(lst):

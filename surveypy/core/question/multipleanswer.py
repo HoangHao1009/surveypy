@@ -52,7 +52,7 @@ class MultipleAnswer(Question):
         df = df.sort_index(axis=1, level=1, key=lambda x: pd.Categorical(x, categories=desired_columns, ordered=True))
         
         if self.df_config.melt:
-            df = _melt_dataframe(df)
+            df = _melt_dataframe(self.code, df)
         
         return df.fillna(0)
     

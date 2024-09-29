@@ -24,7 +24,7 @@ class Number(Question):
         df.columns = pd.MultiIndex.from_product([[self.root], df.columns], names=['root', 'core'])
 
         if self.df_config.melt:
-            df = _melt_dataframe(df)
+            df = _melt_dataframe(self.code, df)
 
         return df.fillna(0)
     
