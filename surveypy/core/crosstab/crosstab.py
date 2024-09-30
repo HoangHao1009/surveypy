@@ -15,6 +15,7 @@ class CrossTab(BaseModel):
     targets: List[TargetType] = []
     config: CtabConfig = CtabConfig()
     _dataframe: Optional[pd.DataFrame] = None
+    deep_by: List[BaseType] = [] #use to deep ctab
     
     @property
     def title(self) -> Union[str, list]:
