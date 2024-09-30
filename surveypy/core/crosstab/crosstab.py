@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Union, List, Callable
+from typing import Union, List, Callable, Optional
 import pandas as pd
 import numpy as np
 from concurrent.futures import ThreadPoolExecutor
@@ -14,7 +14,7 @@ class CrossTab(BaseModel):
     bases: List[BaseType]
     targets: List[TargetType] = []
     config: CtabConfig = CtabConfig()
-    _dataframe: Union[pd.DataFrame, None] = None
+    _dataframe: Optional[pd.DataFrame] = None
     
     @property
     def title(self) -> Union[str, list]:

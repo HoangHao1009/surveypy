@@ -1,1 +1,1 @@
-from .main import CrossTab
+from .crosstab import CrossTab
