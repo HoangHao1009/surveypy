@@ -2,7 +2,7 @@ from pydantic import BaseModel, ConfigDict
 from typing import List, Dict, Union, Literal, Callable, Optional
 import pandas as pd
 from copy import deepcopy
-from ...utils import DfConfig, report_function
+from ...utils import DfConfig, report_function, PptConfig
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 
@@ -22,6 +22,7 @@ class Question(BaseModel):
     loop_on: Optional[Union[str, int]] = None
     responses: List[Response] = []
     df_config: DfConfig = DfConfig()
+    ppt_config: PptConfig = PptConfig()
 
     @property
     def root(self) -> str:
@@ -140,7 +141,7 @@ class Question(BaseModel):
         from .singleanswer import SingleAnswer
         if isinstance(self, (SingleAnswer, MultipleAnswer)):
             df = self.summarize(perc)
-            report_function.create_pptx_chart(ppt_path, df, 'pie', title=self.code)
+            report_function.create_pptx_chart(ppt_path, df, 'pie', title=self.code, config=self.ppt_config)
         else:
             print(f'Question with type {type(self)} can not be to_ppt')
 

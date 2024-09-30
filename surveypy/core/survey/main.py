@@ -9,7 +9,7 @@ import pyreadstat
 from ..question import SingleAnswer, MultipleAnswer, Number, Rank, Response
 from ..crosstab import CrossTab
 from ...flatform import QuestionPro
-from ...utils import report_function, str_function, spss_function, DfConfig, CtabConfig, SpssConfig
+from ...utils import report_function, str_function, spss_function, DfConfig, CtabConfig, SpssConfig, PptConfig
 
 QuestionType = Union[SingleAnswer, MultipleAnswer, Number, Rank]
 
@@ -20,6 +20,7 @@ class Survey(BaseModel):
     df_config: DfConfig = DfConfig()
     ctab_config: CtabConfig = CtabConfig()
     spss_config: SpssConfig = SpssConfig()
+    ppt_config: PptConfig = PptConfig()
     control_variables: List = []
     removed: List[str] = []
     resp_info_col: bool = True
@@ -410,6 +411,7 @@ class Survey(BaseModel):
 
         if self.questions:
             for question in self.questions:
+                question.ppt_config = self.ppt_config
                 question.to_ppt(ppt_path, self.ctab_config.perc)
 
         if self.control_variables:
@@ -417,6 +419,7 @@ class Survey(BaseModel):
                 for question in self.questions:
                     ctab = self[var] | question
                     ctab.config = self.ctab_config
+                    ctab.ppt_config = self.ppt_config
                     try:
                         ctab.to_ppt(ppt_path)
                     except Exception as e:

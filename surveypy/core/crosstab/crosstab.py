@@ -5,7 +5,7 @@ import numpy as np
 from concurrent.futures import ThreadPoolExecutor
 from statsmodels.stats.proportion import proportions_ztest
 from ..question import MultipleAnswer, SingleAnswer, Number, Rank
-from ...utils import report_function, CtabConfig
+from ...utils import report_function, CtabConfig, PptConfig
 
 BaseType = Union[SingleAnswer, MultipleAnswer, Rank]
 TargetType = Union[SingleAnswer, MultipleAnswer, Rank, Number]
@@ -14,6 +14,7 @@ class CrossTab(BaseModel):
     bases: List[BaseType]
     targets: List[TargetType] = []
     config: CtabConfig = CtabConfig()
+    ppt_config: PptConfig = PptConfig()
     _dataframe: Optional[pd.DataFrame] = None
     deep_by: List[BaseType] = [] #use to deep ctab
     
@@ -98,6 +99,7 @@ class CrossTab(BaseModel):
                     dataframe=df,
                     type=type,
                     title=title,
+                    config=self.ppt_config
                 )
 
 def sig_test(df: pd.DataFrame, sig: float):

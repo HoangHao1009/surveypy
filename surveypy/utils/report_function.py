@@ -8,6 +8,8 @@ from typing import Literal
 import os
 from openpyxl import Workbook
 import pandas as pd
+from ..utils import PptConfig
+from typing import Optional
 
 
 def df_to_excel(df: pd.DataFrame, excel_path: str, sheet_name: str):
@@ -27,24 +29,22 @@ chart_type_lookup = {
     'pie': XL_CHART_TYPE.PIE
 }
 
-theme_color = [
-    MSO_THEME_COLOR.ACCENT_1,
-    MSO_THEME_COLOR.ACCENT_2,
-    MSO_THEME_COLOR.ACCENT_3,
-    MSO_THEME_COLOR.ACCENT_4,
-    MSO_THEME_COLOR.ACCENT_5,
-    MSO_THEME_COLOR.ACCENT_6,
-]
-
 def create_pptx_chart(
         template_path,
         dataframe,
         type=Literal['column', 'bar', 'pie'], 
         title=None,
+        config: Optional[PptConfig] = None
     ):
+    
+    if not config:
+        config = PptConfig()
+    
+    theme_color = config.theme_color
+    
     prs = Presentation(template_path) if os.path.exists(template_path) else Presentation()
     chart_type = chart_type_lookup[type]
-    slide_layout = prs.slide_layouts[5]  # Layout trống
+    slide_layout = prs.slide_layouts[config.slide_layout]  # Layout trống
     slide = prs.slides.add_slide(slide_layout)
 
     if type == 'pie':
@@ -61,48 +61,46 @@ def create_pptx_chart(
             for series_name in dataframe.columns[1:]:
                 chart_data.add_series(series_name, dataframe[series_name])
 
-    x, y, cx, cy = Inches(2), Inches(2), Inches(7), Inches(4)
+    x, y, cx, cy = Inches(config.position[0]), Inches(config.position[1]), Inches(config.position[2]), Inches(config.position[3])
     chart = slide.shapes.add_chart(
         chart_type,  # Sử dụng loại biểu đồ này
         x, y, cx, cy,
         chart_data
     ).chart
 
-    # chart.chart_style = 2
-    # chart.font.size = 101600
-    chart.font.name = 'Montserrat'
-    chart.has_legend = True
-    chart.has_title = True
+    chart.font.name = config.font
+    chart.has_legend = config.has_legend
+    chart.has_title = config.has_title
     chart.chart_title.text_frame.text = title
-    chart.legend.position = XL_LEGEND_POSITION.TOP
-    chart.legend.font.size = Pt(12)
+    chart.legend.position = config.legend_position
+    chart.legend.font.size = Pt(config.legend_font_size)
     try:
-        chart.category_axis.has_major_gridlines = False
-        chart.category_axis.has_minor_gridlines = False
-        chart.category_axis.has_title = False
-        chart.category_axis.visible = True
-        chart.category_axis.tick_labels.font.size = Pt(10)
+        chart.category_axis.has_major_gridlines = config.category_axis_has_major_gridlines
+        chart.category_axis.has_minor_gridlines = config.category_axis_has_minor_gridlines
+        chart.category_axis.has_title = config.category_axis_has_title
+        chart.category_axis.visible = config.category_axis_visible
+        chart.category_axis.tick_labels.font.size = Pt(config.category_axis_tick_labels_font_size)
     except:
         pass
     try:
-        chart.value_axis.has_major_gridlines = False
-        chart.value_axis.has_minor_gridlines = False
-        chart.value_axis.visible = False
+        chart.value_axis.has_major_gridlines = config.value_axis_has_major_gridlines
+        chart.value_axis.has_minor_gridlines = config.value_axis_has_minor_gridlines
+        chart.value_axis.visible = config.value_axis_visible
     except:
         pass
 
     if type != 'pie':
         for index, i in enumerate(chart.series):
-            i.data_labels.font.size = Pt(8)
-            i.data_labels.font.name = 'Montserrat'
-            i.data_labels.number_format = 'General'
-            i.data_labels.number_format_is_linked = True
-            i.data_labels.position = XL_LABEL_POSITION.OUTSIDE_END
-            i.data_labels.show_category_name = False
-            i.data_labels.show_legend_key = False
-            i.data_labels.show_percentage = False
-            i.data_labels.show_series_name = False
-            i.data_labels.show_value = True
+            i.data_labels.font.size = Pt(config.data_labels_font_size)
+            i.data_labels.font.name = config.data_labels_font
+            i.data_labels.number_format = config.data_labels_number_format
+            i.data_labels.number_format_is_linked = config.data_labels_number_format_is_linked
+            i.data_labels.position = config.data_labels_position
+            i.data_labels.show_category_name = config.data_labels_show_category_name
+            i.data_labels.show_legend_key = config.data_labels_show_legend_key
+            i.data_labels.show_percentage = config.data_labels_show_percentage
+            i.data_labels.show_series_name = config.data_labels_show_series_name
+            i.data_labels.show_value = config.data_labels_show_value
             i.format.fill.solid()
             try:
                 i.format.fill.fore_color.theme_color = theme_color[index]
@@ -118,124 +116,4 @@ def create_pptx_chart(
                     point.format.fill.fore_color.theme_color = theme_color[0]
 
     prs.save(template_path)
-
-# def create_pptx_chart_old(
-#         ppt_path, 
-#         dataframe, 
-#         type=Literal['column', 'bar', 'pie'], 
-#         position=[2,2,7,4],
-#         title=None,
-#         background_image_path=None,
-#         use_template=True
-#     ):
-        
-
-#     prs = Presentation(ppt_path) if os.path.exists(ppt_path) else Presentation()
-#     chart_type = chart_type_lookup[type]
-
-#     slide_layout = prs.slide_layouts[5]  # Layout trống
-#     slide = prs.slides.add_slide(slide_layout)
-
-#     if background_image_path:
-#         slide.shapes.add_picture(background_image_path, 0, 0, width=prs.slide_width, height=prs.slide_height)
-
-
-#     chart_data = CategoryChartData()
-
-
-#     if 'category' in dataframe.columns:
-#         chart_data.categories = dataframe['category']
-#         chart_data.add_series('count', dataframe['count'])
-#     elif 'row_value' in dataframe.columns:
-#         chart_data.categories = dataframe['row_value']
-#         for series_name in dataframe.columns[1:]:
-#             chart_data.add_series(series_name, dataframe[series_name])
-
-#     x, y, cx, cy = Inches(position[0]), Inches(position[1]), Inches(position[2]), Inches(position[3])
-#     chart = slide.shapes.add_chart(
-#         chart_type,  # Sử dụng loại biểu đồ này
-#         x, y, cx, cy,
-#         chart_data
-#     ).chart
-
-#     if use_template:
-#         for i in prs.slides[0].shapes:
-#             if hasattr(i, 'chart'):
-#                 chart_template = i.chart
-#             # print('No chart')
-#         # chart_template = prs.slides[0].shapes[0].chart
-#         # chart_template = slide.shapes[0].chart
-#         chart.chart_style = chart_template.chart_style  # Kiểu dáng của biểu đồ
-#         chart.has_legend = chart_template.has_legend
-#         chart.legend.position = chart_template.legend.position
-#         # Sao chép màu sắc cho các series trong biểu đồ
-#         for i, series in enumerate(chart.series):
-#             try:
-#                 template_series = chart_template.series[i]
-#                 fill = series.format.fill
-#                 template_fill = template_series.format.fill
-#                 if template_fill.type == 'solid':
-#                     fill.solid()
-#                     fill.fore_color.rgb = template_fill.fore_color.rgb
-#             except:
-#                 pass
-         
-
-#         # Sao chép cỡ chữ cho các data labels, legend, và axis labels
-#         for i, series in enumerate(chart.series):
-#             try:
-#                 template_series = chart_template.series[i]
-#                 series.has_data_labels = template_series.has_data_labels
-#                 if series.has_data_labels:
-#                     data_labels = series.data_labels
-#                     template_data_labels = template_series.data_labels
-#                     data_labels.font.size = template_data_labels.font.size
-#                     data_labels.font.bold = template_data_labels.font.bold
-#                     data_labels.font.color.rgb = template_data_labels.font.color.rgb
-#             except:
-#                 pass
-
-#         # Sao chép cỡ chữ cho legend (chú giải)
-#         legend = chart.legend
-#         legend.font.size = chart_template.legend.font.size
-#         legend.font.bold = chart_template.legend.font.bold
-#         # legend.font.color.rgb = chart_template.legend.font.color.rgb
-
-#         # Sao chép cỡ chữ cho axis labels
-#         category_axis = chart.category_axis
-#         template_category_axis = chart_template.category_axis
-#         category_axis.has_title = template_category_axis.has_title
-#         if category_axis.has_title:
-#             category_axis.axis_title.text_frame.text = template_category_axis.axis_title.text_frame.text
-#             category_axis.axis_title.text_frame.paragraphs[0].font.size = template_category_axis.axis_title.text_frame.paragraphs[0].font.size
-
-#         value_axis = chart.value_axis
-#         template_value_axis = chart_template.value_axis
-#         value_axis.has_title = template_value_axis.has_title
-#         if value_axis.has_title:
-#             value_axis.axis_title.text_frame.text = template_value_axis.axis_title.text_frame.text
-#             value_axis.axis_title.text_frame.paragraphs[0].font.size = template_value_axis.axis_title.text_frame.paragraphs[0].font.size
-
-
-
-#     if title:
-#         chart.has_title = True
-#         chart.chart_title.text_frame.text = title
-
-#     # chart.has_legend = True
-#     # chart.legend.position = XL_LEGEND_POSITION.TOP  # Vị trí của legend
-    
-#     # for series in chart.series:
-#     #     series.has_data_labels = True
-#     #     data_labels = series.data_labels
-#     #     data_labels.number_format = '0'  # Định dạng số
-#     #     data_labels.position = XL_LABEL_POSITION.OUTSIDE_END  # Vị trí của data labels
-#     #     data_labels.show_legend_key = False  # Ẩn legend key nếu có
-#     #     data_labels.show_category_name = False  # Ẩn tên category nếu có
-#     #     data_labels.show_series_name = False  # Ẩn tên series nếu có
-#     #     data_labels.show_percentage = False  # Ẩn phần trăm nếu có
-#     #     data_labels.show_value = True  # Hiển thị giá trị
-
-#     prs.save(ppt_path)
-
 
