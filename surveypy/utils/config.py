@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, ConfigDict
 from typing import Literal, Union, Callable, List, Optional
 import pandas as pd
 from pptx.dml.color import RGBColor, MSO_THEME_COLOR
@@ -73,6 +73,7 @@ class SpssConfig(BaseModel):
         self.alpha = 0.1
 
 class PptConfig(BaseModel):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
     theme_color: List = [
     MSO_THEME_COLOR.ACCENT_1,
     MSO_THEME_COLOR.ACCENT_2,
