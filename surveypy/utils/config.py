@@ -88,7 +88,7 @@ class PptConfig(BaseModel):
     has_legend: bool = True
     has_title: bool = True
     legend_position: Any = XL_LEGEND_POSITION.TOP
-    legend_font_size: 12
+    legend_font_size: int =  12
     category_axis_has_major_gridlines: bool = False
     category_axis_has_minor_gridlines: bool = False
     category_axis_has_title: bool = False
