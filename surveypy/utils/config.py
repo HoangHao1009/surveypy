@@ -106,4 +106,4 @@ class PptConfig(BaseModel):
     data_labels_show_legend_key: bool = False
     data_labels_show_percentage: bool = False
     data_labels_show_series_name: bool = False
-    data_labels_show_value = True
+    data_labels_show_value: bool = True
