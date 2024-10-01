@@ -96,7 +96,7 @@ class PptConfig(BaseModel):
     category_axis_tick_labels_font_size: int = 12
     value_axis_has_major_gridlines: bool = False
     value_axis_has_minor_gridlines: bool = False
-    value_axis_visible = False
+    value_axis_visible: bool = False
     data_labels_font_size: int = 8
     data_labels_font: int = 'Montserrat'
     data_labels_number_format: int = 'General'
