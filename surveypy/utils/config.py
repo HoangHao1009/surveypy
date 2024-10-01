@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field, field_validator, ConfigDict
-from typing import Literal, Union, Callable, List, Optional
+from typing import Literal, Union, Callable, List, Optional, Any
 import pandas as pd
 from pptx.dml.color import RGBColor, MSO_THEME_COLOR
 from pptx.enum.chart import XL_CHART_TYPE, XL_LEGEND_POSITION, XL_LABEL_POSITION
@@ -87,7 +87,7 @@ class PptConfig(BaseModel):
     font: str = 'Montserrat'
     has_legend: bool = True
     has_title: bool = True
-    legend_position: XL_LEGEND_POSITION.TOP
+    legend_position: Any = XL_LEGEND_POSITION.TOP
     legend_font_size: 12
     category_axis_has_major_gridlines: bool = False
     category_axis_has_minor_gridlines: bool = False
@@ -101,7 +101,7 @@ class PptConfig(BaseModel):
     data_labels_font: int = 'Montserrat'
     data_labels_number_format: int = 'General'
     data_labels_number_format_is_linked: bool = True
-    data_labels_position = XL_LABEL_POSITION.OUTSIDE_END
+    data_labels_position: Any = XL_LABEL_POSITION.OUTSIDE_END
     data_labels_show_category_name: bool = False
     data_labels_show_legend_key: bool = False
     data_labels_show_percentage: bool = False
