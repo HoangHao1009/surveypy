@@ -8,6 +8,7 @@ setup(
   description = 'Analysis data in Survey - Market Research',
   install_requires=[
       'python-pptx',
-      'pyreadstat'
+      'pyreadstat',
+      'pandas==2.2.2'
   ]
 )
