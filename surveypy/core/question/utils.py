@@ -7,6 +7,7 @@ def _melt_dataframe(code, df: pd.DataFrame) -> pd.DataFrame:
     except:
         print("MELT ERROR: ", code)
         print(df.reset_index())
+        print(df.columns)
     df = df[df['value'] != 0]
     df = df.add_prefix(f'{code}_')
     df.rename(columns={f'{code}_resp_id': 'resp_id'}, inplace=True)
