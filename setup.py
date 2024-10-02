@@ -9,6 +9,5 @@ setup(
   install_requires=[
       'python-pptx',
       'pyreadstat',
-      'pandas==2.2.2'
   ]
 )
