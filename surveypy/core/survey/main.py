@@ -108,7 +108,22 @@ class Survey(BaseModel):
             question_info['invalid'] = question.invalid
             info.append(question_info)
         return info
-
+    
+    @property
+    def parts(self):
+        mapping = {
+            'main': ['sa', 'ma', 'sa_matrix', 'ma_matrix', 'rank', 'number'],
+            'info': ['respondent_info'],
+            'oe': ['text', 'text_dynamic', 'text_other', 'text_matrix']
+        }
+        
+        result = {}
+        for i, v in mapping.items():
+            questions = [q for q in self.questions if q.type in v]
+            result[i] = questions
+        
+        return result
+        
     @property
     def question_codes(self):
         return [i.code for i in self.questions]
