@@ -32,16 +32,9 @@ class CtabConfig(BaseModel):
             raise ValueError('Value must be between 0 and 1, or None')
         return v
     
-    # def to_default(self):
-    #     self.perc = False
-    #     self.total = False
-    #     self.round_perc: bool = True
-    #     self.cat_aggfunc = pd.Series.nunique
-    #     self.num_aggfunc = ['mean', 'median', 'count', 'min', 'max', 'std', 'var']
-    #     self.sig = None
-    #     self.dropna = False
     def to_default(self):
-        self = CtabConfig()
+        default_instance = type(self)()
+        self.__dict__.update(default_instance.__dict__)
     
     @property
     def format(self):
@@ -66,13 +59,9 @@ class SpssConfig(BaseModel):
     compare_tests: List[str] = ['MEAN', 'PROP']
     alpha: float = 0.1
 
-    # def to_default(self):
-    #     self.perc = False
-    #     self.std = False
-    #     self.compare_tests = ['MEAN', 'PROP']
-    #     self.alpha = 0.1
     def to_default(self):
-        self = SpssConfig()
+        default_instance = type(self)()
+        self.__dict__.update(default_instance.__dict__)
 
 class PptConfig(BaseModel):
     theme_color: List = [
@@ -134,4 +123,5 @@ class PptConfig(BaseModel):
         return mapping[self.data_labels_position]
 
     def to_default(self):
-        self = PptConfig()
+        default_instance = type(self)()
+        self.__dict__.update(default_instance.__dict__)
