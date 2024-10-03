@@ -475,8 +475,9 @@ class Survey(BaseModel):
         dimRespondentInfo = parts['info'].dataframe
         dimRespondentChose = parts['main'].dataframe
         
-        dimRespondentInfo['utctimestamp'] = dimRespondentInfo['timestamp'].apply(_to_utc)
-        dimRespondentInfo['month_num'] = dimRespondentInfo['timestamp'].map(lambda x: _parse_timestamp(x).month)
+        dimRespondentInfo['timestamp'] = dimRespondentInfo['timestamp'].map(_parse_timestamp)
+        # dimRespondentInfo['utctimestamp'] = dimRespondentInfo['timestamp'].apply(_to_utc)
+        dimRespondentInfo['month_num'] = dimRespondentInfo['timestamp'].map(lambda x: x.month)
         # dimRespondentInfo['month_num'] = dimRespondentInfo['timestamp'].apply(lambda x: pd.to_datetime(x).month)
         
         dataset = {
@@ -504,16 +505,16 @@ def _parse_timestamp(timestamp):
     # Áp dụng lại múi giờ ICT
     return dt.tz_localize('Asia/Bangkok')
          
-def _to_utc(series):
-    # Chuyển đổi thời gian với errors='coerce' để lỗi chuyển thành NaT
-    series = pd.to_datetime(series, format='%d %b, %Y %I:%M:%S %p ICT', errors='coerce')
+# def _to_utc(series):
+#     # Chuyển đổi thời gian với errors='coerce' để lỗi chuyển thành NaT
+#     series = pd.to_datetime(series, format='%d %b, %Y %I:%M:%S %p ICT', errors='coerce')
 
-    # Chuyển đổi múi giờ từ Asia/Bangkok (ICT) sang UTC
-    series = series.dt.tz_localize('Asia/Bangkok').dt.tz_convert('UTC')
+#     # Chuyển đổi múi giờ từ Asia/Bangkok (ICT) sang UTC
+#     series = series.dt.tz_localize('Asia/Bangkok').dt.tz_convert('UTC')
 
-    # Chuyển đổi sang Unix timestamp
-    series = series.astype(int) // 10**9
-    return series
+#     # Chuyển đổi sang Unix timestamp
+#     series = series.astype(int) // 10**9
+#     return series
 
 #support function
 def _process_respondent(var: str, response_dict: dict) -> List[SingleAnswer]:
