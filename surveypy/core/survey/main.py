@@ -505,15 +505,14 @@ def _parse_timestamp(timestamp):
     return dt.tz_localize('Asia/Bangkok')
          
 def _to_utc(x):
-
-    x = pd.to_datetime(x, format="%d %b, %Y %I:%M:%S %p ICT", errors='coerce')
+    x = pd.to_datetime(x, format='%d %b, %Y %I:%M:%S %p ICT')
 
     # Chuyển đổi múi giờ từ ICT sang UTC
     x = x.dt.tz_localize('Asia/Bangkok').dt.tz_convert('UTC')
 
     # Chuyển đổi sang Unix timestamp
     x = x.astype(int) // 10**9
-    return x                
+    return x
                                             
 #support function
 def _process_respondent(var: str, response_dict: dict) -> List[SingleAnswer]:
