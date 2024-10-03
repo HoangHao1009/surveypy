@@ -16,6 +16,9 @@ class CrossTab(BaseModel):
     config: CtabConfig = CtabConfig()
     ppt_config: PptConfig = PptConfig()
     _dataframe: Optional[pd.DataFrame] = None
+    ####
+    ####
+    ####
     deep_by: List[BaseType] = [] #use to deep ctab
     
     @property

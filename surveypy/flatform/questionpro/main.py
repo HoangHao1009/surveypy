@@ -113,11 +113,26 @@ def _process_responses(responses: List[Dict], result_dict: defaultdict, question
                     question_dict[det_code] = {}
                     question_dict[det_code]['code'] = det_code
                     question_dict[det_code]['type'] = 'dynamic_explode_text'
-                    question_dict[det_code]['text'] = f"{question_dict[question_code]}_{text}_DynamicText"
+                    question_dict[det_code]['text'] = f"{question_code}_{text}_DynamicText"
                     key = f"{det_code}loop{loop_on}"
                     value = str_function.parse_html(dynamic_text)
                     det_response_obj = get_response_obj(key, value, scale, root, rank)
                     det_response_obj.respondents.append(resp['responseID'])
+
+                other_text = a['value'].get('other', '')
+
+                if other_text != '' and question_code in question_dict:
+                    text = a['answerText'].replace(' ', '')
+                    other_code = f"{question_code}_{text}_OTHER"
+                    question_dict[other_code] = {}
+                    question_dict[other_code]['code'] = other_code
+                    question_dict[other_code]['type'] = 'other_text'
+                    question_dict[other_code]['text'] = f"{question_code}_{text}_OtherText"
+                    key = f"{other_code}loop{loop_on}"
+                    value = str_function.parse_html(dynamic_text)
+                    other_response_obj = get_response_obj(key, value, scale, root, rank)
+                    other_response_obj.respondents.append(resp['responseID'])
+                    
 
 class QuestionPro(BaseModel):
     survey_id: str

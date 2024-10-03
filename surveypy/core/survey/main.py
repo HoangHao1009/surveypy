@@ -424,7 +424,15 @@ class Survey(BaseModel):
                         ctab.to_ppt(ppt_path)
                     except Exception as e:
                         print(f'{ctab.title} error when to_ppt: {e}')
-
+                        
+    @property
+    def datasets(self):
+        pass
+                        
+                        
+                        
+                        
+#support function
 def _process_respondent(var: str, response_dict: dict) -> List[SingleAnswer]:
     responses = [
         Response(
@@ -481,7 +489,7 @@ def _process_question(loop_on: str, question_dict: Dict[str, dict]):
         elif question_info['type'] == 'rank_order_dropdown':
             #? Need to reconstruct?
             question_obj = Rank(**info_dict)
-        elif question_info['type'] == 'dynamic_explode_text':
+        elif question_info['type'] in ['dynamic_explode_text', 'other_text']:
             question_obj = SingleAnswer(**info_dict)
             for index, response in enumerate(question_obj.responses, 1):
                 response.scale = index
@@ -516,3 +524,4 @@ def _recode_question(question: QuestionType, recode_dict: dict, drop):
     return question
 
 resp_info = ['longitude', 'latitude', 'country', 'region', 'timeTaken', 'responseStatus', 'timestamp']
+
