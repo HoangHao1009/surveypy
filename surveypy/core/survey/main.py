@@ -445,8 +445,6 @@ class Survey(BaseModel):
                         
     def datasets(self, to: Literal['no_return', 'csv', 'excel'] = 'no_return'):
         parts = self.parts
-        for part in parts.values():
-            part.df_config.col_type = 'single'
         answer_info = defaultdict(list)
         question_info = defaultdict(list)
 
@@ -472,16 +470,18 @@ class Survey(BaseModel):
         dimResponse = pd.DataFrame(response_data)
         dimAnswer = pd.DataFrame(answer_info)
         dimQuestion = pd.DataFrame(question_info)
+        parts['info'].df_config.col_type = 'single'
         dimRespondentInfo = parts['info'].dataframe
+        parts['main'].df_config.col_type = 'single'
         dimRespondentChose = parts['main'].dataframe
         
         dimRespondentInfo['timestamp'] = dimRespondentInfo['timestamp'].map(_parse_timestamp)
-        # dimRespondentInfo['day'] = dimRespondentInfo['timestamp'].dt.day
-        # dimRespondentInfo['month'] = dimRespondentInfo['timestamp'].dt.month
-        # dimRespondentInfo['year'] = dimRespondentInfo['timestamp'].dt.year
-        # dimRespondentInfo['hour'] = dimRespondentInfo['timestamp'].dt.hour
-        # dimRespondentInfo['month_num'] = dimRespondentInfo['timestamp'].dt.month  # Sử dụng .dt.month thay vì map
-        # dimRespondentInfo['month_num'] = dimRespondentInfo['timestamp'].apply(lambda x: pd.to_datetime(x).month)
+        dimRespondentInfo['day'] = dimRespondentInfo['timestamp'].dt.day
+        dimRespondentInfo['month'] = dimRespondentInfo['timestamp'].dt.month
+        dimRespondentInfo['year'] = dimRespondentInfo['timestamp'].dt.year
+        dimRespondentInfo['hour'] = dimRespondentInfo['timestamp'].dt.hour
+        dimRespondentInfo['month_num'] = dimRespondentInfo['timestamp'].dt.month  # Sử dụng .dt.month thay vì map
+        dimRespondentInfo['month_num'] = dimRespondentInfo['timestamp'].apply(lambda x: pd.to_datetime(x).month)
         
         dataset = {
             'dimRespondentInfo': dimRespondentInfo,
