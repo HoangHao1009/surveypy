@@ -41,7 +41,10 @@ class MultipleAnswer(Question):
         df = df.pivot(index='resp_id', columns=self.code, values='value').fillna(0)
         df.columns = pd.MultiIndex.from_product([[self.root], df.columns], names=['root', 'core'])
         
-        desired_columns = [response.code for response in self.responses]
+        if self.df_config.col_name == 'code':
+            desired_columns = [response.code for response in self.responses]
+        else:
+            desired_columns = [response.value for response in self.responses]
         existing_columns = df.columns.get_level_values(1).tolist()
         missing_columns = [col for col in desired_columns if col not in existing_columns]
 
