@@ -17,17 +17,6 @@ class DfConfig(BaseModel):
         default_instance = type(self)()
         self.__dict__.update(default_instance.__dict__)
         
-    def __setattr__(self, name, value):
-        # Kiểm tra nếu thuộc tính có kiểu Literal và giá trị không hợp lệ
-        if name in self.__annotations__:
-            expected_type = self.__annotations__[name]
-            if isinstance(expected_type, Literal):
-                if value not in expected_type.__args__:
-                    raise ValueError(f"Invalid value '{value}' for attribute '{name}'. Expected one of {expected_type.__args__}")
-        
-        # Gán giá trị nếu hợp lệ
-        super().__setattr__(name, value)
-
 class CtabConfig(BaseModel):
     perc: bool = False
     total: bool = False
@@ -42,13 +31,6 @@ class CtabConfig(BaseModel):
         if v is not None and (v < 0 or v > 1):
             raise ValueError('Value must be between 0 and 1, or None')
         return v
-    
-    def __setattr__(self, name, value):
-        # Sử dụng Pydantic để validate giá trị mới
-        try:
-            super().__setattr__(name, value)
-        except ValidationError as e:
-            raise ValueError(f"Invalid value for attribute '{name}': {e}")
     
     def to_default(self):
         default_instance = type(self)()
@@ -115,14 +97,7 @@ class PptConfig(BaseModel):
     data_labels_show_percentage: bool = False
     data_labels_show_series_name: bool = False
     data_labels_show_value: bool = True
-    
-    def __setattr__(self, name, value):
-        # Sử dụng Pydantic để validate giá trị mới
-        try:
-            super().__setattr__(name, value)
-        except ValidationError as e:
-            raise ValueError(f"Invalid value for attribute '{name}': {e}")
-    
+        
     @property
     def legend_position(self):
         mapping = {
