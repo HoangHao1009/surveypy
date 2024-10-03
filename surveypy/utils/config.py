@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, field_validator, ConfigDict
+from pydantic import BaseModel, Field, field_validator
 from typing import Literal, Union, Callable, List, Optional, Any
 import pandas as pd
 from pptx.dml.color import MSO_THEME_COLOR
@@ -13,14 +13,9 @@ class DfConfig(BaseModel):
     loop_mode: Literal['part', 'stack'] = 'part'
     dropna_col: List[str] = Field(default_factory=list)
     
-    # def to_default(self):
-    #     self.value = 'text'
-    #     self.col_name = 'code'
-    #     self.melt = False
-    #     self.loop_on = None
-    
     def to_default(self):
-        self = DfConfig()
+        default_instance = type(self)()
+        self.__dict__.update(default_instance.__dict__)
         
 class CtabConfig(BaseModel):
     perc: bool = False
