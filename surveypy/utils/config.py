@@ -73,7 +73,6 @@ class SpssConfig(BaseModel):
         self.alpha = 0.1
 
 class PptConfig(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True)
     theme_color: List = [
     MSO_THEME_COLOR.ACCENT_1,
     MSO_THEME_COLOR.ACCENT_2,
@@ -87,7 +86,7 @@ class PptConfig(BaseModel):
     font: str = 'Montserrat'
     has_legend: bool = True
     has_title: bool = True
-    legend_position: Any = XL_LEGEND_POSITION.TOP
+    legend_position: Literal['top', 'bottom', 'left', 'right', 'top_right'] = 'top'
     legend_font_size: int =  12
     category_axis_has_major_gridlines: bool = False
     category_axis_has_minor_gridlines: bool = False
@@ -101,9 +100,33 @@ class PptConfig(BaseModel):
     data_labels_font: int = 'Montserrat'
     data_labels_number_format: int = 'General'
     data_labels_number_format_is_linked: bool = True
-    data_labels_position: Any = XL_LABEL_POSITION.OUTSIDE_END
+    data_labels_position: Literal['center', 'inside_end', 'inside_base', 'outside_end', 'best_fit'] = 'outside_end'
     data_labels_show_category_name: bool = False
     data_labels_show_legend_key: bool = False
     data_labels_show_percentage: bool = False
     data_labels_show_series_name: bool = False
     data_labels_show_value: bool = True
+    
+    @property
+    def legend_position(self):
+        mapping = {
+            'top': XL_LEGEND_POSITION.TOP,
+            'bottom': XL_LEGEND_POSITION.BOTTOM,
+            'left': XL_LEGEND_POSITION.LEFT,
+            'right': XL_LEGEND_POSITION.RIGHT,
+            'top_right': XL_LEGEND_POSITION.TOP_RIGHT
+        }
+        
+        return mapping[self.legend_position]
+    
+    @property
+    def data_labels_position(self):
+        mapping = {
+            'center': XL_LABEL_POSITION.CENTER,
+            'inside_end': XL_LABEL_POSITION.INSIDE_END,
+            'inside_base': XL_LABEL_POSITION.INSIDE_BASE,
+            'outside_end': XL_LABEL_POSITION.OUTSIDE_END,
+            'best_fit': XL_LABEL_POSITION.BEST_FIT
+        }
+        
+        return mapping[self.data_labels_position]
