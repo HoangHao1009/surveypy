@@ -7,7 +7,7 @@ setup(
   packages = ['surveypy'],
   description = 'Analysis data in Survey - Market Research',
   install_requires=[
-      'python-pptx',
+      'python-pptx==1.0.2',
       'pyreadstat',
       'pandas==2.1.4'
   ]

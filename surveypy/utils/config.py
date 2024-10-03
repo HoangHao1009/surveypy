@@ -1,8 +1,8 @@
 from pydantic import BaseModel, Field, field_validator, ConfigDict
 from typing import Literal, Union, Callable, List, Optional, Any
 import pandas as pd
-from pptx.dml.color import RGBColor, MSO_THEME_COLOR
-from pptx.enum.chart import XL_CHART_TYPE, XL_LEGEND_POSITION, XL_LABEL_POSITION
+from pptx.dml.color import MSO_THEME_COLOR
+from pptx.enum.chart import XL_LEGEND_POSITION, XL_LABEL_POSITION
 
 class DfConfig(BaseModel):
     value: Literal['text', 'num'] = 'text'
