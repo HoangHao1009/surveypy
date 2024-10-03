@@ -475,7 +475,7 @@ class Survey(BaseModel):
         dimRespondentInfo = parts['info'].dataframe
         dimRespondentChose = parts['main'].dataframe
         
-        dimRespondentInfo['utctimestamp'] = _to_utc(dimRespondentInfo['timestamp'])
+        dimRespondentInfo['utctimestamp'] = dimRespondentInfo['timestamp'].apply(_to_utc)
         dimRespondentInfo['month_num'] = dimRespondentInfo['timestamp'].apply(lambda x: _parse_timestamp(x).month)
         # dimRespondentInfo['month_num'] = dimRespondentInfo['timestamp'].apply(lambda x: pd.to_datetime(x).month)
         
@@ -505,15 +505,15 @@ def _parse_timestamp(timestamp):
     return dt.tz_localize('Asia/Bangkok')
          
 def _to_utc(x):
-    x = pd.to_datetime(x, format='%d %b, %Y %I:%M:%S %p ICT')
+    # Chuyển đổi thời gian với errors='coerce' để lỗi chuyển thành NaT
+    x = pd.to_datetime(x, format='%d %b, %Y %I:%M:%S %p ICT', errors='coerce')
 
-    # Chuyển đổi múi giờ từ ICT sang UTC
-    x = x.dt.tz_localize('Asia/Bangkok').dt.tz_convert('UTC')
+    # Chuyển đổi múi giờ từ Asia/Bangkok (ICT) sang UTC nếu không phải NaT
+    if pd.notna(x):
+        x = x.tz_localize('Asia/Bangkok').tz_convert('UTC')
 
-    # Chuyển đổi sang Unix timestamp
-    x = x.astype(int) // 10**9
     return x
-                                            
+
 #support function
 def _process_respondent(var: str, response_dict: dict) -> List[SingleAnswer]:
     responses = [
