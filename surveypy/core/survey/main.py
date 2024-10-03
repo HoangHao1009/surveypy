@@ -204,7 +204,7 @@ class Survey(BaseModel):
             new.questions = questions
             return new
 
-    def __call__(self, flatform, remove_incomplete: bool=True):
+    def initialize(self, flatform, remove_incomplete: bool=True):
         if not isinstance(flatform, QuestionPro):
             raise ValueError(f'Need QuestionPro/ ... to continue')
         with ThreadPoolExecutor() as executor:
