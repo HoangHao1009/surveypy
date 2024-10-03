@@ -509,7 +509,7 @@ def _to_utc(series):
     series = pd.to_datetime(series, format='%d %b, %Y %I:%M:%S %p ICT', errors='coerce')
 
     # Chuyển đổi múi giờ từ Asia/Bangkok (ICT) sang UTC
-    series = series.dt.tz_localize('Asia/Bangkok', errors='coerce').dt.tz_convert('UTC')
+    series = series.dt.tz_localize('Asia/Bangkok').dt.tz_convert('UTC')
 
     return series
 
