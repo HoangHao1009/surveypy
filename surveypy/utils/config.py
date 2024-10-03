@@ -18,11 +18,15 @@ class DfConfig(BaseModel):
         self.__dict__.update(default_instance.__dict__)
         
     def __setattr__(self, name, value):
-        # Sử dụng Pydantic để validate giá trị mới
-        try:
-            super().__setattr__(name, value)
-        except ValidationError as e:
-            raise ValueError(f"Invalid value for attribute '{name}': {e}")
+        # Kiểm tra nếu thuộc tính có kiểu Literal và giá trị không hợp lệ
+        if name in self.__annotations__:
+            expected_type = self.__annotations__[name]
+            if isinstance(expected_type, Literal):
+                if value not in expected_type.__args__:
+                    raise ValueError(f"Invalid value '{value}' for attribute '{name}'. Expected one of {expected_type.__args__}")
+        
+        # Gán giá trị nếu hợp lệ
+        super().__setattr__(name, value)
 
 class CtabConfig(BaseModel):
     perc: bool = False
