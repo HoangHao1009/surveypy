@@ -504,15 +504,14 @@ def _parse_timestamp(timestamp):
     # Áp dụng lại múi giờ ICT
     return dt.tz_localize('Asia/Bangkok')
          
-def _to_utc(x):
+def _to_utc(series):
     # Chuyển đổi thời gian với errors='coerce' để lỗi chuyển thành NaT
-    x = pd.to_datetime(x, format='%d %b, %Y %I:%M:%S %p ICT', errors='coerce')
+    series = pd.to_datetime(series, format='%d %b, %Y %I:%M:%S %p ICT', errors='coerce')
 
-    # Chuyển đổi múi giờ từ Asia/Bangkok (ICT) sang UTC nếu không phải NaT
-    if pd.notna(x):
-        x = x.tz_localize('Asia/Bangkok').tz_convert('UTC')
+    # Chuyển đổi múi giờ từ Asia/Bangkok (ICT) sang UTC
+    series = series.dt.tz_localize('Asia/Bangkok', errors='coerce').dt.tz_convert('UTC')
 
-    return x
+    return series
 
 #support function
 def _process_respondent(var: str, response_dict: dict) -> List[SingleAnswer]:
