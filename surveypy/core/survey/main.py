@@ -2,6 +2,7 @@ from pydantic import BaseModel, ConfigDict
 from typing import Dict, List, Union, Literal
 import os
 import shutil
+from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from copy import deepcopy
 import pandas as pd
@@ -330,10 +331,9 @@ class Survey(BaseModel):
                 parts = [future.result() for future in as_completed(futures)]
             df = pd.concat(parts, axis=0)
 
-        if self.df_config.col_type == 'core':
-            df.columns = df.columns.get_level_values(1)
 
-        if self.df_config.col_type == 'core':
+        if self.df_config.col_type == 'single':
+            df.columns = df.columns.get_level_values(1)
             sort_columns = sorted(
                 df.columns, 
                 key=lambda col: str_function.custom_sort(col, self.block_order)
@@ -442,9 +442,26 @@ class Survey(BaseModel):
                     except Exception as e:
                         print(f'{ctab.title} error when to_ppt: {e}')
                         
-    @property
-    def datasets(self):
-        pass
+    def datasets(self, to: Literal['no_return', 'csv', 'excel'] = 'no_return'):
+        parts = self.parts        
+        answer_info = defaultdict(list)
+        question_info = defaultdict(list)
+
+        for question in self.questions:
+            question_info['question_code'].append(question.code)
+            question_info['question_type'].append(question.type)
+            question_info['question_text'].append(question.text)
+            for response in question.responses:
+                answer_info['question_code'].append(question.code)
+                answer_info['answer_text'].append(response.value)
+                answer_info['answer_scale'].append(response.scale)
+                
+        dimAnswer = pd.DataFrame(answer_info)
+        dimQuestion = pd.DataFrame(question_info)
+        dimRespondentInfo = parts['info']
+        dimRespondentChose = parts['main']
+
+        
                         
                         
                         
