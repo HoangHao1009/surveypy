@@ -495,31 +495,31 @@ class Survey(BaseModel):
         return dataset
         
         
-def _to_utc(x):
-    # Chuyển đổi x thành dạng datetime, loại bỏ múi giờ ICT khỏi chuỗi
-    x = pd.to_datetime(x, format='%d %b, %Y %I:%M:%S %p', errors='coerce')
-
-    # Kiểm tra giá trị không hợp lệ
-    if x.isna().any():
-        raise ValueError("Some date strings could not be parsed. Please check the format.")
-
-    # Chuyển đổi múi giờ từ Asia/Bangkok (ICT) sang UTC
-    x = x.dt.tz_localize('Asia/Bangkok').dt.tz_convert('UTC')
-
-    # Chuyển đổi sang Unix timestamp
-    unix_timestamp = x.view('int64') // 10**9
-    return unix_timestamp
-         
 # def _to_utc(x):
+#     # Chuyển đổi x thành dạng datetime, loại bỏ múi giờ ICT khỏi chuỗi
+#     x = pd.to_datetime(x, format='%d %b, %Y %I:%M:%S %p', errors='coerce')
 
-#     x = pd.to_datetime(x, format='%d %b, %Y %I:%M:%S %p ICT')
+#     # Kiểm tra giá trị không hợp lệ
+#     if x.isna().any():
+#         raise ValueError("Some date strings could not be parsed. Please check the format.")
 
-#     # Chuyển đổi múi giờ từ ICT sang UTC
+#     # Chuyển đổi múi giờ từ Asia/Bangkok (ICT) sang UTC
 #     x = x.dt.tz_localize('Asia/Bangkok').dt.tz_convert('UTC')
 
 #     # Chuyển đổi sang Unix timestamp
-#     x = x.astype(int) // 10**9
-#     return x                
+#     unix_timestamp = x.view('int64') // 10**9
+#     return unix_timestamp
+         
+def _to_utc(x):
+
+    x = pd.to_datetime(x, format='%d %b, %Y %I:%M:%S %p ICT')
+
+    # Chuyển đổi múi giờ từ ICT sang UTC
+    x = x.dt.tz_localize('Asia/Bangkok').dt.tz_convert('UTC')
+
+    # Chuyển đổi sang Unix timestamp
+    x = x.astype(int) // 10**9
+    return x                
                                             
 #support function
 def _process_respondent(var: str, response_dict: dict) -> List[SingleAnswer]:
