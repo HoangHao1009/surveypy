@@ -13,11 +13,14 @@ class DfConfig(BaseModel):
     loop_mode: Literal['part', 'stack'] = 'part'
     dropna_col: List[str] = Field(default_factory=list)
     
+    # def to_default(self):
+    #     self.value = 'text'
+    #     self.col_name = 'code'
+    #     self.melt = False
+    #     self.loop_on = None
+    
     def to_default(self):
-        self.value = 'text'
-        self.col_name = 'code'
-        self.melt = False
-        self.loop_on = None
+        self = DfConfig()
         
 class CtabConfig(BaseModel):
     perc: bool = False
@@ -34,14 +37,16 @@ class CtabConfig(BaseModel):
             raise ValueError('Value must be between 0 and 1, or None')
         return v
     
+    # def to_default(self):
+    #     self.perc = False
+    #     self.total = False
+    #     self.round_perc: bool = True
+    #     self.cat_aggfunc = pd.Series.nunique
+    #     self.num_aggfunc = ['mean', 'median', 'count', 'min', 'max', 'std', 'var']
+    #     self.sig = None
+    #     self.dropna = False
     def to_default(self):
-        self.perc = False
-        self.total = False
-        self.round_perc: bool = True
-        self.cat_aggfunc = pd.Series.nunique
-        self.num_aggfunc = ['mean', 'median', 'count', 'min', 'max', 'std', 'var']
-        self.sig = None
-        self.dropna = False
+        self = CtabConfig()
     
     @property
     def format(self):
@@ -66,11 +71,13 @@ class SpssConfig(BaseModel):
     compare_tests: List[str] = ['MEAN', 'PROP']
     alpha: float = 0.1
 
+    # def to_default(self):
+    #     self.perc = False
+    #     self.std = False
+    #     self.compare_tests = ['MEAN', 'PROP']
+    #     self.alpha = 0.1
     def to_default(self):
-        self.perc = False
-        self.std = False
-        self.compare_tests = ['MEAN', 'PROP']
-        self.alpha = 0.1
+        self = SpssConfig()
 
 class PptConfig(BaseModel):
     theme_color: List = [
@@ -130,3 +137,6 @@ class PptConfig(BaseModel):
         }
         
         return mapping[self.data_labels_position]
+
+    def to_default(self):
+        self = PptConfig()

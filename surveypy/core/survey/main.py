@@ -32,6 +32,7 @@ class Survey(BaseModel):
         self.df_config.to_default()
         self.ctab_config.to_default()
         self.spss_config.to_default()
+        self.ppt_config.to
 
     def reset_question(self):
         for question in self.questions:
@@ -495,21 +496,6 @@ class Survey(BaseModel):
             
         return dataset
         
-        
-# def _to_utc(x):
-#     # Chuyển đổi x thành dạng datetime, loại bỏ múi giờ ICT khỏi chuỗi
-#     x = pd.to_datetime(x, format='%d %b, %Y %I:%M:%S %p', errors='coerce')
-
-#     # Kiểm tra giá trị không hợp lệ
-#     if x.isna().any():
-#         raise ValueError("Some date strings could not be parsed. Please check the format.")
-
-#     # Chuyển đổi múi giờ từ Asia/Bangkok (ICT) sang UTC
-#     x = x.dt.tz_localize('Asia/Bangkok').dt.tz_convert('UTC')
-
-#     # Chuyển đổi sang Unix timestamp
-#     unix_timestamp = x.view('int64') // 10**9
-#     return unix_timestamp
 
 def _parse_timestamp(timestamp):
     # Loại bỏ phần ICT khỏi chuỗi thời gian
