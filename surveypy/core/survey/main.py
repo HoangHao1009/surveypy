@@ -444,7 +444,7 @@ class Survey(BaseModel):
                         
     def datasets(self, to: Literal['no_return', 'csv', 'excel'] = 'no_return'):
         parts = self.parts
-        for part in parts:
+        for part in parts.values():
             part.df_config.col_type = 'single'
         answer_info = defaultdict(list)
         question_info = defaultdict(list)
