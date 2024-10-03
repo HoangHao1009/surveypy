@@ -334,7 +334,7 @@ class Survey(BaseModel):
 
 
         if self.df_config.col_type == 'single':
-            # df.columns = df.columns.get_level_values(1)
+            df.columns = df.columns.get_level_values(1)
             sort_columns = sorted(
                 df.columns, 
                 key=lambda col: str_function.custom_sort(col, self.block_order)
