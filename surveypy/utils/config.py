@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, ValidationError
 from typing import Literal, Union, Callable, List, Optional, Any
 import pandas as pd
 from pptx.dml.color import MSO_THEME_COLOR
@@ -17,6 +17,13 @@ class DfConfig(BaseModel):
         default_instance = type(self)()
         self.__dict__.update(default_instance.__dict__)
         
+    def __setattr__(self, name, value):
+        # Sử dụng Pydantic để validate giá trị mới
+        try:
+            super().__setattr__(name, value)
+        except ValidationError as e:
+            raise ValueError(f"Invalid value for attribute '{name}': {e}")
+
 class CtabConfig(BaseModel):
     perc: bool = False
     total: bool = False
@@ -31,6 +38,13 @@ class CtabConfig(BaseModel):
         if v is not None and (v < 0 or v > 1):
             raise ValueError('Value must be between 0 and 1, or None')
         return v
+    
+    def __setattr__(self, name, value):
+        # Sử dụng Pydantic để validate giá trị mới
+        try:
+            super().__setattr__(name, value)
+        except ValidationError as e:
+            raise ValueError(f"Invalid value for attribute '{name}': {e}")
     
     def to_default(self):
         default_instance = type(self)()
@@ -58,7 +72,7 @@ class SpssConfig(BaseModel):
     std: bool = False
     compare_tests: List[str] = ['MEAN', 'PROP']
     alpha: float = 0.1
-
+    
     def to_default(self):
         default_instance = type(self)()
         self.__dict__.update(default_instance.__dict__)
@@ -97,6 +111,13 @@ class PptConfig(BaseModel):
     data_labels_show_percentage: bool = False
     data_labels_show_series_name: bool = False
     data_labels_show_value: bool = True
+    
+    def __setattr__(self, name, value):
+        # Sử dụng Pydantic để validate giá trị mới
+        try:
+            super().__setattr__(name, value)
+        except ValidationError as e:
+            raise ValueError(f"Invalid value for attribute '{name}': {e}")
     
     @property
     def legend_position(self):
