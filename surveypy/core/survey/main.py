@@ -462,34 +462,53 @@ def _process_question(loop_on: str, question_dict: Dict[str, dict]):
         info_dict = dict(
             code=question_code,
             text=question_info['text'],
-            type=question_info['type'],
+            # type=question_info['type'],
             loop_on=loop_on_val,
             responses=all_info['responses'],
         )
-        
     
-        if question_info['type'] in ['multiplechoice_radio', 'multiplechoice_dropdown', 'matrix_slider', 
-                                     'matrix_radio', 'multiplechoice_smiley',
-                                     'text_multiple_row', 'text_single_row', 'matrix_text']:
+            
+        # if question_info['type'] in ['multiplechoice_radio', 'multiplechoice_dropdown', 'matrix_slider', 
+        #                              'matrix_radio', 'multiplechoice_smiley',
+        #                              'text_multiple_row', 'text_single_row', 'matrix_text']:
+        #     question_obj = SingleAnswer(**info_dict)
+        #     if question_obj.type not in ['text_multiple_row', 'text_single_row', 'matrix_text']:
+        #         construct_dict = {option: [option] for option in question_info['options']} if 'options' in question_info else {}
+        #         question_obj = question_obj.reconstruct(construct_dict)
+        #     else:
+        #         for index, response in enumerate(question_obj.responses, 1):
+        #             response.scale = index
+        if question_info['type'] in ['multiplechoice_radio', 'multiplechoice_dropdown', 
+                                     'multiplechoice_smiley', 'matrix_slider', 'matrix_radio']:
+            info_dict['type'] = 'sa' if 'matrix' not in question_info['type'] else 'sa_matrix'
             question_obj = SingleAnswer(**info_dict)
-            if question_obj.type not in ['text_multiple_row', 'text_single_row', 'matrix_text']:
-                construct_dict = {option: [option] for option in question_info['options']} if 'options' in question_info else {}
-                question_obj = question_obj.reconstruct(construct_dict)
-            else:
-                for index, response in enumerate(question_obj.responses, 1):
-                    response.scale = index
+            construct_dict = {option: [option] for option in question_info['options']} if 'options' in question_info else {}
+            question_obj = question_obj.reconstruct(construct_dict)
+            
+        elif question_info['type'] in ['text_multiple_row', 'text_single_row', 'matrix_text']:
+            info_dict['type'] = 'text' if 'matrix' not in question_info['type'] else 'text_matrix'
+            question_obj = SingleAnswer(**info_dict)
+            for index, response in enumerate(question_obj.responses, 1):
+                response.scale = index
+                
         elif question_info['type'] in ['lookup_table']:
+            info_dict['type'] = 'sa'
             question_obj = SingleAnswer(**info_dict)
-
+            
         elif question_info['type'] in ['multiplechoice_checkbox', 'matrix_checkbox']:
+            info_dict['type'] = 'ma' if 'matrix' not in question_info['type'] else 'ma_matrix'
             construct_dict = {option: [option] for option in question_info['options']} if 'options' in question_info else {}
             question_obj = MultipleAnswer(**info_dict).reconstruct(construct_dict)
+            
         elif question_info['type'] == 'numeric_slider':
+            info_dict['type'] = 'number'
             question_obj = Number(**info_dict)
         elif question_info['type'] == 'rank_order_dropdown':
             #? Need to reconstruct?
+            info_dict['type'] = 'rank'
             question_obj = Rank(**info_dict)
-        elif question_info['type'] in ['dynamic_explode_text', 'other_text']:
+        elif question_info['type'] in ['text_dynamic', 'text_other']:
+            info_dict['type'] = question_info['type']
             question_obj = SingleAnswer(**info_dict)
             for index, response in enumerate(question_obj.responses, 1):
                 response.scale = index

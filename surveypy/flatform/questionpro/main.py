@@ -112,7 +112,7 @@ def _process_responses(responses: List[Dict], result_dict: defaultdict, question
                     det_code = f"{question_code}_{text}_DET"
                     question_dict[det_code] = {}
                     question_dict[det_code]['code'] = det_code
-                    question_dict[det_code]['type'] = 'dynamic_explode_text'
+                    question_dict[det_code]['type'] = 'text_dynamic'
                     question_dict[det_code]['text'] = f"{question_code}_{text}_DynamicText"
                     key = f"{det_code}loop{loop_on}"
                     value = str_function.parse_html(dynamic_text)
@@ -126,7 +126,7 @@ def _process_responses(responses: List[Dict], result_dict: defaultdict, question
                     other_code = f"{question_code}_{text}_OTHER"
                     question_dict[other_code] = {}
                     question_dict[other_code]['code'] = other_code
-                    question_dict[other_code]['type'] = 'other_text'
+                    question_dict[other_code]['type'] = 'text_other'
                     question_dict[other_code]['text'] = f"{question_code}_{text}_OtherText"
                     key = f"{other_code}loop{loop_on}"
                     value = str_function.parse_html(other_text)
