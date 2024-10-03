@@ -476,7 +476,9 @@ class Survey(BaseModel):
         dimRespondentChose = parts['main'].dataframe
         
         dimRespondentInfo['timestamp'] = dimRespondentInfo['timestamp'].map(_parse_timestamp)
-        dimRespondentInfo['date'] = dimRespondentInfo['timestamp'].map(lambda x: x.date)
+        dimRespondentInfo['day'] = dimRespondentInfo['timestamp'].map(lambda x: x.dt.day)
+        dimRespondentInfo['month'] = dimRespondentInfo['timestamp'].map(lambda x: x.dt.month)
+        dimRespondentInfo['year'] = dimRespondentInfo['timestamp'].map(lambda x: x.dt.year)
         dimRespondentInfo['hour'] = dimRespondentInfo['timestamp'].map(lambda x: x.hour)
         dimRespondentInfo['month_num'] = dimRespondentInfo['timestamp'].map(lambda x: x.month)
         # dimRespondentInfo['month_num'] = dimRespondentInfo['timestamp'].apply(lambda x: pd.to_datetime(x).month)
