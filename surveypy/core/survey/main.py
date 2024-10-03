@@ -104,7 +104,7 @@ class Survey(BaseModel):
             question_info = {}
             question_info['code'] = question.code
             question_info['loop'] = question.loop_on
-            question_info['type'] = type(question)
+            question_info['type'] = question.type
             question_info['invalid'] = question.invalid
             info.append(question_info)
         return info
