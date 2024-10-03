@@ -129,7 +129,7 @@ def _process_responses(responses: List[Dict], result_dict: defaultdict, question
                     question_dict[other_code]['type'] = 'other_text'
                     question_dict[other_code]['text'] = f"{question_code}_{text}_OtherText"
                     key = f"{other_code}loop{loop_on}"
-                    value = str_function.parse_html(dynamic_text)
+                    value = str_function.parse_html(other_text)
                     other_response_obj = get_response_obj(key, value, scale, root, rank)
                     other_response_obj.respondents.append(resp['responseID'])
                     
