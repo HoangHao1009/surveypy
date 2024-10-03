@@ -120,7 +120,9 @@ class Survey(BaseModel):
         result = {}
         for i, v in mapping.items():
             questions = [q for q in self.questions if q.type in v]
-            result[i] = questions
+            survey = self.copy()
+            survey.questions = questions
+            result[i] = survey
         
         return result
         
