@@ -480,7 +480,7 @@ class Survey(BaseModel):
         dimRespondentInfo['month'] = dimRespondentInfo['timestamp'].dt.month
         dimRespondentInfo['year'] = dimRespondentInfo['timestamp'].dt.year
         dimRespondentInfo['hour'] = dimRespondentInfo['timestamp'].dt.hour
-        dimRespondentInfo['month_num'] = dimRespondentInfo['timestamp'].map(lambda x: x.month)
+        dimRespondentInfo['month_num'] = dimRespondentInfo['timestamp'].dt.month  # Sử dụng .dt.month thay vì map
         # dimRespondentInfo['month_num'] = dimRespondentInfo['timestamp'].apply(lambda x: pd.to_datetime(x).month)
         
         dataset = {
@@ -499,14 +499,15 @@ class Survey(BaseModel):
                     v.to_excel(os.path.join(self.working_dir, f'{k}.xlsx'))
             
         return dataset
-        
-
+    
 def _parse_timestamp(timestamp):
     # Loại bỏ phần ICT khỏi chuỗi thời gian
     dt_without_tz = " ".join(timestamp.split()[:-1])
+    # Chuyển đổi chuỗi thành datetime
     dt = pd.to_datetime(dt_without_tz)
     # Áp dụng lại múi giờ ICT
     return dt.tz_localize('Asia/Bangkok')
+
          
 # def _to_utc(series):
 #     # Chuyển đổi thời gian với errors='coerce' để lỗi chuyển thành NaT
