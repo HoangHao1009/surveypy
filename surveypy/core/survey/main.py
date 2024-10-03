@@ -443,7 +443,9 @@ class Survey(BaseModel):
                         print(f'{ctab.title} error when to_ppt: {e}')
                         
     def datasets(self, to: Literal['no_return', 'csv', 'excel'] = 'no_return'):
-        parts = self.parts        
+        parts = self.parts
+        for part in parts:
+            part.df_config.col_type = 'single'
         answer_info = defaultdict(list)
         question_info = defaultdict(list)
 
@@ -455,17 +457,59 @@ class Survey(BaseModel):
                 answer_info['question_code'].append(question.code)
                 answer_info['answer_text'].append(response.value)
                 answer_info['answer_scale'].append(response.scale)
-                
+
+        response_data = []
+        for question in parts['main'].questions:
+            for response in question.responses:
+                for respondent in response.respondents:
+                    d = {'resp_id': respondent,
+                        'question_code': question.code,
+                        'answer_text': response.value,
+                        'answer_scale': response.scale}
+                    response_data.append(d)
+                    
+        dimResponse = pd.DataFrame(response_data)
         dimAnswer = pd.DataFrame(answer_info)
         dimQuestion = pd.DataFrame(question_info)
         dimRespondentInfo = parts['info']
         dimRespondentChose = parts['main']
+        
+        dimRespondentInfo['utctimestamp'] = _to_utc(dimRespondentInfo['timestamp'])
+        dimRespondentInfo['month_num'] = dimRespondentInfo['timestamp'].apply(lambda x: pd.to_datetime(x).month)
+        
+        dataset = {
+            'dimRespondentInfo': dimRespondentInfo,
+            'dimRespondentChose': dimRespondentChose,
+            'dimResponse': dimResponse,
+            'dimAnswer': dimAnswer,
+            'dimQuestion': dimQuestion
+        }
+        
+        if to != 'no_return':
+            for k, v in dataset.items():
+                if to == 'csv':
+                    v.to_csv(os.path.join(self.working_dir, f'{k}.csv'))
+                elif to == 'excel':
+                    v.to_excel(os.path.join(self.working_dir, f'{k}.xlsx'))
+            
+        return dataset
+        
+        
 
         
-                        
-                        
-                        
-                        
+
+        
+         
+def _to_utc(x):
+    x = pd.to_datetime(x, format='%d %b, %Y %I:%M:%S %p ICT')
+
+    # Chuyển đổi múi giờ từ ICT sang UTC
+    x = x.dt.tz_localize('Asia/Bangkok').dt.tz_convert('UTC')
+
+    # Chuyển đổi sang Unix timestamp
+    x = x.astype(int) // 10**9
+    return x                
+                                            
 #support function
 def _process_respondent(var: str, response_dict: dict) -> List[SingleAnswer]:
     responses = [
