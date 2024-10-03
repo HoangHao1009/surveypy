@@ -495,27 +495,32 @@ class Survey(BaseModel):
         return dataset
         
         
-
-        
-
-        
-         
 def _to_utc(x):
-    dt_without_tz = " ".join(x.split()[:-1])
-    dt = pd.to_datetime(dt_without_tz)
-    # Áp dụng lại múi giờ ICT
-    dt = dt.tz_localize('Asia/Bangkok')
+    # Chuyển đổi x thành dạng datetime, loại bỏ múi giờ ICT khỏi chuỗi
+    x = pd.to_datetime(x, format='%d %b, %Y %I:%M:%S %p', errors='coerce')
 
-    dt = dt.astype(int) // 10**9
-    return dt
-    # x = pd.to_datetime(x, format='%d %b, %Y %I:%M:%S %p ICT')
+    # Kiểm tra các giá trị không hợp lệ
+    if x is pd.NaT:
+        raise ValueError("Date format is incorrect or unable to parse timestamp.")
 
-    # # Chuyển đổi múi giờ từ ICT sang UTC
-    # x = x.dt.tz_localize('Asia/Bangkok').dt.tz_convert('UTC')
+    # Chuyển đổi múi giờ từ Asia/Bangkok (ICT) sang UTC
+    x = x.tz_localize('Asia/Bangkok').tz_convert('UTC')
 
     # Chuyển đổi sang Unix timestamp
-    # x = x.astype(int) // 10**9
-    # return x                
+    unix_timestamp = int(x.timestamp())
+    return unix_timestamp
+  
+         
+# def _to_utc(x):
+
+#     x = pd.to_datetime(x, format='%d %b, %Y %I:%M:%S %p ICT')
+
+#     # Chuyển đổi múi giờ từ ICT sang UTC
+#     x = x.dt.tz_localize('Asia/Bangkok').dt.tz_convert('UTC')
+
+#     # Chuyển đổi sang Unix timestamp
+#     x = x.astype(int) // 10**9
+#     return x                
                                             
 #support function
 def _process_respondent(var: str, response_dict: dict) -> List[SingleAnswer]:
