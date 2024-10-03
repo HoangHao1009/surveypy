@@ -32,7 +32,7 @@ class Survey(BaseModel):
         self.df_config.to_default()
         self.ctab_config.to_default()
         self.spss_config.to_default()
-        self.ppt_config.to
+        self.ppt_config.to_default()
 
     def reset_question(self):
         for question in self.questions:
