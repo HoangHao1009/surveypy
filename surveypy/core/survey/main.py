@@ -471,8 +471,8 @@ class Survey(BaseModel):
         dimResponse = pd.DataFrame(response_data)
         dimAnswer = pd.DataFrame(answer_info)
         dimQuestion = pd.DataFrame(question_info)
-        dimRespondentInfo = parts['info']
-        dimRespondentChose = parts['main']
+        dimRespondentInfo = parts['info'].dataframe
+        dimRespondentChose = parts['main'].dataframe
         
         dimRespondentInfo['utctimestamp'] = _to_utc(dimRespondentInfo['timestamp'])
         dimRespondentInfo['month_num'] = dimRespondentInfo['timestamp'].apply(lambda x: pd.to_datetime(x).month)
