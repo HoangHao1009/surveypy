@@ -501,14 +501,21 @@ class Survey(BaseModel):
         
          
 def _to_utc(x):
-    x = pd.to_datetime(x, format='%d %b, %Y %I:%M:%S %p ICT')
+    dt_without_tz = " ".join(x.split()[:-1])
+    dt = pd.to_datetime(dt_without_tz)
+    # Áp dụng lại múi giờ ICT
+    dt = dt.tz_localize('Asia/Bangkok')
 
-    # Chuyển đổi múi giờ từ ICT sang UTC
-    x = x.dt.tz_localize('Asia/Bangkok').dt.tz_convert('UTC')
+    dt = dt.astype(int) // 10**9
+    return dt
+    # x = pd.to_datetime(x, format='%d %b, %Y %I:%M:%S %p ICT')
+
+    # # Chuyển đổi múi giờ từ ICT sang UTC
+    # x = x.dt.tz_localize('Asia/Bangkok').dt.tz_convert('UTC')
 
     # Chuyển đổi sang Unix timestamp
-    x = x.astype(int) // 10**9
-    return x                
+    # x = x.astype(int) // 10**9
+    # return x                
                                             
 #support function
 def _process_respondent(var: str, response_dict: dict) -> List[SingleAnswer]:
