@@ -475,7 +475,8 @@ class Survey(BaseModel):
         dimRespondentChose = parts['main'].dataframe
         
         dimRespondentInfo['utctimestamp'] = _to_utc(dimRespondentInfo['timestamp'])
-        dimRespondentInfo['month_num'] = dimRespondentInfo['timestamp'].apply(lambda x: pd.to_datetime(x).month)
+        dimRespondentInfo['month_num'] = dimRespondentInfo['timestamp'].apply(lambda x: _parse_timestamp(x).month)
+        # dimRespondentInfo['month_num'] = dimRespondentInfo['timestamp'].apply(lambda x: pd.to_datetime(x).month)
         
         dataset = {
             'dimRespondentInfo': dimRespondentInfo,
@@ -509,6 +510,13 @@ class Survey(BaseModel):
 #     # Chuyển đổi sang Unix timestamp
 #     unix_timestamp = x.view('int64') // 10**9
 #     return unix_timestamp
+
+def _parse_timestamp(timestamp):
+    # Loại bỏ phần ICT khỏi chuỗi thời gian
+    dt_without_tz = " ".join(timestamp.split()[:-1])
+    dt = pd.to_datetime(dt_without_tz)
+    # Áp dụng lại múi giờ ICT
+    return dt.tz_localize('Asia/Bangkok')
          
 def _to_utc(x):
 
