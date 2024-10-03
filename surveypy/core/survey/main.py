@@ -506,7 +506,7 @@ def _parse_timestamp(timestamp):
          
 def _to_utc(x):
 
-    x = pd.to_datetime(x, format='%d %b, %Y %I:%M:%S %p ICT')
+    x = pd.to_datetime(x, format="%d %b, %Y %I:%M:%S %p ICT", errors='coerce')
 
     # Chuyển đổi múi giờ từ ICT sang UTC
     x = x.dt.tz_localize('Asia/Bangkok').dt.tz_convert('UTC')
