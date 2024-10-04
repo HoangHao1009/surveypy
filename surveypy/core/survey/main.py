@@ -402,6 +402,7 @@ class Survey(BaseModel):
             df = dataframe
         else:
             self.df_config.col_type = 'single'
+            self.df_config.value = 'num'
             self.reset_question()
             df = self.dataframe.reset_index().dropna(subset=dropna)
         df.columns = [re.sub(r'[^\w]', '_', i)[0:64] for i in df.columns] 
