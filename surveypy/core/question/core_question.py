@@ -119,17 +119,13 @@ class Question(BaseModel):
                 for future in as_completed(future_to_old_label):
                     old_label = future_to_old_label[future]
                     old_label_to_respondents[old_label] = future.result().respondents
-            print(old_label_to_respondents)
 
             for new_response in new_responses:
                 for k, v in construct_dict.items():
                     if new_response.value in v:
                         old_label = k
                         # old_label = new_response.value
-                        if old_label in old_label_to_respondents:
-                            new_response.respondents.extend(old_label_to_respondents[old_label])
-                        else:
-                            print(f'Old labels: {old_label} not exist')
+                        new_response.respondents.extend(old_label_to_respondents[old_label])
 
             question = MultipleAnswer(**self._info, responses=new_responses)
 
