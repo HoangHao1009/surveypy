@@ -198,6 +198,9 @@ def _sm_ctab(
         margins_name=total_label,
         dropna=False
     )
+    
+    if pv.shape == [0, 0]:
+        print(f'{base} and {target} not have any correspondent')
 
     pv.rename_axis(index=['row', 'row_value'], columns=['col', 'col_value'], inplace=True)
     total_df = pv.loc[[total_label],:]
