@@ -54,7 +54,7 @@ class CtabConfig(BaseModel):
                 'dropna': self.dropna}
 
 class SpssConfig(BaseModel):
-    perc: bool = False
+    perc: bool = True
     std: bool = False
     compare_tests: List[str] = ['MEAN', 'PROP']
     alpha: float = 0.1
