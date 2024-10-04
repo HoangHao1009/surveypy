@@ -2,7 +2,7 @@ from pydantic import BaseModel, Field, field_validator
 from typing import Literal, Union, Callable, List, Optional
 import pandas as pd
 from pptx.dml.color import MSO_THEME_COLOR
-from pptx.enum.chart import XL_LEGEND_POSITION, XL_LABEL_POSITION
+from pptx.enum.chart import XL_LEGEND_POSITION, XL_DATA_LABEL_POSITION
 
 class DfConfig(BaseModel):
     value: Literal['text', 'num'] = 'text'
@@ -91,7 +91,7 @@ class PptConfig(BaseModel):
     data_labels_font: int = 'Montserrat'
     data_labels_number_format: int = 'General'
     data_labels_number_format_is_linked: bool = True
-    _data_labels_position: Literal['center', 'inside_end', 'inside_base', 'outside_end', 'best_fit'] = 'outside_end'
+    _data_labels_position: Literal['above', 'below', 'best_fit', 'center', 'inside_base', 'inside_end', 'left', 'mixed', 'outside_end', 'right'] = 'outside_end'
     data_labels_show_category_name: bool = False
     data_labels_show_legend_key: bool = False
     data_labels_show_percentage: bool = False
@@ -105,7 +105,8 @@ class PptConfig(BaseModel):
             'bottom': XL_LEGEND_POSITION.BOTTOM,
             'left': XL_LEGEND_POSITION.LEFT,
             'right': XL_LEGEND_POSITION.RIGHT,
-            'top_right': XL_LEGEND_POSITION.TOP_RIGHT
+            'corner': XL_LEGEND_POSITION.CORNER,
+            'custom': XL_LEGEND_POSITION.CUSTOM
         }
         return mapping[self._legend_position]
 
@@ -116,17 +117,23 @@ class PptConfig(BaseModel):
     @property
     def data_labels_position(self):
         mapping = {
-            'center': XL_LABEL_POSITION.CENTER,
-            'inside_end': XL_LABEL_POSITION.INSIDE_END,
-            'inside_base': XL_LABEL_POSITION.INSIDE_BASE,
-            'outside_end': XL_LABEL_POSITION.OUTSIDE_END,
-            'best_fit': XL_LABEL_POSITION.BEST_FIT
+            'above': XL_DATA_LABEL_POSITION.ABOVE,
+            'below': XL_DATA_LABEL_POSITION.BELOW,
+            'best_fit': XL_DATA_LABEL_POSITION.BEST_FIT,
+            'center': XL_DATA_LABEL_POSITION.CENTER,
+            'inside_base': XL_DATA_LABEL_POSITION.INSIDE_BASE,
+            'inside_end': XL_DATA_LABEL_POSITION.INSIDE_END,
+            'left': XL_DATA_LABEL_POSITION.LEFT,
+            'mixed': XL_DATA_LABEL_POSITION.MIXED,
+            'outside_end': XL_DATA_LABEL_POSITION.OUTSIDE_END,
+            'right': XL_DATA_LABEL_POSITION.RIGHT
+            
         }
         
         return mapping[self.data_labels_position]
     
     @data_labels_position.setter
-    def data_labels_position(self, value: Literal['center', 'inside_end', 'inside_base', 'outside_end', 'best_fit']):
+    def data_labels_position(self, value: Literal['above', 'below', 'best_fit', 'center', 'inside_base', 'inside_end', 'left', 'mixed', 'outside_end', 'right']):
         self._data_labels_position = value
         
 
