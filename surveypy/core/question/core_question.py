@@ -67,7 +67,7 @@ class Question(BaseModel):
         self._set_response()
         self.df_config.to_default()
         
-    def reconstruct(self, construct_dict: Dict, new_code: str, new_type: str, method: Literal['cluster', 'classify']='cluster', by: Literal['value', 'scale']='value'):
+    def reconstruct(self, construct_dict: Dict, method: Literal['cluster', 'classify']='cluster', by: Literal['value', 'scale']='value', new_code: Optional[str] = None, new_type: Optional[str] = None):
         from .multipleanswer import MultipleAnswer
         from .singleanswer import SingleAnswer
         from .rank import Rank
@@ -129,8 +129,10 @@ class Question(BaseModel):
 
             question = MultipleAnswer(**self._info, responses=new_responses)
 
-        question.code = new_code
-        question.type = new_type
+        if new_code is not None:
+            question.code = new_code 
+        if new_type is not None:
+            question.type = new_type 
         question.reset()
 
         return question
