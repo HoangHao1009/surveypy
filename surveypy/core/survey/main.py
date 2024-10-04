@@ -394,7 +394,7 @@ class Survey(BaseModel):
                 by_col.append(var)
             ctab_syntax = spss_function.ctab(by_col, calculate_dict, self.spss_config.compare_tests, self.spss_config.alpha)
             syntaxs.append(ctab_syntax)
-        syntaxs.append(spss_function.export(f'{self.working_dir}.{self.name}_output.xlsx'))
+        syntaxs.append(spss_function.export(f'{self.working_dir}/{self.name}_output.xlsx'))
         return syntaxs
         
     def to_spss(self, folder_path: str=None, dropna: List[str]=[], dataframe=None):
