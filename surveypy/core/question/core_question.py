@@ -16,7 +16,7 @@ class Response(BaseModel):
     
 class Question(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
-    _code: str = Field(default="")
+    _code: str = ""
     text: str
     type: str
     loop_on: Optional[Union[str, int]] = None
