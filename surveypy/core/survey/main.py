@@ -496,11 +496,13 @@ class Survey(BaseModel):
         }
         
         if to != 'no_return':
+            path = os.path.join(self.working_dir, 'datasets')
+            os.makedirs(path)
             for k, v in dataset.items():
                 if to == 'csv':
-                    v.to_csv(os.path.join(self.working_dir, 'datasets', f'{k}.csv'))
+                    v.to_csv(os.path.join(path, f'{k}.csv'))
                 elif to == 'excel':
-                    v.to_excel(os.path.join(self.working_dir, 'datasets', f'{k}.xlsx'))
+                    v.to_excel(os.path.join(path, f'{k}.xlsx'))
             
         return dataset
     
