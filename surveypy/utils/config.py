@@ -77,7 +77,7 @@ class PptConfig(BaseModel):
     font: str = 'Montserrat'
     has_legend: bool = True
     has_title: bool = True
-    legend_position: Literal['top', 'bottom', 'left', 'right', 'top_right'] = 'top'
+    _legend_position: Literal['top', 'bottom', 'left', 'right', 'top_right'] = 'top'
     legend_font_size: int =  12
     category_axis_has_major_gridlines: bool = False
     category_axis_has_minor_gridlines: bool = False
@@ -91,7 +91,7 @@ class PptConfig(BaseModel):
     data_labels_font: int = 'Montserrat'
     data_labels_number_format: int = 'General'
     data_labels_number_format_is_linked: bool = True
-    data_labels_position: Literal['center', 'inside_end', 'inside_base', 'outside_end', 'best_fit'] = 'outside_end'
+    _data_labels_position: Literal['center', 'inside_end', 'inside_base', 'outside_end', 'best_fit'] = 'outside_end'
     data_labels_show_category_name: bool = False
     data_labels_show_legend_key: bool = False
     data_labels_show_percentage: bool = False
@@ -107,8 +107,11 @@ class PptConfig(BaseModel):
             'right': XL_LEGEND_POSITION.RIGHT,
             'top_right': XL_LEGEND_POSITION.TOP_RIGHT
         }
-        
-        return mapping[self.legend_position]
+        return mapping[self._legend_position]
+
+    @legend_position.setter
+    def legend_position(self, value: Literal['top', 'bottom', 'left', 'right', 'top_right']):
+        self._legend_position = value
     
     @property
     def data_labels_position(self):
@@ -121,6 +124,11 @@ class PptConfig(BaseModel):
         }
         
         return mapping[self.data_labels_position]
+    
+    @data_labels_position.setter
+    def data_labels_position(self, value: Literal['center', 'inside_end', 'inside_base', 'outside_end', 'best_fit']):
+        self._data_labels_position = value
+        
 
     def to_default(self):
         default_instance = type(self)()
