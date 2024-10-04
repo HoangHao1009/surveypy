@@ -46,30 +46,29 @@ def custom_sort(item, priority_list=[]):
 
 def parse_html(text: str, max_length=200):
     def truncate_text(text: str, max_length):
-        # if len(text) <= max_length:
-        #     return text
+        if len(text) <= max_length:
+            return text
         
-        # truncate_sign = ['?', ',', '-', '_', ':', '(', '.']
+        truncate_sign = ['?', ',', '-', '_', ':', '(', '.']
 
-        # # Tách chuỗi thành các câu dựa vào dấu chấm "."
-        # for i in truncate_sign:
-        #     if i in text:
-        #         sentences = text.split(i)
-        #         break
+        # Tách chuỗi thành các câu dựa vào dấu chấm "."
+        for i in truncate_sign:
+            if i in text:
+                sentences = text.split(i)
+                break
 
-        # # Ghép lại các câu nhưng loại bỏ câu cuối cùng nếu chuỗi vượt quá giới hạn
-        # truncated_text = ''
+        # Ghép lại các câu nhưng loại bỏ câu cuối cùng nếu chuỗi vượt quá giới hạn
+        truncated_text = ''
         
-        # for sentence in sentences[:-1]:  # Duyệt qua các câu trừ câu cuối
-        #     # Thêm câu hiện tại vào chuỗi đã cắt và một dấu chấm nếu cần
-        #     if len(truncated_text) + len(sentence) + 1 <= max_length:
-        #         truncated_text += sentence + '.'
-        #     else:
-        #         break
-        # if truncated_text == '':
-        #     truncated_text = text
-        # return truncated_text.strip()  # Xoá khoảng trắng dư thừa
-        return text
+        for sentence in sentences[:-1]:  # Duyệt qua các câu trừ câu cuối
+            # Thêm câu hiện tại vào chuỗi đã cắt và một dấu chấm nếu cần
+            if len(truncated_text) + len(sentence) + 1 <= max_length:
+                truncated_text += sentence + '.'
+            else:
+                break
+        if truncated_text == '':
+            truncated_text = text
+        return truncated_text.strip()  # Xoá khoảng trắng dư thừa
 
     # Chỉ chuyển thành chuỗi một lần, nếu cần thiết
     if not isinstance(text, str):
