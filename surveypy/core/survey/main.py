@@ -468,7 +468,7 @@ class Survey(BaseModel):
         for question in parts['main'].questions:
             for response in question.responses:
                 for respondent in response.respondents:
-                    d = {'id': respondent + response.code,
+                    d = {'id': str(respondent) + str(response.code),
                         'resp_id': respondent,
                         'question_code': question.code,
                         # 'answer_text': response.value,
