@@ -76,9 +76,7 @@ class MultipleAnswer(Question):
         df.columns = ['count', 'category']
         if perc:
             df['count'] = df['count'] / sum(df['count'])
-
-
-
+        return df
 
 def _process_response(code: str, response: Response, config: DfConfig):
     v = 1 if config.value == 'num' else response.value
