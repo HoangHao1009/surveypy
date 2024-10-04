@@ -16,7 +16,7 @@ class Response(BaseModel):
     
 class Question(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
-    _code: str = ""
+    code: str
     text: str
     type: str
     loop_on: Optional[Union[str, int]] = None
@@ -29,15 +29,6 @@ class Question(BaseModel):
         root = self.code.split('_')[0]
         return root
     
-    @property
-    def code(self) -> str:
-        return self._code
-    
-    @code.setter
-    def code(self, value):
-        self._code = value
-        self._set_response()
-
     def __or__(self, other):
         from ..crosstab import CrossTab
         if isinstance(other, list):
