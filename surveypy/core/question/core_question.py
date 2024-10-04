@@ -129,6 +129,8 @@ class Question(BaseModel):
 
             question = MultipleAnswer(**self._info, responses=new_responses)
 
+        question.code = new_code
+        question.type = new_type
         question.reset()
 
         return question
