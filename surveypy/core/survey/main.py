@@ -499,7 +499,8 @@ class Survey(BaseModel):
         
         if to != 'no_return':
             path = os.path.join(self.working_dir, 'datasets')
-            os.makedirs(path)
+            if not os.path.exists(path):
+                os.makedirs(path)
             for k, v in dataset.items():
                 if to == 'csv':
                     v.to_csv(os.path.join(path, f'{k}.csv'), index=False)
