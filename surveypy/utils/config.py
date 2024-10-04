@@ -130,7 +130,7 @@ class PptConfig(BaseModel):
             
         }
         
-        return mapping[self.data_labels_position]
+        return mapping[self._data_labels_position]
     
     @data_labels_position.setter
     def data_labels_position(self, value: Literal['above', 'below', 'best_fit', 'center', 'inside_base', 'inside_end', 'left', 'mixed', 'outside_end', 'right']):
