@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 from typing import List, Dict, Union, Literal, Callable, Optional
 import pandas as pd
 from copy import deepcopy
@@ -16,7 +16,7 @@ class Response(BaseModel):
     
 class Question(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
-    _code: str
+    _code: str = Field(default="")
     text: str
     type: str
     loop_on: Optional[Union[str, int]] = None
