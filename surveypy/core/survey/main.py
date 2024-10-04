@@ -498,9 +498,9 @@ class Survey(BaseModel):
         if to != 'no_return':
             for k, v in dataset.items():
                 if to == 'csv':
-                    v.to_csv(os.path.join(self.working_dir, f'{k}.csv'))
+                    v.to_csv(os.path.join(self.working_dir, 'datasets', f'{k}.csv'))
                 elif to == 'excel':
-                    v.to_excel(os.path.join(self.working_dir, f'{k}.xlsx'))
+                    v.to_excel(os.path.join(self.working_dir, 'datasets', f'{k}.xlsx'))
             
         return dataset
     
