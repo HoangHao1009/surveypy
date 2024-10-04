@@ -110,7 +110,7 @@ class Question(BaseModel):
         
         elif method == 'classify':
             new_labels = list(set(label for labels in construct_dict.values() for label in labels))
-            new_responses = [Response(value=new_label, scale=index, root=self.code) for index, new_label in enumerate(new_labels, 1)]
+            new_responses = [Response(value=new_label, scale=index, root=self.code) for index, new_label in enumerate(new_labels, 1) if not pd.isna(new_label)]
 
             old_labels = list(construct_dict.keys())
             with ThreadPoolExecutor() as executor:
