@@ -1,6 +1,7 @@
 from pydantic import BaseModel, ConfigDict
 from typing import Dict, List, Union, Literal
 import os
+import re
 import shutil
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -370,11 +371,13 @@ class Survey(BaseModel):
                     syntaxs.append(syntax)
         if self.control_variables:
             calculate_dict = {}
-            for code in self.question_codes:
+            question_codes = [re.sub(r'[^\w]', '_', i)[0:64] for i in self.question_codes]
+            for code in question_codes:
                 try:
                     question = self[code]
                 except:
                     question = self[f'{code}loop{self.df_config.loop_on}']
+                    
                 if isinstance(question, Number):
                     calculate_dict[code] = ['Mean', 'Std'] if self.spss_config.std else ['Mean']
                 else:
@@ -392,8 +395,6 @@ class Survey(BaseModel):
         return syntaxs
         
     def to_spss(self, folder_path: str=None, dropna: List[str]=[], dataframe=None):
-        import os
-        import re
         folder_path = folder_path if folder_path else self.working_dir 
         sav_path = os.path.join(folder_path, f'{self.name}.sav')
         sps_path = os.path.join(folder_path, f'{self.name}.sps')
@@ -405,9 +406,8 @@ class Survey(BaseModel):
             self.df_config.value = 'num'
             self.reset_question()
             df = self.dataframe.reset_index().dropna(subset=dropna)
-        # df.columns = [re.sub(r'[^\w]', '_', i)[0:64] for i in df.columns] 
-        df.columns = [i[0:64] for i in df.columns] 
-        pyreadstat.write_sav(df, sav_path)
+        df.columns = [re.sub(r'[^\w]', '_', i)[0:64] for i in df.columns] 
+        pyreadstat.write_sav(df, sav_path)            
         spss_syntaxs = '\n'.join(self.spss_syntaxs)
         with open(sps_path, 'w') as file:
             file.write(spss_syntaxs)
