@@ -366,7 +366,9 @@ class Survey(BaseModel):
     def spss_syntaxs(self) -> List[str]:
         syntaxs = []
         for question in self.questions:
-            for syntax in question.spss_syntax:
+            question_copy = deepcopy(question)
+            question_copy.code = re.sub(r'[^\w]', 'x', question.code)[0:64]
+            for syntax in question_copy.spss_syntax:
                 if syntax not in syntaxs:
                     syntaxs.append(syntax)
         if self.control_variables:
