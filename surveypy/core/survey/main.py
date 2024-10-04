@@ -462,6 +462,7 @@ class Survey(BaseModel):
                 answer_info['question_code'].append(question.code)
                 answer_info['answer_text'].append(response.value)
                 answer_info['answer_scale'].append(response.scale)
+                answer_info['answer_code'].append(response.code)
 
         response_data = []
         for question in parts['main'].questions:
@@ -470,7 +471,8 @@ class Survey(BaseModel):
                     d = {'resp_id': respondent,
                         'question_code': question.code,
                         'answer_text': response.value,
-                        'answer_scale': response.scale}
+                        'answer_scale': response.scale,
+                        'answer_code': response.code}
                     response_data.append(d)
                     
         dimResponse = pd.DataFrame(response_data)
