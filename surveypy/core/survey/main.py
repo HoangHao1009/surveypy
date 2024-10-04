@@ -448,6 +448,8 @@ class Survey(BaseModel):
                         print(f'{ctab.title} error when to_ppt: {e}')
                         
     def datasets(self, to: Literal['no_return', 'csv', 'excel'] = 'no_return'):
+        self.df_config.value = 'text'
+        self.reset_question()
         parts = self.parts
         answer_info = defaultdict(list)
         question_info = defaultdict(list)
