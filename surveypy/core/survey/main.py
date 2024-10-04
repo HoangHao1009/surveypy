@@ -500,9 +500,9 @@ class Survey(BaseModel):
             os.makedirs(path)
             for k, v in dataset.items():
                 if to == 'csv':
-                    v.to_csv(os.path.join(path, f'{k}.csv'))
+                    v.to_csv(os.path.join(path, f'{k}.csv'), index=False)
                 elif to == 'excel':
-                    v.to_excel(os.path.join(path, f'{k}.xlsx'))
+                    v.to_excel(os.path.join(path, f'{k}.xlsx'), index=False)
             
         return dataset
     
