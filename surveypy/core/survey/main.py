@@ -468,10 +468,11 @@ class Survey(BaseModel):
         for question in parts['main'].questions:
             for response in question.responses:
                 for respondent in response.respondents:
-                    d = {'resp_id': respondent,
+                    d = {'id': respondent + response.code,
+                        'resp_id': respondent,
                         'question_code': question.code,
-                        'answer_text': response.value,
-                        'answer_scale': response.scale,
+                        # 'answer_text': response.value,
+                        # 'answer_scale': response.scale,
                         'answer_code': response.code}
                     response_data.append(d)
                     
