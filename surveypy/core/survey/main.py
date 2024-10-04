@@ -371,7 +371,7 @@ class Survey(BaseModel):
                     syntaxs.append(syntax)
         if self.control_variables:
             calculate_dict = {}
-            question_codes = [re.sub(r'[^\w]', '_', i)[0:64] for i in self.question_codes]
+            question_codes = [re.sub(r'[^\w]', 'x', i)[0:64] for i in self.question_codes]
             for code in question_codes:
                 try:
                     question = self[code]
@@ -406,7 +406,7 @@ class Survey(BaseModel):
             self.df_config.value = 'num'
             self.reset_question()
             df = self.dataframe.reset_index().dropna(subset=dropna)
-        df.columns = [re.sub(r'[^\w]', '_', i)[0:64] for i in df.columns] 
+        df.columns = [re.sub(r'[^\w]', 'x', i)[0:64] for i in df.columns] 
         pyreadstat.write_sav(df, sav_path)            
         spss_syntaxs = '\n'.join(self.spss_syntaxs)
         with open(sps_path, 'w') as file:
