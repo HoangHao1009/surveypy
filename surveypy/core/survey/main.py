@@ -401,9 +401,8 @@ class Survey(BaseModel):
         if dataframe:
             df = dataframe
         else:
-            for question in self.questions:
-                question.df_config.value = 'num'
-            self.df_config.col_type = 'core'
+            self.df_config.col_type = 'single'
+            self.reset_question()
             df = self.dataframe.reset_index().dropna(subset=dropna)
         df.columns = [re.sub(r'[^\w]', '_', i)[0:64] for i in df.columns] 
         pyreadstat.write_sav(df, sav_path)
