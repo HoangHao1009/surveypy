@@ -127,7 +127,7 @@ class Question(BaseModel):
                         old_label = k
                         # old_label = new_response.value
                         if old_label in old_label_to_respondents:
-                            new_response.respondents.append(old_label_to_respondents[old_label])
+                            new_response.respondents.extend(old_label_to_respondents[old_label])
                         else:
                             print(f'Old labels: {old_label} not exist')
 
