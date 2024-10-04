@@ -119,6 +119,7 @@ class Question(BaseModel):
                 for future in as_completed(future_to_old_label):
                     old_label = future_to_old_label[future]
                     old_label_to_respondents[old_label] = future.result().respondents
+            print(old_label_to_respondents)
 
             for new_response in new_responses:
                 old_label = new_response.value
