@@ -479,9 +479,9 @@ class Survey(BaseModel):
         dimAnswer = pd.DataFrame(answer_info)
         dimQuestion = pd.DataFrame(question_info)
         parts['info'].df_config.col_type = 'single'
-        dimRespondentInfo = parts['info'].dataframe
+        dimRespondentInfo = parts['info'].dataframe.reset_index()
         parts['main'].df_config.col_type = 'single'
-        dimRespondentChose = parts['main'].dataframe
+        dimRespondentChose = parts['main'].dataframe.reset_index()
         
         dimRespondentInfo['timestamp'] = dimRespondentInfo['timestamp'].map(_parse_timestamp)
         dimRespondentInfo['day'] = dimRespondentInfo['timestamp'].dt.day
