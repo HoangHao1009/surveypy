@@ -371,12 +371,13 @@ class Survey(BaseModel):
                     syntaxs.append(syntax)
         if self.control_variables:
             calculate_dict = {}
-            question_codes = [re.sub(r'[^\w]', 'x', i)[0:64] for i in self.question_codes]
-            for code in question_codes:
+            for code in self.question_codes:
                 try:
                     question = self[code]
                 except:
                     question = self[f'{code}loop{self.df_config.loop_on}']
+                    
+                code = re.sub(r'[^\w]', 'x', code)[0:64]
                     
                 if isinstance(question, Number):
                     calculate_dict[code] = ['Mean', 'Std'] if self.spss_config.std else ['Mean']
