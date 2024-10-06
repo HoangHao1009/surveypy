@@ -316,6 +316,8 @@ class Survey(BaseModel):
             part = part.loc[:, reorder_col]
             return part
         
+        self.reset_question()
+        
         if self.resp_info_col:
             questions = self.questions
         else:
