@@ -370,7 +370,6 @@ class Survey(BaseModel):
         if self.df_config.col_type == 'single':
             df.columns = df.columns.get_level_values(-1)
 
-
         if self.df_config.dropna_col:
             df.dropna(subset=self.df_config.dropna_col, inplace = True)
         return df
