@@ -347,7 +347,7 @@ class Survey(BaseModel):
         def get_sort_key(col):
             if self.df_config.col_type == 'single':
                 if self.df_config.col_name == 'code':
-                    return col  # Sử dụng toàn bộ tên cột để sắp xếp
+                    return col[-1]  # Sử dụng toàn bộ tên cột để sắp xếp
                 else:
                     # Sử dụng giá trị được ánh xạ từ value_to_code
                     return value_to_code[f'{col[0]}_{col[-1]}']
