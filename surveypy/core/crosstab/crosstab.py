@@ -61,16 +61,13 @@ class CrossTab(BaseModel):
             if len(list_of_lists) > 1:
                 return list(product(*list_of_lists))
             else:
-                return list_of_lists
+                return [list_of_lists]
         
         def filter_by_responses(questions, response_pair):
             questions = deepcopy(questions)
             valid_respondents = []
-            if isinstance(response_pair, list):
-                for response in response_pair:
-                    valid_respondents.extend(response.respondents)
-            else:
-                valid_respondents.extend(response_pair.respondents)
+            for response in response_pair:
+                valid_respondents.extend(response.respondents)
             valid_respondents = list(set(valid_respondents))
             
             for question in questions:
