@@ -335,7 +335,7 @@ class Survey(BaseModel):
             
         
         value_to_code = {
-            f'{response.code}_{response.value}'
+            f'{response.code}_{response.value}': response.code
             for question in self.questions
             for response in question.responses
         }
