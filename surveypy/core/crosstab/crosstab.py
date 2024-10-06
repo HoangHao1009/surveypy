@@ -6,6 +6,8 @@ from concurrent.futures import ThreadPoolExecutor
 from statsmodels.stats.proportion import proportions_ztest
 from ..question import MultipleAnswer, SingleAnswer, Number, Rank
 from ...utils import report_function, CtabConfig, PptConfig
+from copy import deepcopy
+from itertools import product
 
 BaseType = Union[SingleAnswer, MultipleAnswer, Rank]
 TargetType = Union[SingleAnswer, MultipleAnswer, Rank, Number]
@@ -36,23 +38,76 @@ class CrossTab(BaseModel):
     def reset(self):
         self._dataframe = None
         self.config.to_default()
-    
+        
     def _get_dataframe(self) -> pd.DataFrame:
-        base_dfs = []
+        def ctab(bases, targets):
+            base_dfs = []
+            
+            for base in bases:
+                if isinstance(base, (SingleAnswer, MultipleAnswer)):
+                    with ThreadPoolExecutor() as executor:
+                        result = list(executor.map(lambda target: _process_target(base, target, self.config), targets))
+                elif isinstance(base, Rank):
+                    with ThreadPoolExecutor() as executor:
+                        result = list(executor.map(lambda target: _process_rank(base, target), targets))
+                else:
+                    raise ValueError(f'Invalid base type. Required: SingleAnswer, MultipleAnswer or Rank.')
+            
+                base_dfs.append(pd.concat(result, axis=0))
+            
+            return pd.concat(base_dfs, axis = 1).fillna(0)
         
-        for base in self.bases:
-            if isinstance(base, (SingleAnswer, MultipleAnswer)):
-                with ThreadPoolExecutor() as executor:
-                    result = list(executor.map(lambda target: _process_target(base, target, self.config), self.targets))
-            elif isinstance(base, Rank):
-                with ThreadPoolExecutor() as executor:
-                    result = list(executor.map(lambda target: _process_rank(base, target), self.targets))
-            else:
-                raise ValueError(f'Invalid base type. Required: SingleAnswer, MultipleAnswer or Rank.')
+        def create_pairs(list_of_lists):
+            return list(product(*list_of_lists))
         
-            base_dfs.append(pd.concat(result, axis=0))
+        def filter_by_responses(questions, response_pair):
+            questions = deepcopy(questions)
+            valid_respondents = []
+            for response in response_pair:
+                valid_respondents.extend(response.respondents)
+            valid_respondents = list(set(valid_respondents))
+            
+            for question in questions:
+                for response in question.responses:
+                    response.respondents = [r for r in response.respondents if r in valid_respondents]
+            return questions
         
-        return pd.concat(base_dfs, axis = 1).fillna(0)
+        if self.deep_by:
+        
+            response_pairs = create_pairs([q.responses for q in self.deep_by])
+            
+            dfs = []
+            for pair in response_pairs:
+                bases = filter_by_responses(self.bases, pair)
+                targets = filter_by_responses(self.targets, pair)
+                crosstab = ctab(bases, targets)
+                cols = [response.code for response in pair]
+                    
+                final_cols = [cols + list(col) for col in crosstab.columns]
+                crosstab.columns = pd.MultiIndex.from_arrays(final_cols)
+                dfs.append(crosstab)
+            return pd.concat(dfs, axis=1)
+    
+        else:
+            return ctab(self.bases, self.targets)
+         
+    # NO_DEEP_BY
+    # def _get_dataframe(self) -> pd.DataFrame:
+    #     base_dfs = []
+        
+    #     for base in self.bases:
+    #         if isinstance(base, (SingleAnswer, MultipleAnswer)):
+    #             with ThreadPoolExecutor() as executor:
+    #                 result = list(executor.map(lambda target: _process_target(base, target, self.config), self.targets))
+    #         elif isinstance(base, Rank):
+    #             with ThreadPoolExecutor() as executor:
+    #                 result = list(executor.map(lambda target: _process_rank(base, target), self.targets))
+    #         else:
+    #             raise ValueError(f'Invalid base type. Required: SingleAnswer, MultipleAnswer or Rank.')
+        
+    #         base_dfs.append(pd.concat(result, axis=0))
+        
+    #     return pd.concat(base_dfs, axis = 1).fillna(0)
     
     def __and__(self, target=Union[List[TargetType], TargetType]):
         if isinstance(target, list):
