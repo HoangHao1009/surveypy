@@ -80,9 +80,9 @@ class CrossTab(BaseModel):
             bases = filter_by_responses(self.bases, pair)
             targets = filter_by_responses(self.targets, pair)
             crosstab = self._ctab(bases, targets)
-            cols = [response.code for response in pair]
-            final_cols = [cols + list(col) for col in crosstab.columns]
-            crosstab.columns = pd.MultiIndex.from_arrays(final_cols)
+            # cols = [response.code for response in pair]
+            # final_cols = [cols + list(col) for col in crosstab.columns]
+            # crosstab.columns = pd.MultiIndex.from_arrays(final_cols)
             
             key = '_'.join([response.code for response in pair])
             result[key] = crosstab
