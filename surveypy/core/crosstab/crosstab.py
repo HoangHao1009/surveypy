@@ -70,7 +70,7 @@ class CrossTab(BaseModel):
         if len(self.config.deep_by) > 1:
             response_pairs = create_pairs([q.responses for q in self.config.deep_by])
         else:
-            response_pairs = [(response,) for response in self.config.deep_by[0]]
+            response_pairs = [(response,) for response in self.config.deep_by[0].responses]
             
         result = {}
         
