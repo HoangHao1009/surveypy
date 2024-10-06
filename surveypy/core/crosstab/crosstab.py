@@ -75,6 +75,8 @@ class CrossTab(BaseModel):
         result = {}
         
         for pair in response_pairs:
+            print(type(pair))
+            print(pair)
             bases = filter_by_responses(self.bases, pair)
             targets = filter_by_responses(self.targets, pair)
             crosstab = self._ctab(bases, targets)
