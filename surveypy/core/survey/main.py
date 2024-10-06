@@ -343,6 +343,7 @@ class Survey(BaseModel):
             else:
                 for response in question.responses:
                     value_to_code[f'{question.code}_{response.value}'] = response.code
+        print(value_to_code)
 
         
         def get_sort_key(col):
