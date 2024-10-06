@@ -1,27 +1,23 @@
 from pydantic import BaseModel
-from typing import Union, List, Callable, Optional
+from typing import Union, List, Callable, Optional, Tuple
 import pandas as pd
 import numpy as np
 from concurrent.futures import ThreadPoolExecutor
 from statsmodels.stats.proportion import proportions_ztest
-from ..question import MultipleAnswer, SingleAnswer, Number, Rank
+from ..question import MultipleAnswer, SingleAnswer, Number, Rank, Response
 from ...utils import report_function, CtabConfig, PptConfig
 from copy import deepcopy
 from itertools import product
 
 BaseType = Union[SingleAnswer, MultipleAnswer, Rank]
-TargetType = Union[SingleAnswer, MultipleAnswer, Rank, Number]
+QuestionType = Union[SingleAnswer, MultipleAnswer, Rank, Number]
 
 class CrossTab(BaseModel):
     bases: List[BaseType]
-    targets: List[TargetType] = []
+    targets: List[QuestionType] = []
     config: CtabConfig = CtabConfig()
     ppt_config: PptConfig = PptConfig()
     _dataframe: Optional[pd.DataFrame] = None
-    ####
-    ####
-    ####
-    deep_by: List[BaseType] = [] #use to deep ctab
     
     @property
     def title(self) -> Union[str, list]:
@@ -39,28 +35,27 @@ class CrossTab(BaseModel):
         self._dataframe = None
         self.config.to_default()
         
-    def _get_dataframe(self) -> pd.DataFrame:
-        def ctab(bases, targets):
-            base_dfs = []
-            
-            for base in bases:
-                if isinstance(base, (SingleAnswer, MultipleAnswer)):
-                    with ThreadPoolExecutor() as executor:
-                        result = list(executor.map(lambda target: _process_target(base, target, self.config), targets))
-                elif isinstance(base, Rank):
-                    with ThreadPoolExecutor() as executor:
-                        result = list(executor.map(lambda target: _process_rank(base, target), targets))
-                else:
-                    raise ValueError(f'Invalid base type. Required: SingleAnswer, MultipleAnswer or Rank.')
-            
-                base_dfs.append(pd.concat(result, axis=0))
-            
-            return pd.concat(base_dfs, axis = 1).fillna(0)
+    def _ctab(bases, targets) -> pd.DataFrame:
+        base_dfs = []
         
+        for base in bases:
+            if isinstance(base, (SingleAnswer, MultipleAnswer)):
+                with ThreadPoolExecutor() as executor:
+                    result = list(executor.map(lambda target: _process_target(base, target, self.config), targets))
+            elif isinstance(base, Rank):
+                with ThreadPoolExecutor() as executor:
+                    result = list(executor.map(lambda target: _process_rank(base, target), targets))
+            else:
+                raise ValueError(f'Invalid base type. Required: SingleAnswer, MultipleAnswer or Rank.')
+        
+            base_dfs.append(pd.concat(result, axis=0))
+        
+        return pd.concat(base_dfs, axis = 1).fillna(0)
+
+    def _deep_parts(self):
         def create_pairs(list_of_lists):
             return list(product(*list_of_lists))
-        
-        def filter_by_responses(questions, response_pair):
+        def filter_by_responses(questions: List[QuestionType], response_pair: Tuple[Response]):
             questions = deepcopy(questions)
             valid_respondents = []
             for response in response_pair:
@@ -71,27 +66,30 @@ class CrossTab(BaseModel):
                 for response in question.responses:
                     response.respondents = [r for r in response.respondents if r in valid_respondents]
             return questions
-        
-        if self.deep_by:
-            if len(self.deep_by) > 1:
-                response_pairs = create_pairs([q.responses for q in self.deep_by])
-            else:
-                response_pairs = [(self.deep_by[0].responses)]
-                
-            dfs = []
-            for pair in response_pairs:
-                bases = filter_by_responses(self.bases, pair)
-                targets = filter_by_responses(self.targets, pair)
-                crosstab = ctab(bases, targets)
-                cols = [response.code for response in pair]
-                    
-                final_cols = [cols + list(col) for col in crosstab.columns]
-                crosstab.columns = pd.MultiIndex.from_arrays(final_cols)
-                dfs.append(crosstab)
-            return pd.concat(dfs, axis=1)
     
+        if len(self.config.deep_by) > 1:
+            response_pairs = create_pairs([q.responses for q in self.config.deep_by])
         else:
-            return ctab(self.bases, self.targets)
+            response_pairs = [(self.config.deep_by[0].responses)]
+            
+        result = {}
+        
+        for pair in response_pairs:
+            bases = filter_by_responses(self.bases, pair)
+            targets = filter_by_responses(self.targets, pair)
+            crosstab = self._ctab(bases, targets)
+            cols = [response.code for response in pair]
+            final_cols = [cols + list(col) for col in crosstab.columns]
+            crosstab.columns = pd.MultiIndex.from_arrays(final_cols)
+            
+            key = '_'.join([response.code for response in pair])
+            result[key] = crosstab
+            
+        return result
+
+    def _get_dataframe(self) -> pd.DataFrame:
+        pass
+            
          
     # NO_DEEP_BY
     # def _get_dataframe(self) -> pd.DataFrame:

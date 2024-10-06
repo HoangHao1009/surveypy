@@ -3,6 +3,9 @@ from typing import Literal, Union, Callable, List, Optional
 import pandas as pd
 from pptx.dml.color import MSO_THEME_COLOR
 from pptx.enum.chart import XL_LEGEND_POSITION, XL_DATA_LABEL_POSITION
+from ..core.question import SingleAnswer, MultipleAnswer, Rank
+
+BaseType = Union[SingleAnswer, MultipleAnswer, Rank]
 
 class DfConfig(BaseModel):
     value: Literal['text', 'num'] = 'text'
@@ -25,6 +28,7 @@ class CtabConfig(BaseModel):
     num_aggfunc: List[Union[str, Callable]] = ['mean', 'median', 'count', 'min', 'max', 'std', 'var']
     sig: Union[float, None] = Field(None, ge=0, le=1, allow_none=True)
     dropna: bool=False
+    deep_by: List[BaseType] = []
 
     @field_validator('sig')
     def validate_sig(cls, v):
