@@ -315,9 +315,7 @@ class Survey(BaseModel):
             reorder_col = [loop_col] + [i for i in part.columns if i != loop_col]
             part = part.loc[:, reorder_col]
             return part
-        
-        self.reset_question()
-        
+                
         if self.resp_info_col:
             questions = self.questions
         else:
@@ -336,6 +334,8 @@ class Survey(BaseModel):
             df = pd.concat(parts, axis=0)
             
         
+        self.reset_question()
+
         value_to_code = {
             f'{response.code}_{response.value}': response.code
             for question in self.questions
