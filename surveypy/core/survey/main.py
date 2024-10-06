@@ -332,20 +332,37 @@ class Survey(BaseModel):
                 futures = [executor.submit(_process_loop, loop, questions) for loop in self.loop_list]
                 parts = [future.result() for future in as_completed(futures)]
             df = pd.concat(parts, axis=0)
+            
+        
+        value_to_code = {
+            f'{response.code}_{response.value}'
+            for question in self.questions
+            for response in question.responses
+        }
+        
+        def get_sort_key(col):
+            if self.df_config.col_type == 'single':
+                if self.df_config.col_name == 'code':
+                    return col  # Sử dụng toàn bộ tên cột để sắp xếp
+                else:
+                    # Sử dụng giá trị được ánh xạ từ value_to_code
+                    return value_to_code.get(f'{col[0]}_{col[-1]}', '')
+            else:  # col_type khác 'single'
+                if self.df_config.col_name == 'code':
+                    return col[-1]  # Sử dụng phần cuối của tên cột để sắp xếp
+                else:
+                    # Sử dụng giá trị được ánh xạ từ value_to_code
+                    return value_to_code.get(f'{col[0]}_{col[-1]}', '')
 
+        sort_key = lambda col: str_function.custom_sort(get_sort_key(col), self.block_order)
+
+        sort_columns = sorted(df.columns, key=sort_key)
+
+        df = df[sort_columns]
 
         if self.df_config.col_type == 'single':
-            df.columns = df.columns.get_level_values(1)
-            sort_columns = sorted(
-                df.columns, 
-                key=lambda col: str_function.custom_sort(col, self.block_order)
-            )
-        else:
-            sort_columns = sorted(
-                df.columns, 
-                key=lambda col: str_function.custom_sort(col[-1], self.block_order)
-            )
-        df = df[sort_columns]
+            df.columns = df.columns.get_level_values(-1)
+
 
         if self.df_config.dropna_col:
             df.dropna(subset=self.df_config.dropna_col, inplace = True)
@@ -511,6 +528,7 @@ class Survey(BaseModel):
         return dataset
     
 def _parse_timestamp(timestamp):
+    
     # Loại bỏ phần ICT khỏi chuỗi thời gian
     dt_without_tz = " ".join(timestamp.split()[:-1])
     # Chuyển đổi chuỗi thành datetime
