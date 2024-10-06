@@ -81,7 +81,7 @@ class CrossTab(BaseModel):
             bases = filter_by_responses(self.bases, pair)
             targets = filter_by_responses(self.targets, pair)
             crosstab = self._ctab(bases, targets)            
-            key = '[SPLIT]'.join([response.code for response in pair])
+            key = '[SPLIT]'.join([response.value for response in pair])
             result[key] = crosstab
             
         return result
