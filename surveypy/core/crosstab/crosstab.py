@@ -162,16 +162,16 @@ def _sm_ctab(
     base.df_config.melt = True
     target.df_config.melt = True
     base.df_config.value = 'text'
-    target.df_config.melt = 'text'
+    target.df_config.value = 'text'
 
     merge_df = pd.merge(base.dataframe, target.dataframe, on='resp_id')
 
     suffix = '_x' if base.code == target.code else ''
 
-    if base.type == 'matrix_checkbox':
-        merge_df[f'{base.code}_core{suffix}'] = merge_df[f'{base.code}_core'].str.rsplit('_', n=1).str[0]
-    if target.type == 'matrix_checkbox':
-        merge_df[f'{target.code}_core{suffix}'] = merge_df[f'{target.code}_core'].str.rsplit('_', n=1).str[0]
+    # if base.type == 'matrix_checkbox':
+    #     merge_df[f'{base.code}_core{suffix}'] = merge_df[f'{base.code}_core'].str.rsplit('_', n=1).str[0]
+    # if target.type == 'matrix_checkbox':
+    #     merge_df[f'{target.code}_core{suffix}'] = merge_df[f'{target.code}_core'].str.rsplit('_', n=1).str[0]
 
     base_root = f'{base.code}_root{suffix}' if 'matrix' not in base.type else f'{base.code}_core{suffix}'
     base_value = f'{base.code}_value{suffix}'
