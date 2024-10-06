@@ -44,8 +44,14 @@ class Question(BaseModel):
         else:
             base = [self + other]
         return CrossTab(bases=base, targets=[])
-
     
+    @property
+    def respondents(self):
+        result = []
+        for response in self.responses:
+            result.extend(response.respondents)
+        return list(set(result))
+
     @property
     def _info(self):
         return {'code': self.code, 'text': self.text, 'type': self.type, 'loop_on': self.loop_on}

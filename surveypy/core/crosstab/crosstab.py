@@ -216,10 +216,22 @@ def _sm_ctab(
     """
     SingleAnswer-MultipleAnswer crosstab function
     """
+    
+    base_zero = False
+    target_zero = False
+    if len(base.respondents) == 0:
+        base_zero = True
+        base.responses[0].respondents = [999999]
+    if len(target.respondents) == 0:
+        target_zero = True
+        target.responses[0].respondents = [999999]
+    
     base.df_config.melt = True
     target.df_config.melt = True
     base.df_config.value = 'text'
     target.df_config.value = 'text'
+    
+    
 
     merge_df = pd.merge(base.dataframe, target.dataframe, on='resp_id')
 
@@ -256,6 +268,9 @@ def _sm_ctab(
         dropna=False
     )
     
+    if base_zero or target_zero:
+        pv.loc[:, :] = 0
+
     if pv.shape == [0, 0]:
         print(f'{base} and {target} not have any correspondent')
 
