@@ -102,7 +102,7 @@ class CrossTab(BaseModel):
                 cols = pd.MultiIndex.from_tuples([tuple(col_list) +  i for i in df.columns], names=names)
                 df.columns = cols
                 dfs.append(df)
-            return pd.concat(dfs, axis=1)
+            return pd.concat(dfs, axis=0)
         else:
             return self._ctab(self.bases, self.targets)
             
