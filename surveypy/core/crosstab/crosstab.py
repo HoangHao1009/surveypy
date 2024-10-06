@@ -136,30 +136,48 @@ class CrossTab(BaseModel):
         report_function.df_to_excel(self.dataframe, excel_path, sheet_name)
 
     def to_ppt(self, ppt_path: str):
-        if self.config.deep_by:
-            for k, v in self._deep_parts:
-                title = '_'.join(k.split('[SPLIT]')) + ': ' + v['ctab'].
-        # for base in self.bases:
-        #     for target in self.targets:
-        #         ctab = CrossTab(
-        #             bases=[base],
-        #             targets=[target],
-        #             **self.config.format
-        #         )
-        #         df = ctab.dataframe
-        #         title = str(ctab.title)
-        #         df.columns = df.columns.get_level_values(1)
-        #         df.reset_index(level='row_value', inplace=True)
+        # if self.config.deep_by:
+        #     for k, v in self._deep_parts:
+        #         pass
+        #         # title = '_'.join(k.split('[SPLIT]')) + ': ' + v['ctab'].
+        for base in self.bases:
+            for target in self.targets:
+                ctab = CrossTab(
+                    bases=[base],
+                    targets=[target],
+                    **self.config.format
+                )
+                if not self.config.deep_by:
+                    df = ctab.dataframe
+                    title = str(ctab.title)
+                    df.columns = df.columns.get_level_values(1)
+                    df.reset_index(level='row_value', inplace=True)
 
-        #         type = 'bar' if isinstance(target, Number) else 'column'
+                    type = 'bar' if isinstance(target, Number) else 'column'
 
-        #         report_function.create_pptx_chart(
-        #             template_path=ppt_path,
-        #             dataframe=df,
-        #             type=type,
-        #             title=title,
-        #             config=self.ppt_config
-        #         )
+                    report_function.create_pptx_chart(
+                        template_path=ppt_path,
+                        dataframe=df,
+                        type=type,
+                        title=title,
+                        config=self.ppt_config
+                    )
+                else:
+                    ctab.config.deep_by = self.config.deep_by
+                    for k, v in ctab._deep_parts:
+                        df = v['ctab']
+                        title = '_'.join(k.split('[SPLIT]')) + ':' + str(ctab.title)
+                        df.columns = df.columns.get_level_values(1)
+                        df.reset_index(level='row_value', inplace=True)
+                        type = 'bar' if isinstance(target, Number) else 'column'
+                        report_function.create_pptx_chart(
+                            template_path=ppt_path,
+                            dataframe=df,
+                            type=type,
+                            title=title,
+                            config=self.ppt_config
+                        )
+
 
 def sig_test(df: pd.DataFrame, sig: float):
     test_df = pd.DataFrame("", index=df.index, columns=df.columns)
