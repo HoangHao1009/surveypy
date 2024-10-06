@@ -343,9 +343,8 @@ class Survey(BaseModel):
                 value_to_code[f'{question.code}_{question.code}'] = question.code
             else:
                 for response in question.responses:
-                    value_to_code[f'{response.code}_{response.value}'] = response.code
+                    value_to_code[f'{question.code}_{response.value}'] = response.code
 
-        
         
         def get_sort_key(col):
             if self.df_config.col_type == 'single':
