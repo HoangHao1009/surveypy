@@ -323,7 +323,6 @@ class Survey(BaseModel):
             
         for question in self.questions:
             question.df_config.col_name = self.df_config.col_name
-            question.df_config.col_type = self.df_config.col_type
 
         if self.df_config.loop_mode == 'part':
             with ThreadPoolExecutor() as executor:
