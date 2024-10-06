@@ -106,7 +106,6 @@ class CrossTab(BaseModel):
         else:
             return self._ctab(self.bases, self.targets)
             
-            
     def __and__(self, target=Union[List[QuestionType], QuestionType]):
         if isinstance(target, list):
             lst = self.targets + target
