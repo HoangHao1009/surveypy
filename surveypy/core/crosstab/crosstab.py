@@ -61,10 +61,12 @@ class CrossTab(BaseModel):
             for response in response_pair:
                 valid_respondents.extend(response.respondents)
             valid_respondents = list(set(valid_respondents))
+            print('valid_respondents:', valid_respondents)
             
             for question in questions:
                 for response in question.responses:
                     response.respondents = [r for r in response.respondents if r in valid_respondents]
+                    print('respondents:', response.respondents)
             return questions
     
         if len(self.config.deep_by) > 1:
