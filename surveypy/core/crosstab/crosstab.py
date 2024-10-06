@@ -35,8 +35,7 @@ class CrossTab(BaseModel):
         self._dataframe = None
         self.config.to_default()
         
-    @staticmethod
-    def _ctab(bases, targets) -> pd.DataFrame:
+    def _ctab(self, bases, targets) -> pd.DataFrame:
         base_dfs = []
         
         for base in bases:
