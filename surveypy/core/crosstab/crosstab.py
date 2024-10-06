@@ -109,7 +109,7 @@ class CrossTab(BaseModel):
         
     #     return pd.concat(base_dfs, axis = 1).fillna(0)
     
-    def __and__(self, target=Union[List[TargetType], TargetType]):
+    def __and__(self, target=Union[List[QuestionType], QuestionType]):
         if isinstance(target, list):
             lst = self.targets + target
         elif isinstance(target, (SingleAnswer, MultipleAnswer, Rank, Number)):
@@ -205,7 +205,7 @@ def sig_test(df: pd.DataFrame, sig: float):
     return test_df
 
 def _sm_ctab(
-        base:BaseType, target:TargetType, 
+        base:BaseType, target:QuestionType, 
         total:bool, perc:bool, round_perc=bool,
         cat_aggfunc:Union[Callable, str] = pd.Series.nunique,
         sig=None,
