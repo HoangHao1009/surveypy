@@ -3,9 +3,7 @@ from typing import Literal, Union, Callable, List, Optional
 import pandas as pd
 from pptx.dml.color import MSO_THEME_COLOR
 from pptx.enum.chart import XL_LEGEND_POSITION, XL_DATA_LABEL_POSITION
-from ..core.question import SingleAnswer, MultipleAnswer, Rank
 
-BaseType = Union[SingleAnswer, MultipleAnswer, Rank]
 
 class DfConfig(BaseModel):
     value: Literal['text', 'num'] = 'text'
@@ -28,12 +26,20 @@ class CtabConfig(BaseModel):
     num_aggfunc: List[Union[str, Callable]] = ['mean', 'median', 'count', 'min', 'max', 'std', 'var']
     sig: Union[float, None] = Field(None, ge=0, le=1, allow_none=True)
     dropna: bool=False
-    deep_by: List[BaseType] = []
+    deep_by: List = []
 
     @field_validator('sig')
     def validate_sig(cls, v):
         if v is not None and (v < 0 or v > 1):
             raise ValueError('Value must be between 0 and 1, or None')
+        return v
+    
+    @field_validator('deep_by')
+    def validate_deep_by(cls, v):
+        from ..core.question import SingleAnswer, MultipleAnswer, Rank
+        for question in v:
+            if not isinstance(question, (SingleAnswer, MultipleAnswer, Rank)):
+                raise ValueError('Deep by requires SingleAnswer, MultipleAnswer or Rank')
         return v
     
     def to_default(self):
