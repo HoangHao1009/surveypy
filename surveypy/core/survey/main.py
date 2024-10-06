@@ -345,7 +345,6 @@ class Survey(BaseModel):
                     value_to_code[f'{question.code}_{response.value}'] = response.code
         
         def get_sort_key(col):
-            print(col)
             if self.df_config.col_type == 'single':
                 if self.df_config.col_name == 'code':
                     return col  # Sử dụng toàn bộ tên cột để sắp xếp
@@ -358,8 +357,6 @@ class Survey(BaseModel):
                 else:
                     # Sử dụng giá trị được ánh xạ từ value_to_code
                     return value_to_code[f'{col[0]}_{col[-1]}']
-
-        print(df.columns)
         
         sort_columns = sorted(df.columns, key=lambda col: str_function.custom_sort(get_sort_key(col), self.block_order))
 
