@@ -2,7 +2,6 @@ import re
 from bs4 import BeautifulSoup
 
 def custom_sort(item, priority_list=[]):
-    print(item)
     def split_key(item):
         # Sử dụng regex để tách chuỗi thành prefix, số chính (int hoặc float), và phần phụ
         match = re.match(r"([A-Za-z]+)([\d.]+)?(?:[._](\d+))?", item)
