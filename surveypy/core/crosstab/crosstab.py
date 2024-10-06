@@ -58,10 +58,7 @@ class CrossTab(BaseModel):
             return pd.concat(base_dfs, axis = 1).fillna(0)
         
         def create_pairs(list_of_lists):
-            if len(list_of_lists) > 1:
-                return list(product(*list_of_lists))
-            else:
-                return [list_of_lists]
+            return list(product(*list_of_lists))
         
         def filter_by_responses(questions, response_pair):
             questions = deepcopy(questions)
@@ -76,9 +73,11 @@ class CrossTab(BaseModel):
             return questions
         
         if self.deep_by:
-        
-            response_pairs = create_pairs([q.responses for q in self.deep_by])
-            
+            if len(self.deep_by) > 1:
+                response_pairs = create_pairs([q.responses for q in self.deep_by])
+            else:
+                response_pairs = [(self.deep_by[0].responses)]
+                
             dfs = []
             for pair in response_pairs:
                 bases = filter_by_responses(self.bases, pair)
