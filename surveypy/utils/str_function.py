@@ -2,28 +2,6 @@ import re
 from bs4 import BeautifulSoup
 
 def custom_sort(item, priority_list=[]):
-    # Bỏ qua ký tự '$' nếu có
-    # item = item.lstrip('$').upper()  # Bỏ ký tự '$' và chuyển thành chữ hoa
-
-    # # Tìm các phần chữ cái và số trong item
-    # parts = re.findall(r'([A-Z]+)(\d+\.?\d*)?', item)
-    # key = []
-
-    # # Phần đầu tiên trong parts phải là chữ cái
-    # letter_part = parts[0][0]
-    
-    # # Kiểm tra xem phần chữ cái có nằm trong danh sách ưu tiên không
-    # if letter_part in priority_list:
-    #     key.append(priority_list.index(letter_part))
-    # else:
-    #     key.append(len(priority_list))  # Đặt ở cuối nếu không có trong danh sách ưu tiên
-    
-    # # Thêm số để sắp xếp, bao gồm cả số thập phân
-    # for letter, number in parts:
-    #     if number:
-    #         key.extend([int(n) for n in number.split('.') if n])
-    # return key
-
     def split_key(item):
         # Sử dụng regex để tách chuỗi thành prefix, số chính (int hoặc float), và phần phụ
         match = re.match(r"([A-Za-z]+)([\d.]+)?(?:[._](\d+))?", item)

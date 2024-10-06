@@ -350,13 +350,13 @@ class Survey(BaseModel):
                     return col  # Sử dụng toàn bộ tên cột để sắp xếp
                 else:
                     # Sử dụng giá trị được ánh xạ từ value_to_code
-                    return value_to_code.get(f'{col[0]}_{col[-1]}', '')
+                    return value_to_code[f'{col[0]}_{col[-1]}']
             else:  # col_type khác 'single'
                 if self.df_config.col_name == 'code':
                     return col[-1]  # Sử dụng phần cuối của tên cột để sắp xếp
                 else:
                     # Sử dụng giá trị được ánh xạ từ value_to_code
-                    return value_to_code.get(f'{col[0]}_{col[-1]}', '')
+                    return value_to_code[f'{col[0]}_{col[-1]}']
 
         sort_key = lambda col: str_function.custom_sort(get_sort_key(col), self.block_order)
 
