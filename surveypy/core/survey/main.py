@@ -337,12 +337,14 @@ class Survey(BaseModel):
                 parts = [future.result() for future in as_completed(futures)]
             df = pd.concat(parts, axis=0)
             
+        value_to_code = {}
+        for question in self.questions:
+            for response in question.responses:
+                if isinstance(question, (SingleAnswer, Number)):
+                    value_to_code[response.code] = response.code
+                else:
+                    value_to_code[f'{response.code}_{response.value}'] = response.code
         
-        value_to_code = {
-            f'{response.code}_{response.value}': response.code
-            for question in self.questions
-            for response in question.responses
-        }
         
         def get_sort_key(col):
             if self.df_config.col_type == 'single':
