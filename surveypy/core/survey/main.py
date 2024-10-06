@@ -339,11 +339,12 @@ class Survey(BaseModel):
             
         value_to_code = {}
         for question in self.questions:
-            for response in question.responses:
-                if isinstance(question, (SingleAnswer, Number)):
-                    value_to_code[f'{response.code}_{response.code}'] = response.code
-                else:
+            if isinstance(question, (SingleAnswer, Number)):
+                value_to_code[f'{question.code}_{question.code}'] = question.code
+            else:
+                for response in question.responses:
                     value_to_code[f'{response.code}_{response.value}'] = response.code
+
         
         
         def get_sort_key(col):
