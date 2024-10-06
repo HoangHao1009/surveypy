@@ -378,6 +378,7 @@ class Survey(BaseModel):
         for question in self.questions:
             question_copy = deepcopy(question)
             question_copy.code = re.sub(r'[^\w]', 'x', question.code)[0:64]
+            question_copy._set_response()
             for syntax in question_copy.spss_syntax:
                 if syntax not in syntaxs:
                     syntaxs.append(syntax)
