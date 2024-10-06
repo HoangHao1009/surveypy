@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Union, List, Callable, Optional, Tuple
+from typing import Union, List, Callable, Optional, Tuple, Dict
 import pandas as pd
 import numpy as np
 from concurrent.futures import ThreadPoolExecutor
@@ -52,7 +52,10 @@ class CrossTab(BaseModel):
         
         return pd.concat(base_dfs, axis = 1).fillna(0)
 
-    def _deep_parts(self):
+    @property
+    def _deep_parts(self) -> Dict[str, pd.DataFrame]:
+        if not self.config.deep_by:
+            raise ValueError('Need to set config: deep_by to take deep_parts')
         def create_pairs(list_of_lists):
             return list(product(*list_of_lists))
         def filter_by_responses(questions: List[QuestionType], response_pair: Tuple[Response]):
@@ -79,18 +82,24 @@ class CrossTab(BaseModel):
         for pair in response_pairs:
             bases = filter_by_responses(self.bases, pair)
             targets = filter_by_responses(self.targets, pair)
-            crosstab = self._ctab(bases, targets)
-            # cols = [response.code for response in pair]
-            # final_cols = [cols + list(col) for col in crosstab.columns]
-            # crosstab.columns = pd.MultiIndex.from_arrays(final_cols)
-            
+            crosstab = self._ctab(bases, targets)            
             key = '_'.join([response.code for response in pair])
             result[key] = crosstab
             
         return result
 
     def _get_dataframe(self) -> pd.DataFrame:
-        pass
+        if self.config.deep_by:
+            parts = self._deep_parts
+            dfs = []
+            for k, df in parts:
+                cols = pd.MultiIndex.from_tuples([tuple(k.split('_')) +  i for i in df.columns])
+                df.columns = cols
+                dfs.append(df)
+            return pd.concat(dfs, axis=1)
+        else:
+            return self._ctab(self.bases, self.targets)
+            
             
          
     # NO_DEEP_BY
