@@ -35,6 +35,7 @@ class CrossTab(BaseModel):
         self._dataframe = None
         self.config.to_default()
         
+    @staticmethod
     def _ctab(bases, targets) -> pd.DataFrame:
         base_dfs = []
         
@@ -75,8 +76,6 @@ class CrossTab(BaseModel):
         result = {}
         
         for pair in response_pairs:
-            print(type(pair))
-            print(pair)
             bases = filter_by_responses(self.bases, pair)
             targets = filter_by_responses(self.targets, pair)
             crosstab = self._ctab(bases, targets)
