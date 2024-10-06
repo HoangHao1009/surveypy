@@ -64,12 +64,10 @@ class CrossTab(BaseModel):
             for response in response_pair:
                 valid_respondents.extend(response.respondents)
             valid_respondents = list(set(valid_respondents))
-            print('valid_respondents:', valid_respondents)
             
             for question in questions:
                 for response in question.responses:
                     response.respondents = [r for r in response.respondents if r in valid_respondents]
-                    print('respondents:', response.respondents)
             return questions
     
         if len(self.config.deep_by) > 1:
@@ -92,7 +90,7 @@ class CrossTab(BaseModel):
         if self.config.deep_by:
             parts = self._deep_parts
             dfs = []
-            for k, df in parts:
+            for k, df in parts.items():
                 cols = pd.MultiIndex.from_tuples([tuple(k.split('_')) +  i for i in df.columns])
                 df.columns = cols
                 dfs.append(df)
