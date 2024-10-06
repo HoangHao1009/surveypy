@@ -434,7 +434,8 @@ class Survey(BaseModel):
         ctab_excel_path = os.path.join(folder_path, f'{self.name}_ctab.xlsx')
         sheet_name = self.name
         report_function.df_to_excel(self.dataframe, rawdata_excel_path, sheet_name)
-        report_function.df_to_excel(self.ctab.dataframe, ctab_excel_path, sheet_name)
+        if self.control_variables:
+            report_function.df_to_excel(self.ctab.dataframe, ctab_excel_path, sheet_name)
 
     def to_ppt(self, folder_path: str=None, template_path: str=None):
         folder_path = folder_path if folder_path else self.working_dir
