@@ -81,8 +81,10 @@ class CrossTab(BaseModel):
             bases = filter_by_responses(self.bases, pair)
             targets = filter_by_responses(self.targets, pair)
             crosstab = self._ctab(bases, targets)            
-            key = '[SPLIT]'.join([response.value for response in pair])
-            result[key] = crosstab
+            key = '[SPLIT]'.join([response.code for response in pair])
+            col_list = [response.value for response in pair]
+            result[key]['ctab'] = crosstab
+            result[key]['cols'] = col_list
             
         return result
 
@@ -90,8 +92,10 @@ class CrossTab(BaseModel):
         if self.config.deep_by:
             parts = self._deep_parts
             dfs = []
-            for k, df in parts.items():
-                cols = pd.MultiIndex.from_tuples([tuple(k.split('[SPLIT]')) +  i for i in df.columns])
+            for k, v in parts.items():
+                df = v['ctab']
+                col_list = v['cols']
+                cols = pd.MultiIndex.from_tuples([tuple(col_list) +  i for i in df.columns])
                 df.columns = cols
                 dfs.append(df)
             return pd.concat(dfs, axis=1)
