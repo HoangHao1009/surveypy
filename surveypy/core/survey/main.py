@@ -366,8 +366,8 @@ class Survey(BaseModel):
         for i in self.questions:
             i.reset()
         ctab = CrossTab(
-            bases = [self[var] for var in self.control_variables],
-            targets = [question for question in self.questions]
+            bases = deepcopy([self[var] for var in self.control_variables]),
+            targets = deepcopy([question for question in self.questions])
         )
         ctab.config = self.ctab_config
         return ctab
