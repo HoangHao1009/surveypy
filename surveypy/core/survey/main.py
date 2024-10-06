@@ -340,7 +340,7 @@ class Survey(BaseModel):
         value_to_code = {}
         for question in self.questions:
             if isinstance(question, (SingleAnswer, Number)):
-                value_to_code[f'{question.code}_{question.code}'] = question.code
+                value_to_code[f'{question.root}_{question.code}'] = question.code
             else:
                 for response in question.responses:
                     value_to_code[f'{question.code}_{response.value}'] = response.code
