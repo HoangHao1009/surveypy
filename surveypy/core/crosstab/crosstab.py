@@ -85,7 +85,7 @@ class CrossTab(BaseModel):
             col_list = [response.value for response in pair]
             result[key] = {}
             result[key]['ctab'] = crosstab
-            result[key]['cols'] = col_list
+            result[key]['col_list'] = col_list
             result[key]['col_root'] = [response.root for response in pair]
             
         return result
@@ -96,7 +96,7 @@ class CrossTab(BaseModel):
             dfs = []
             for k, v in parts.items():
                 df = v['ctab']
-                col_list = v['cols']
+                col_list = v['col_list']
                 col_roots = v['col_root']
                 names = col_roots + df.columns.names
                 cols = pd.MultiIndex.from_tuples([tuple(col_list) +  i for i in df.columns], names=names)
@@ -107,25 +107,6 @@ class CrossTab(BaseModel):
             return self._ctab(self.bases, self.targets)
             
             
-         
-    # NO_DEEP_BY
-    # def _get_dataframe(self) -> pd.DataFrame:
-    #     base_dfs = []
-        
-    #     for base in self.bases:
-    #         if isinstance(base, (SingleAnswer, MultipleAnswer)):
-    #             with ThreadPoolExecutor() as executor:
-    #                 result = list(executor.map(lambda target: _process_target(base, target, self.config), self.targets))
-    #         elif isinstance(base, Rank):
-    #             with ThreadPoolExecutor() as executor:
-    #                 result = list(executor.map(lambda target: _process_rank(base, target), self.targets))
-    #         else:
-    #             raise ValueError(f'Invalid base type. Required: SingleAnswer, MultipleAnswer or Rank.')
-        
-    #         base_dfs.append(pd.concat(result, axis=0))
-        
-    #     return pd.concat(base_dfs, axis = 1).fillna(0)
-    
     def __and__(self, target=Union[List[QuestionType], QuestionType]):
         if isinstance(target, list):
             lst = self.targets + target
@@ -155,27 +136,30 @@ class CrossTab(BaseModel):
         report_function.df_to_excel(self.dataframe, excel_path, sheet_name)
 
     def to_ppt(self, ppt_path: str):
-        for base in self.bases:
-            for target in self.targets:
-                ctab = CrossTab(
-                    bases=[base],
-                    targets=[target],
-                    **self.config.format
-                )
-                df = ctab.dataframe
-                title = str(ctab.title)
-                df.columns = df.columns.get_level_values(1)
-                df.reset_index(level='row_value', inplace=True)
+        if self.config.deep_by:
+            for k, v in self._deep_parts:
+                title = '_'.join(k.split('[SPLIT]')) + ': ' + v['ctab'].
+        # for base in self.bases:
+        #     for target in self.targets:
+        #         ctab = CrossTab(
+        #             bases=[base],
+        #             targets=[target],
+        #             **self.config.format
+        #         )
+        #         df = ctab.dataframe
+        #         title = str(ctab.title)
+        #         df.columns = df.columns.get_level_values(1)
+        #         df.reset_index(level='row_value', inplace=True)
 
-                type = 'bar' if isinstance(target, Number) else 'column'
+        #         type = 'bar' if isinstance(target, Number) else 'column'
 
-                report_function.create_pptx_chart(
-                    template_path=ppt_path,
-                    dataframe=df,
-                    type=type,
-                    title=title,
-                    config=self.ppt_config
-                )
+        #         report_function.create_pptx_chart(
+        #             template_path=ppt_path,
+        #             dataframe=df,
+        #             type=type,
+        #             title=title,
+        #             config=self.ppt_config
+        #         )
 
 def sig_test(df: pd.DataFrame, sig: float):
     test_df = pd.DataFrame("", index=df.index, columns=df.columns)

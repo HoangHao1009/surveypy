@@ -42,7 +42,7 @@ class Question(BaseModel):
         if isinstance(other, list):
             base = [self] + other
         else:
-            base = [self + other]
+            base = [self, other]
         return CrossTab(bases=base, targets=[])
     
     @property
