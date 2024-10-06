@@ -359,9 +359,9 @@ class Survey(BaseModel):
                     # Sử dụng giá trị được ánh xạ từ value_to_code
                     return value_to_code[f'{col[0]}_{col[-1]}']
 
-        sort_key = lambda col: str_function.custom_sort(get_sort_key(col), self.block_order)
-
-        sort_columns = sorted(df.columns, key=sort_key)
+        print(df.columns)
+        
+        sort_columns = sorted(df.columns, key=lambda col: str_function.custom_sort(get_sort_key(col), self.block_order))
 
         df = df[sort_columns]
 
