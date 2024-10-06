@@ -345,18 +345,23 @@ class Survey(BaseModel):
                     value_to_code[f'{question.code}_{response.value}'] = response.code
         
         def get_sort_key(col):
-            if self.df_config.col_type == 'single':
-                if self.df_config.col_name == 'code':
-                    return col[-1]  # Sử dụng toàn bộ tên cột để sắp xếp
-                else:
-                    # Sử dụng giá trị được ánh xạ từ value_to_code
-                    return value_to_code[f'{col[0]}_{col[-1]}']
-            else:  # col_type khác 'single'
-                if self.df_config.col_name == 'code':
-                    return col[-1]  # Sử dụng phần cuối của tên cột để sắp xếp
-                else:
-                    # Sử dụng giá trị được ánh xạ từ value_to_code
-                    return value_to_code[f'{col[0]}_{col[-1]}']
+            if self.df_config.col_name == 'code':
+                return col[-1]
+            else:
+                return value_to_code[f'{col[0]}_{col[-1]}']
+                    
+            # if self.df_config.col_type == 'single':
+            #     if self.df_config.col_name == 'code':
+            #         return col[-1]  # Sử dụng toàn bộ tên cột để sắp xếp
+            #     else:
+            #         # Sử dụng giá trị được ánh xạ từ value_to_code
+            #         return value_to_code[f'{col[0]}_{col[-1]}']
+            # else:  # col_type khác 'single'
+            #     if self.df_config.col_name == 'code':
+            #         return col[-1]  # Sử dụng phần cuối của tên cột để sắp xếp
+            #     else:
+            #         # Sử dụng giá trị được ánh xạ từ value_to_code
+            #         return value_to_code[f'{col[0]}_{col[-1]}']
         
         sort_columns = sorted(df.columns, key=lambda col: str_function.custom_sort(get_sort_key(col), self.block_order))
 

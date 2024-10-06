@@ -13,7 +13,6 @@ def custom_sort(item, priority_list=[]):
             return (prefix, num1, num2)
         return (item, -1, -1)
 
-    print('item: ', item)
     # Hàm sort_key tùy chỉnh
         # Kiểm tra từng ký tự đại diện và trả về thứ tự ưu tiên của nó
     for i, pattern in enumerate(priority_list):
