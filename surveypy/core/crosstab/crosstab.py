@@ -164,7 +164,7 @@ class CrossTab(BaseModel):
                     )
                 else:
                     ctab.config.deep_by = self.config.deep_by
-                    for k, v in ctab._deep_parts:
+                    for k, v in ctab._deep_parts.items():
                         df = v['ctab']
                         title = '_'.join(k.split('[SPLIT]')) + ':' + str(ctab.title)
                         df.columns = df.columns.get_level_values(1)
