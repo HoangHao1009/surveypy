@@ -296,11 +296,12 @@ def _sm_ctab(
     try:
         total_df = pv.loc[[total_label],:]
     except:
-        total_df = pv.loc[[total_label],:]
         print(base.code)
         print(target.code)
         print('pv', pv)
         print('merge_df', merge_df)
+
+        total_df = pv.loc[[total_label],:]
     pv = pv.loc[~pv.index.get_level_values(0).isin([total_label])]
     if sig:
         pv_test = pv.loc[:,~pv.columns.get_level_values(0).isin([total_label])]
