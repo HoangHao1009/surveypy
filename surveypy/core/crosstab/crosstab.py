@@ -247,7 +247,7 @@ def _custom_merge(base:BaseType, target:QuestionType):
     
     merge_df = pd.merge(base.dataframe, target.dataframe, on='resp_id')
     
-    if merge_df.shape == [0, 0]:
+    if merge_df.shape[0] == 0:
         print('merge shape 0 - base: ', base.responses[0].respondents)
         print('merge shape 0 - target: ',target.responses[0].respondents)
     
@@ -313,6 +313,7 @@ def _sm_ctab(
         print(target.code)
         print(merge_df.shape)
         print(merge_df)
+        print(pv)
         total_df = pv.loc[[total_label],:]
 
     pv = pv.loc[~pv.index.get_level_values(0).isin([total_label])]
