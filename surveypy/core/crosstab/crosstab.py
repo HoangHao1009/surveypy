@@ -233,8 +233,6 @@ def _sm_ctab(
     SingleAnswer-MultipleAnswer crosstab function
     """
         
-    base = deepcopy(base)
-    target = deepcopy(target)
     base.df_config.melt = True
     target.df_config.melt = True
     base.df_config.value = 'text'
@@ -243,12 +241,15 @@ def _sm_ctab(
     cross_zero = False
     
     if len(set(base.respondents) & set(target.respondents)) == 0:
-        temp_id = 999999
+        temp_id = 999999999999
         base.responses[0].respondents.append(temp_id)
         target.responses[0].respondents.append(temp_id)
         cross_zero = True
     
     merge_df = pd.merge(base.dataframe, target.dataframe, on='resp_id')
+    
+    base.responses[0].respondents.remove(999999999999)
+    target.responses[0].respondents.remove(999999999999)
 
     suffix = '_x' if base.code == target.code else ''
 
@@ -287,17 +288,15 @@ def _sm_ctab(
         pv.loc[:, :] = 0
 
     pv.rename_axis(index=['row', 'row_value'], columns=['col', 'col_value'], inplace=True)
-    try:
-        total_df = pv.loc[[total_label],:]
-    except:
-        print(base.respondents)
-        print(target.respondents)
-        print(base.code)
-        print(target.code)
-        print('pv', pv)
-        print('merge_df', merge_df)
+    total_df = pv.loc[[total_label],:]
+    # except:
+    #     print(base.respondents)
+    #     print(target.respondents)
+    #     print(base.code)
+    #     print(target.code)
+    #     print('pv', pv)
+    #     print('merge_df', merge_df)
 
-        total_df = pv.loc[[total_label],:]
     pv = pv.loc[~pv.index.get_level_values(0).isin([total_label])]
     if sig:
         pv_test = pv.loc[:,~pv.columns.get_level_values(0).isin([total_label])]
@@ -344,8 +343,6 @@ def _num_ctab(
         base:BaseType, target:Number,
         num_aggfunc: List[Union[Callable, str]]
     ) -> pd.DataFrame:
-    base = deepcopy(base)
-    target = deepcopy(target)
 
     base.df_config.melt = True
     target.df_config.melt = True
@@ -372,8 +369,6 @@ def _rank_ctab(
         sig=None,
         dropna=False
     ) -> pd.DataFrame:
-    base = deepcopy(base)
-    target = deepcopy(target)
 
     if not isinstance(target, Rank) or isinstance(base, Rank):
         raise ValueError('Need base or target is Rank')
