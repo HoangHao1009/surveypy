@@ -249,7 +249,7 @@ def _sm_ctab(
     
     cross_zero = False
     
-    if len(set(base.respondents) & target.respondents) == 0:
+    if len(set(base.respondents) & set(target.respondents)) == 0:
         base.responses[0].respondents = [999999]
         target.responses[0].respondents = [999999]
         cross_zero = True
