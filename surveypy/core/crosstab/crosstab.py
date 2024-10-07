@@ -311,6 +311,7 @@ def _sm_ctab(
     except:
         print(base.code)
         print(target.code)
+        print(merge_df.shape)
         print(merge_df)
         total_df = pv.loc[[total_label],:]
 
