@@ -247,15 +247,14 @@ def _sm_ctab(
     base.df_config.value = 'text'
     target.df_config.value = 'text'
     
+    cross_zero = False
     
-
+    if len(set(base.respondents) & target.respondents) == 0:
+        base.responses[0].respondents = [999999]
+        target.responses[0].respondents = [999999]
+        cross_zero = True
+    
     merge_df = pd.merge(base.dataframe, target.dataframe, on='resp_id')
-    
-    merge_df_zero = False
-    
-    if merge_df.shape == 0:
-        merge_df.loc[len(merge_df)] = 'temp'
-        merge_df_zero = True
 
     suffix = '_x' if base.code == target.code else ''
 
@@ -290,7 +289,7 @@ def _sm_ctab(
         dropna=False
     )
     
-    if base_zero or target_zero or merge_df_zero:
+    if base_zero or target_zero or cross_zero:
         pv.loc[:, :] = 0
 
     pv.rename_axis(index=['row', 'row_value'], columns=['col', 'col_value'], inplace=True)
