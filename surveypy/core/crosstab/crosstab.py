@@ -248,8 +248,8 @@ def _custom_merge(base:BaseType, target:QuestionType):
     merge_df = pd.merge(base.dataframe, target.dataframe, on='resp_id')
     
     if merge_df.shape == [0, 0]:
-        print(base.responses[0].respondents)
-        print(target.responses[0].respondents)
+        print('merge shape 0 - base: ', base.responses[0].respondents)
+        print('merge shape 0 - target: ',target.responses[0].respondents)
     
     base.responses[0].respondents = [i for i in base.responses[0].respondents if i != temp_id]
     target.responses[0].respondents = [i for i in target.responses[0].respondents if i != temp_id]
