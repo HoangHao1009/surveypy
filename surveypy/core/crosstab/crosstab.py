@@ -233,6 +233,8 @@ def _sm_ctab(
     SingleAnswer-MultipleAnswer crosstab function
     """
         
+    base = deepcopy(base)
+    target = deepcopy(target)
     base.df_config.melt = True
     target.df_config.melt = True
     base.df_config.value = 'text'
@@ -241,8 +243,9 @@ def _sm_ctab(
     cross_zero = False
     
     if len(set(base.respondents) & set(target.respondents)) == 0:
-        base.responses[0].respondents = base.responses[0].respondents.append(999999)
-        target.responses[0].respondents = target.responses[0].respondents.append(999999)
+        temp_id = 999999
+        base.responses[0].respondents = base.responses[0].respondents.append(temp_id)
+        target.responses[0].respondents = target.responses[0].respondents.append(temp_id)
         cross_zero = True
     
     merge_df = pd.merge(base.dataframe, target.dataframe, on='resp_id')
