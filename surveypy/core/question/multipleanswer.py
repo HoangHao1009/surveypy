@@ -42,6 +42,7 @@ class MultipleAnswer(Question):
             df = df.pivot(index='resp_id', columns=self.code, values='value').fillna(0)
         except:
             print('Error in code: ', self.code)
+            print('Respondents: ', self.respondents)
             df = df.pivot(index='resp_id', columns=self.code, values='value').fillna(0)
         df.columns = pd.MultiIndex.from_product([[self.root], df.columns], names=['root', 'core'])
         
