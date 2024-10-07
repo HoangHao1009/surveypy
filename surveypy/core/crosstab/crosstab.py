@@ -141,10 +141,6 @@ class CrossTab(BaseModel):
         report_function.df_to_excel(self.dataframe, excel_path, sheet_name)
 
     def to_ppt(self, ppt_path: str):
-        # if self.config.deep_by:
-        #     for k, v in self._deep_parts:
-        #         pass
-        #         # title = '_'.join(k.split('[SPLIT]')) + ': ' + v['ctab'].
         for base in self.bases:
             for target in self.targets:
                 ctab = CrossTab(
