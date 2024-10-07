@@ -305,15 +305,8 @@ def _sm_ctab(
         pv.loc[:, :] = 0
 
     pv.rename_axis(index=['row', 'row_value'], columns=['col', 'col_value'], inplace=True)
-    try:
-        total_df = pv.loc[[total_label],:]
-    except:
-        print(base.code)
-        print(target.code)
-        print(merge_df.shape)
-        print(merge_df)
-        print(pv)
-        total_df = pv.loc[[total_label],:]
+    
+    total_df = pv.loc[[total_label],:]
 
     pv = pv.loc[~pv.index.get_level_values(0).isin([total_label])]
     if sig:
