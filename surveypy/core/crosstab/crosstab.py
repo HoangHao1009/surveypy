@@ -295,13 +295,6 @@ def _sm_ctab(
 
     pv.rename_axis(index=['row', 'row_value'], columns=['col', 'col_value'], inplace=True)
     total_df = pv.loc[[total_label],:]
-    # except:
-    #     print(base.respondents)
-    #     print(target.respondents)
-    #     print(base.code)
-    #     print(target.code)
-    #     print('pv', pv)
-    #     print('merge_df', merge_df)
 
     pv = pv.loc[~pv.index.get_level_values(0).isin([total_label])]
     if sig:
@@ -309,6 +302,7 @@ def _sm_ctab(
         test_df = sig_test(pv_test, sig)
     if perc:
         pv = pv.div(total_df.values, axis=1)
+        pv = pv.fillna(0)
         if round_perc:
             pv = pv.map(lambda x: f'{round(x*100)}%')
     
