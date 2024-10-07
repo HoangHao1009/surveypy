@@ -239,17 +239,18 @@ def _sm_ctab(
     target.df_config.value = 'text'
     
     cross_zero = False
+    temp_id = 999999999999
     
     if len(set(base.respondents) & set(target.respondents)) == 0:
-        temp_id = 999999999999
         base.responses[0].respondents.append(temp_id)
         target.responses[0].respondents.append(temp_id)
         cross_zero = True
     
     merge_df = pd.merge(base.dataframe, target.dataframe, on='resp_id')
     
-    base.responses[0].respondents.remove(999999999999)
-    target.responses[0].respondents.remove(999999999999)
+    if len(set(base.respondents) & set(target.respondents)) == 0:
+        base.responses[0].respondents.remove(temp_id)
+        target.responses[0].respondents.remove(temp_id)
 
     suffix = '_x' if base.code == target.code else ''
 
