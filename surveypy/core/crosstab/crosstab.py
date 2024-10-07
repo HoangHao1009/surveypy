@@ -233,6 +233,11 @@ def _custom_merge(base:BaseType, target:QuestionType):
     cross_zero = False
     temp_id = 999999999999
     
+    if len(base.respondents) == 0:
+        base.responses[0].respondents.append(temp_id)
+    if len(target.respondents) == 0:
+        target.responses[0].respondents.append(temp_id)
+    
     if len(set(base.respondents) & set(target.respondents)) == 0:
         # if base.code != target.code:
         base.responses[0].respondents.append(temp_id)
