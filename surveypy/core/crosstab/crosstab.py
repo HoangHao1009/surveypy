@@ -95,20 +95,6 @@ class CrossTab(BaseModel):
         
         return result
 
-        # result = {}
-        
-        # for pair in response_pairs:
-        #     bases = filter_by_responses(self.bases, pair)
-        #     targets = filter_by_responses(self.targets, pair)
-        #     crosstab = self._ctab(bases, targets)            
-        #     key = '[SPLIT]'.join([response.code for response in pair])
-        #     col_list = [response.value for response in pair]
-        #     result[key] = {}
-        #     result[key]['ctab'] = crosstab
-        #     result[key]['col_list'] = col_list
-        #     result[key]['col_root'] = [response.root for response in pair]
-            
-        # return result
 
     def _get_dataframe(self) -> pd.DataFrame:
         if self.config.deep_by:
