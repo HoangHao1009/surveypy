@@ -293,7 +293,12 @@ def _sm_ctab(
         pv.loc[:, :] = 0
 
     pv.rename_axis(index=['row', 'row_value'], columns=['col', 'col_value'], inplace=True)
-    total_df = pv.loc[[total_label],:]
+    
+    try:
+        total_df = pv.loc[[total_label],:]
+    except:
+        print(base.code)
+        print(target.code)
     pv = pv.loc[~pv.index.get_level_values(0).isin([total_label])]
     if sig:
         pv_test = pv.loc[:,~pv.columns.get_level_values(0).isin([total_label])]
