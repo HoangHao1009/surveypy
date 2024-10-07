@@ -247,6 +247,10 @@ def _custom_merge(base:BaseType, target:QuestionType):
     
     merge_df = pd.merge(base.dataframe, target.dataframe, on='resp_id')
     
+    if merge_df.shape == [0, 0]:
+        print(base.responses[0].respondents)
+        print(target.responses[0].respondents)
+    
     base.responses[0].respondents = [i for i in base.responses[0].respondents if i != temp_id]
     target.responses[0].respondents = [i for i in target.responses[0].respondents if i != temp_id]
 
@@ -285,7 +289,7 @@ def _sm_ctab(
     column_total_label = f"{base.code}_Total"
 
     total_label = 'Total'
-
+    
     pv = pd.pivot_table(
         merge_df,
         values='resp_id',
