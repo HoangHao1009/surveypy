@@ -222,17 +222,7 @@ def sig_test(df: pd.DataFrame, sig: float):
                 test_df.at[index, df.columns[i]] = ''.join(diff_columns)
     return test_df
 
-def _sm_ctab(
-        base:BaseType, target:QuestionType, 
-        total:bool, perc:bool, round_perc=bool,
-        cat_aggfunc:Union[Callable, str] = pd.Series.nunique,
-        sig=None,
-        dropna=False
-    ) -> pd.DataFrame:
-    """
-    SingleAnswer-MultipleAnswer crosstab function
-    """
-        
+def _custom_merge(base:BaseType, target:QuestionType):
     base.df_config.melt = True
     target.df_config.melt = True
     base.df_config.value = 'text'
@@ -251,6 +241,21 @@ def _sm_ctab(
     if len(set(base.respondents) & set(target.respondents)) == 0:
         base.responses[0].respondents.remove(temp_id)
         target.responses[0].respondents.remove(temp_id)
+
+    return merge_df, cross_zero
+
+def _sm_ctab(
+        base:BaseType, target:QuestionType, 
+        total:bool, perc:bool, round_perc=bool,
+        cat_aggfunc:Union[Callable, str] = pd.Series.nunique,
+        sig=None,
+        dropna=False
+    ) -> pd.DataFrame:
+    """
+    SingleAnswer-MultipleAnswer crosstab function
+    """
+        
+    merge_df, cross_zero = _custom_merge(base, target)
 
     suffix = '_x' if base.code == target.code else ''
 
