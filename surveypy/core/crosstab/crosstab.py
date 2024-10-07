@@ -88,8 +88,8 @@ class CrossTab(BaseModel):
                 'col_root': [response.root for response in pair]
             }
 
-        with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
-            results = pool.map(process_pair, response_pairs)
+        with ThreadPoolExecutor() as executor:
+            results = executor.map(process_pair, response_pairs)
 
         result = dict(results)
         
