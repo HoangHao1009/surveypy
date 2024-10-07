@@ -225,6 +225,8 @@ def sig_test(df: pd.DataFrame, sig: float):
     return test_df
 
 def _custom_merge(base:BaseType, target:QuestionType):
+    base = deepcopy(base)
+    target = deepcopy(target)
     base.df_config.melt = True
     target.df_config.melt = True
     base.df_config.value = 'text'
@@ -251,9 +253,6 @@ def _custom_merge(base:BaseType, target:QuestionType):
         print('merge shape 0 - base: ', base.responses[0].respondents)
         print('merge shape 0 - target: ',target.responses[0].respondents)
     
-    base.responses[0].respondents = [i for i in base.responses[0].respondents if i != temp_id]
-    target.responses[0].respondents = [i for i in target.responses[0].respondents if i != temp_id]
-
     return merge_df, cross_zero
 
 def _sm_ctab(
