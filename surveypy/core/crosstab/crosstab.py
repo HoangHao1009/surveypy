@@ -291,7 +291,11 @@ def _sm_ctab(
         print(f'{base} and {target} not have any correspondent')
 
     pv.rename_axis(index=['row', 'row_value'], columns=['col', 'col_value'], inplace=True)
-    total_df = pv.loc[[total_label],:]
+    try:
+        total_df = pv.loc[[total_label],:]
+    except:
+        print('base', base.code)
+        print('target', target.code)
     pv = pv.loc[~pv.index.get_level_values(0).isin([total_label])]
     if sig:
         pv_test = pv.loc[:,~pv.columns.get_level_values(0).isin([total_label])]
