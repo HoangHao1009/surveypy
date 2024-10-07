@@ -296,6 +296,8 @@ def _sm_ctab(
     try:
         total_df = pv.loc[[total_label],:]
     except:
+        print(base.respondents)
+        print(target.respondents)
         print(base.code)
         print(target.code)
         print('pv', pv)
