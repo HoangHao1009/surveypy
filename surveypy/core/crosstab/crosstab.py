@@ -240,8 +240,10 @@ def _custom_merge(base:BaseType, target:QuestionType):
     
     merge_df = pd.merge(base.dataframe, target.dataframe, on='resp_id')
     
-    base.responses[0].respondents.remove(temp_id)
-    target.responses[0].respondents.remove(temp_id)
+    if temp_id in base.responses[0]:
+        base.responses[0].respondents.remove(temp_id)
+    if temp_id in target.responses[0]:
+        target.responses[0].respondents.remove(temp_id)
 
     return merge_df, cross_zero
 
