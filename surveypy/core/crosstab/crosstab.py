@@ -8,6 +8,7 @@ from ..question import MultipleAnswer, SingleAnswer, Number, Rank, Response
 from ...utils import report_function, CtabConfig, PptConfig
 from copy import deepcopy
 from itertools import product
+import multiprocessing
 
 BaseType = Union[SingleAnswer, MultipleAnswer, Rank]
 QuestionType = Union[SingleAnswer, MultipleAnswer, Rank, Number]
@@ -75,20 +76,39 @@ class CrossTab(BaseModel):
         else:
             response_pairs = [(response,) for response in self.config.deep_by[0].responses]
             
-        result = {}
-        
-        for pair in response_pairs:
+        def process_pair(pair):
             bases = filter_by_responses(self.bases, pair)
             targets = filter_by_responses(self.targets, pair)
-            crosstab = self._ctab(bases, targets)            
+            crosstab = self._ctab(bases, targets)
             key = '[SPLIT]'.join([response.code for response in pair])
             col_list = [response.value for response in pair]
-            result[key] = {}
-            result[key]['ctab'] = crosstab
-            result[key]['col_list'] = col_list
-            result[key]['col_root'] = [response.root for response in pair]
-            
+            return key, {
+                'ctab': crosstab,
+                'col_list': col_list,
+                'col_root': [response.root for response in pair]
+            }
+
+        with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
+            results = pool.map(process_pair, response_pairs)
+
+        result = dict(results)
+        
         return result
+
+        # result = {}
+        
+        # for pair in response_pairs:
+        #     bases = filter_by_responses(self.bases, pair)
+        #     targets = filter_by_responses(self.targets, pair)
+        #     crosstab = self._ctab(bases, targets)            
+        #     key = '[SPLIT]'.join([response.code for response in pair])
+        #     col_list = [response.value for response in pair]
+        #     result[key] = {}
+        #     result[key]['ctab'] = crosstab
+        #     result[key]['col_list'] = col_list
+        #     result[key]['col_root'] = [response.root for response in pair]
+            
+        # return result
 
     def _get_dataframe(self) -> pd.DataFrame:
         if self.config.deep_by:
