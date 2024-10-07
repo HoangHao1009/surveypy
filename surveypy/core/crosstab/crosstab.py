@@ -234,12 +234,12 @@ def _custom_merge(base:BaseType, target:QuestionType):
     temp_id = 999999999999
     
     if len(set(base.respondents) & set(target.respondents)) == 0:
-        if base.code != target.code:
-            base.responses[0].respondents.append(temp_id)
-            target.responses[0].respondents.append(temp_id)
-        else:
-            base.responses[0].respondents.append(temp_id)
-            target.responses[-1].respondents.append(temp_id)
+        # if base.code != target.code:
+        base.responses[0].respondents.append(temp_id)
+        target.responses[0].respondents.append(temp_id)
+        # else:
+        #     base.responses[0].respondents.append(temp_id)
+        #     target.responses[-1].respondents.append(temp_id)
         cross_zero = True
     
     merge_df = pd.merge(base.dataframe, target.dataframe, on='resp_id')
