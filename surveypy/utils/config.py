@@ -19,7 +19,7 @@ class DfConfig(BaseModel):
         self.__dict__.update(default_instance.__dict__)
         
 class CtabConfig(BaseModel):
-    perc: bool = False
+    perc: bool = True
     total: bool = False
     round_perc: bool = True
     cat_aggfunc: Union[str, Callable, List[Union[Callable, str]]] = pd.Series.nunique
