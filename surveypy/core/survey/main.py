@@ -524,6 +524,13 @@ class Survey(BaseModel):
             
         return dataset
     
+    def take_all(self, datasets_to: Literal['csv', 'excel']='csv'):
+        self.to_excel()
+        self.to_spss()
+        self.to_ppt()
+        self.datasets(to=datasets_to)
+        
+    
 def _parse_timestamp(timestamp):
     
     # Loại bỏ phần ICT khỏi chuỗi thời gian
