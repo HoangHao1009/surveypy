@@ -244,8 +244,8 @@ def _sm_ctab(
     
     if len(set(base.respondents) & set(target.respondents)) == 0:
         temp_id = 999999
-        base.responses[0].respondents = base.responses[0].respondents.append(temp_id)
-        target.responses[0].respondents = target.responses[0].respondents.append(temp_id)
+        base.responses[0].respondents.append(temp_id)
+        target.responses[0].respondents.append(temp_id)
         cross_zero = True
     
     merge_df = pd.merge(base.dataframe, target.dataframe, on='resp_id')
@@ -344,6 +344,9 @@ def _num_ctab(
         base:BaseType, target:Number,
         num_aggfunc: List[Union[Callable, str]]
     ) -> pd.DataFrame:
+    base = deepcopy(base)
+    target = deepcopy(target)
+
     base.df_config.melt = True
     target.df_config.melt = True
 
@@ -369,6 +372,8 @@ def _rank_ctab(
         sig=None,
         dropna=False
     ) -> pd.DataFrame:
+    base = deepcopy(base)
+    target = deepcopy(target)
 
     if not isinstance(target, Rank) or isinstance(base, Rank):
         raise ValueError('Need base or target is Rank')
