@@ -287,8 +287,8 @@ def _sm_ctab(
     if base_zero or target_zero:
         pv.loc[:, :] = 0
 
-    if pv.shape == [0, 0]:
-        print(f'{base} and {target} not have any correspondent')
+    # if pv.shape == [0, 0]:
+    #     print(f'{base} and {target} not have any correspondent')
 
     pv.rename_axis(index=['row', 'row_value'], columns=['col', 'col_value'], inplace=True)
     try:
@@ -296,6 +296,8 @@ def _sm_ctab(
     except:
         print('base', base.code)
         print('target', target.code)
+        print('return pv')
+        return pv
     pv = pv.loc[~pv.index.get_level_values(0).isin([total_label])]
     if sig:
         pv_test = pv.loc[:,~pv.columns.get_level_values(0).isin([total_label])]
