@@ -1,9 +1,11 @@
 from ..question import MultipleAnswer, SingleAnswer, Number, Rank, Response
 from ...utils import report_function, CtabConfig, PptConfig
 from pydantic import BaseModel
-from typing import Union, List, Optional, Tuple, Dict
+from typing import Union, List, Optional, Tuple, Dict, Callable
 import pandas as pd
 import multiprocessing as mp
+import itertools
+
 
 BaseType = Union[SingleAnswer, MultipleAnswer, Rank]
 QuestionType = Union[SingleAnswer, MultipleAnswer, Rank, Number]
@@ -17,24 +19,24 @@ class CrossTab(BaseModel):
     @property
     def dataframe(self):
         dfs = []
-        args_list = [(self.bases, target, self.config.total, self.config.perc, self.config.round_perc, self.config.deep_by) for target in self.targets]
+        args_list = [(self.bases, target, self.config) for target in self.targets]
         with mp.Pool(mp.cpu_count()) as pool:
             dfs = pool.map(_pivot_target_with_args, args_list)
         # Kết hợp các DataFrame trả về
         return pd.concat(dfs, axis=0)
     
-def _pivot_target_with_args(args):
-    bases, target, total, perc, round_perc, deep_by = args
-    return _pivot_target(bases, target, total, perc, round_perc, deep_by)
+def _pivot_target_with_args(args: Tuple[List[BaseType], QuestionType, CtabConfig]):
+    bases, target, config = args
+    return _pivot_target(bases, target, config)
 
-def _pivot_target(bases: List[BaseType], target: QuestionType, total=True, perc=True, round_perc=True, deep_by=[]):
-    args = {'bases': bases, 'target': target, 'total': total, 'perc': perc, 'round_perc': round_perc, 'deep_by': deep_by}
+def _pivot_target(bases: List[BaseType], target: QuestionType, config: CtabConfig):
+    
     if isinstance(target, (SingleAnswer, MultipleAnswer)):
-        return _pivot_sm(**args)
+        return _pivot_sm(bases, target, config)
     elif isinstance(target, Rank):
-        return pd.concat([_pivot_sm(bases, sa, total, perc, round_perc, deep_by) for sa in target.decompose()], axis=0)
+        return pd.concat([_pivot_sm(bases, sa, config) for sa in target.decompose()], axis=0)
     elif isinstance(target, Number):
-        return _pivot_number(**args)
+        return _pivot_number(bases, target, config)
     
 def _custom_merge(bases: List[BaseType], target: QuestionType, deep_by: List[BaseType] = []):
     for q in [target] + bases + deep_by:
@@ -58,44 +60,14 @@ def _custom_merge(bases: List[BaseType], target: QuestionType, deep_by: List[Bas
         df = df.merge(deep_df, on='resp_id', how='inner')
     return df
 
-
-        
-def _pivot_sm(bases: List[BaseType], target: QuestionType, total=True, perc=True, round_perc=True, sig=None, deep_by: List[BaseType] = []):
-    
-    df = _custom_merge(bases, target, deep_by)
-    
-    deep_indexes = [f'deep_answer_{index}' for index in range(1, len(deep_by) + 1)]
-
-    total_label = 'Total'
-
-    pv = pd.pivot_table(df, columns=deep_indexes + ['root', 'answer'], index=['target_root', 'target_answer'], values='resp_id', 
-                        aggfunc=pd.Series.nunique, fill_value=0, margins=True, margins_name=total_label)
-    
-    total_df = pv.loc[[total_label],:]
-    
-
-    pv = pv.loc[~pv.index.get_level_values(0).isin([total_label])]
-    
-    if perc:
-        pv = pv.div(total_df.values, axis=1).fillna(0)
-        if round_perc:
-            pv = pv.map(lambda x: f'{round(x*100)}%')
-    
-    pv = pd.concat([pv, total_df])
-
-    index_total_label = f"{target.code}_Total"
-    column_total_label = "Total"
-    pv.rename(columns={total_label: column_total_label}, inplace=True, index={total_label: index_total_label})
-    
-    if not total:    
-        pv = pv.loc[~pv.index.get_level_values(0).isin([index_total_label]),
-                    ~pv.columns.get_level_values(0).isin([column_total_label])]
-
+def _desired_columns(deep_by, total, bases):
     desired_columns = []
     if deep_by:
         if total:
-            desired_columns.append(('Total', '', ''))
-
+            total_label = ('Total', '')
+            for i in range(len(deep_by)):
+                total_label += ('', )
+            desired_columns.append(total_label)
         for deep in deep_by:
             for deep_response in deep.responses:
                 for base in bases:
@@ -108,27 +80,90 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, total=True, perc=True
             for response in base.responses:
                 desired_columns.append((base.code, response.value))
 
-    missing_cols = list((set(desired_columns)) - set(pv.columns))
-    new_columns = pd.DataFrame(0, index=pv.index, columns=missing_cols)
+   
+def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
+    
+    total = config.total
+    perc = config.perc
+    deep_by = config.deep_by
+    round_perc = config.round_perc
+    sig = config.sig
+    cat_aggfunc = config.cat_aggfunc
+    dropna = config.dropna
+    
+    
+    df = _custom_merge(bases, target, deep_by)
+    
+    deep_indexes = [f'deep_answer_{index}' for index in range(1, len(deep_by) + 1)]
 
-    # Dùng pd.concat để thêm các cột mới vào DataFrame hiện tại
-    pv = pd.concat([pv, new_columns], axis=1)
-        
-    pv = pv.reindex(columns=pd.MultiIndex.from_tuples(desired_columns))
+    total_label = 'Total'
 
-    desired_indexes = [response.value for response in target.responses]
-    current_indexes = pv.index.get_level_values(1)
-    for idx in desired_indexes:
-        if idx not in current_indexes:
-            # Thêm các hàng mới với giá trị mặc định là 0 cho các index không có
-            new_index = pd.MultiIndex.from_tuples([(target.code, idx)], names=pv.index.names)
-            new_row = pd.DataFrame([[0] * len(pv.columns)], columns=pv.columns, index=new_index)
-            pv = pd.concat([pv, new_row])
-    pv = pv.sort_index(level=1, key=lambda x: pd.Categorical(x, categories=desired_indexes, ordered=True))
+    pv = pd.pivot_table(df, columns=deep_indexes + ['root', 'answer'], index=['target_root', 'target_answer'], values='resp_id', 
+                        aggfunc=cat_aggfunc, fill_value=0, margins=True, margins_name=total_label)
+    
+    total_df = pv.loc[[total_label],:]
+    
+
+    pv = pv.loc[~pv.index.get_level_values(0).isin([total_label])]
+    
+    if sig:
+        deep_repsonses = [[i.code for i in deep.responses] for deep in deep_by]
+        deep_pairs = list(itertools.product(*deep_repsonses))
+        dfs = []
+        for pair in deep_pairs:
+            for base in bases:
+                column = pair + (base.code, )
+                df = pv.loc[:, column]
+                tested_df = _sig_test(df)
+                dfs.append(tested_df)
+        final_tested_df = pd.concat(dfs, axis=1)
+    
+    if perc:
+        pv = pv.div(total_df.values, axis=1).fillna(0)
+        if round_perc:
+            pv = pv.map(lambda x: f'{round(x*100)}%')
+            
+    if sig:
+        pv = pv.astype(str) + " " + final_tested_df
+
+    pv = pd.concat([pv, total_df])
+
+    index_total_label = f"{target.code}_Total"
+    column_total_label = "Total"
+    pv.rename(columns={total_label: column_total_label}, inplace=True, index={total_label: index_total_label})
+    
+    if not total:    
+        pv = pv.loc[~pv.index.get_level_values(0).isin([index_total_label]),
+                    ~pv.columns.get_level_values(0).isin([column_total_label])]
+
+    if not dropna:
+        desired_columns = _desired_columns(deep_by, total, bases)
+        missing_cols = list((set(desired_columns)) - set(pv.columns))
+        new_columns = pd.DataFrame(0, index=pv.index, columns=missing_cols)
+
+        # Dùng pd.concat để thêm các cột mới vào DataFrame hiện tại
+        pv = pd.concat([pv, new_columns], axis=1)
+            
+        pv = pv.reindex(columns=pd.MultiIndex.from_tuples(desired_columns))
+
+        desired_indexes = [response.value for response in target.responses]
+        current_indexes = pv.index.get_level_values(1)
+        for idx in desired_indexes:
+            if idx not in current_indexes:
+                # Thêm các hàng mới với giá trị mặc định là 0 cho các index không có
+                new_index = pd.MultiIndex.from_tuples([(target.code, idx)], names=pv.index.names)
+                new_row = pd.DataFrame([[0] * len(pv.columns)], columns=pv.columns, index=new_index)
+                pv = pd.concat([pv, new_row])
+        pv = pv.sort_index(level=1, key=lambda x: pd.Categorical(x, categories=desired_indexes, ordered=True))
 
     return pv
 
-def _pivot_number(bases: List[BaseType], target: QuestionType, deep_by: List[BaseType] = []):
+def _pivot_number(bases: List[BaseType], target: QuestionType, config: CtabConfig):
+    
+    deep_by = config.deep_by
+    num_aggfunc = config.num_aggfunc
+    dropna = config.dropna
+
     df = _custom_merge(bases, target)
     
     deep_indexes = [f'deep_answer_{index}' for index in range(1, len(deep_by) + 1)]
@@ -139,29 +174,21 @@ def _pivot_number(bases: List[BaseType], target: QuestionType, deep_by: List[Bas
     values='target_answer',
     columns=['target_core'],
     index=deep_indexes + ['root', 'answer'],
-    aggfunc=['mean', 'median', 'count', 'min', 'max', 'std', 'var'],
+    aggfunc=num_aggfunc,
     fill_value=0,
     dropna=True
     ).T
-    desired_columns = []
-    if deep_by:
-        for deep in deep_by:
-            for deep_response in deep.responses:
-                for base in bases:
-                    for response in base.responses:
-                        desired_columns.append((deep_response.value, base.code, response.value))
-    else:
-        for base in bases:
-            for response in base.responses:
-                desired_columns.append((base.code, response.value))
+    
+    if not dropna:
+        desired_columns = _desired_columns(deep_by=deep_by, total=False, bases=bases)
 
-    missing_cols = list((set(desired_columns)) - set(pv.columns))
-    new_columns = pd.DataFrame(0, index=pv.index, columns=missing_cols)
+        missing_cols = list((set(desired_columns)) - set(pv.columns))
+        new_columns = pd.DataFrame(0, index=pv.index, columns=missing_cols)
 
-    # Dùng pd.concat để thêm các cột mới vào DataFrame hiện tại
-    pv = pd.concat([pv, new_columns], axis=1)
-        
-    pv = pv.reindex(columns=pd.MultiIndex.from_tuples(desired_columns))
+        # Dùng pd.concat để thêm các cột mới vào DataFrame hiện tại
+        pv = pd.concat([pv, new_columns], axis=1)
+            
+        pv = pv.reindex(columns=pd.MultiIndex.from_tuples(desired_columns))
 
     return pv
 
