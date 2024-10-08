@@ -21,6 +21,7 @@ class Number(Question):
 
         df = pd.DataFrame(flattened_results)
 
+        df.set_index('resp_id', inplace=True)
         df.columns = pd.MultiIndex.from_product([[self.root], df.columns], names=['root', 'core'])
 
         if self.df_config.melt:
