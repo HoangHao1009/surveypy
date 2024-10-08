@@ -124,11 +124,14 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
         test_dfs = []
         for pair in pairs:
             for base in bases:
-                column = pair + (base.code, )
-                test_df = raw_pv.loc[:, column]
-                test_df.columns = pd.MultiIndex.from_tuples([column + (col,) for col in test_df.columns])
-                test_result = _sig_test(test_df, sig)  
-                test_dfs.append(test_result)
+                try:
+                    column = pair + (base.code, )
+                    test_df = raw_pv.loc[:, column]
+                    test_df.columns = pd.MultiIndex.from_tuples([column + (col,) for col in test_df.columns])
+                    test_result = _sig_test(test_df, sig)  
+                    test_dfs.append(test_result)
+                except:
+                    pass
         final_test = pd.concat(test_dfs, axis=1)
         pv = pv.astype(str) + " " + final_test  
                      
