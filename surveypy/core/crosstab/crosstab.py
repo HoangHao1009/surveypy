@@ -36,62 +36,16 @@ class CrossTab(BaseModel):
         self._dataframe = None
         self.config.to_default()
         
-    def _ctab(self, bases, targets) -> pd.DataFrame:
-        base_dfs = []
-        
-        for base in bases:
-            if isinstance(base, (SingleAnswer, MultipleAnswer)):
-                with ThreadPoolExecutor() as executor:
-                    result = list(executor.map(lambda target: _process_target(base, target, self.config), targets))
-            elif isinstance(base, Rank):
-                with ThreadPoolExecutor() as executor:
-                    result = list(executor.map(lambda target: _process_rank(base, target), targets))
-            else:
-                raise ValueError(f'Invalid base type. Required: SingleAnswer, MultipleAnswer or Rank.')
-        
-            base_dfs.append(pd.concat(result, axis=0))
-        
-        return pd.concat(base_dfs, axis = 1).fillna(0)
     @property
     def _deep_parts(self) -> Dict[str, pd.DataFrame]:
         if not self.config.deep_by:
             raise ValueError('Need to set config: deep_by to take deep_parts')
-        
-        # Hàm tạo các cặp response từ config deep_by
-        def create_pairs(list_of_lists):
-            return list(product(*list_of_lists))
-        
-        # Hàm filter responses cho từng pair
-        def filter_by_responses(questions: List[QuestionType], response_pair: Tuple[Response]):
-            # Tránh dùng deepcopy quá nhiều nếu có thể
-            questions = deepcopy(questions)  # Tùy vào yêu cầu có thể tối ưu ở đây
-            valid_respondents = set()
-            for response in response_pair:
-                valid_respondents.update(response.respondents)
-            
-            for question in questions:
-                for response in question.responses:
-                    response.respondents = [r for r in response.respondents if r in valid_respondents]
-            return questions
 
         # Chuẩn bị các cặp response
         if len(self.config.deep_by) > 1:
             response_pairs = create_pairs([q.responses for q in self.config.deep_by])
         else:
             response_pairs = [(response,) for response in self.config.deep_by[0].responses]
-
-        # Hàm xử lý cho từng pair
-        def process_pair(pair):
-            bases = filter_by_responses(self.bases, pair)
-            targets = filter_by_responses(self.targets, pair)
-            crosstab = self._ctab(bases, targets)  # Giả sử self._ctab là hàm tính toán tốn tài nguyên
-            key = '[SPLIT]'.join([response.code for response in pair])
-            col_list = [response.value for response in pair]
-            return key, {
-                'ctab': crosstab,
-                'col_list': col_list,
-                'col_root': [response.root for response in pair]
-            }
 
         # Hàm quản lý đa tiến trình
         def parallel_process(response_pairs):
@@ -166,7 +120,7 @@ class CrossTab(BaseModel):
                 dfs.append(df)
             return pd.concat(dfs, axis=0)
         else:
-            return self._ctab(self.bases, self.targets)
+            return _ctab(self.bases, self.targets)
             
     def __and__(self, target=Union[List[QuestionType], QuestionType]):
         if isinstance(target, list):
@@ -234,7 +188,53 @@ class CrossTab(BaseModel):
                             title=title,
                             config=self.ppt_config
                         )
+                        
+# Hàm tạo các cặp response từ config deep_by
+def create_pairs(list_of_lists):
+    return list(product(*list_of_lists))
 
+# Hàm filter responses cho từng pair
+def filter_by_responses(questions: List[QuestionType], response_pair: Tuple[Response]):
+    # Tránh dùng deepcopy quá nhiều nếu có thể
+    questions = deepcopy(questions)  # Tùy vào yêu cầu có thể tối ưu ở đây
+    valid_respondents = set()
+    for response in response_pair:
+        valid_respondents.update(response.respondents)
+    
+    for question in questions:
+        for response in question.responses:
+            response.respondents = [r for r in response.respondents if r in valid_respondents]
+    return questions
+
+# Hàm xử lý cho từng pair
+def process_pair(pair, bases, targets):
+    bases = filter_by_responses(bases, pair)
+    targets = filter_by_responses(targets, pair)
+    crosstab = _ctab(bases, targets)  # Giả sử self._ctab là hàm tính toán tốn tài nguyên
+    key = '[SPLIT]'.join([response.code for response in pair])
+    col_list = [response.value for response in pair]
+    return key, {
+        'ctab': crosstab,
+        'col_list': col_list,
+        'col_root': [response.root for response in pair]
+    }
+                        
+def _ctab(config, bases, targets) -> pd.DataFrame:
+    base_dfs = []
+    
+    for base in bases:
+        if isinstance(base, (SingleAnswer, MultipleAnswer)):
+            with ThreadPoolExecutor() as executor:
+                result = list(executor.map(lambda target: _process_target(base, target, config), targets))
+        elif isinstance(base, Rank):
+            with ThreadPoolExecutor() as executor:
+                result = list(executor.map(lambda target: _process_rank(base, target), targets))
+        else:
+            raise ValueError(f'Invalid base type. Required: SingleAnswer, MultipleAnswer or Rank.')
+    
+        base_dfs.append(pd.concat(result, axis=0))
+    
+    return pd.concat(base_dfs, axis = 1).fillna(0)
 
 def sig_test(df: pd.DataFrame, sig: float):
     test_df = pd.DataFrame("", index=df.index, columns=df.columns)
