@@ -53,8 +53,8 @@ class CrossTab(BaseModel):
         def parallel_process(response_pairs, base, target, config):
             with ProcessPoolExecutor(max_workers=multiprocessing.cpu_count()) as process_executor:
                 # Sử dụng đa tiến trình để xử lý các cặp
-                args_list = [(pair, base, target, config) for pair in response_pairs]
-                results = list(process_executor.map(_process_pair, args_list))
+                process_with_params = partial(_process_pair, base=base, target=target, config=config)
+                results = list(process_executor.map(process_with_params, response_pairs))
             return dict(results)
 
         # Sử dụng kết hợp đa tiến trình và đa luồng
