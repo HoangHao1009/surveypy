@@ -224,36 +224,6 @@ def sig_test(df: pd.DataFrame, sig: float):
                 test_df.at[index, df.columns[i]] = ''.join(diff_columns)
     return test_df
 
-def _custom_merge(base:BaseType, target:QuestionType):
-    base = deepcopy(base)
-    target = deepcopy(target)
-    base.df_config.melt = True
-    target.df_config.melt = True
-    base.df_config.value = 'text'
-    target.df_config.value = 'text'
-    
-    cross_zero = False
-    temp_id = 999999999999
-    
-    if len(base.respondents) == 0:
-        base.responses[0].respondents.append(temp_id)
-    if len(target.respondents) == 0:
-        target.responses[0].respondents.append(temp_id)
-    
-    if len(set(base.respondents) & set(target.respondents)) == 0:
-        if temp_id not in base.responses[0].respondents:
-            base.responses[0].respondents.append(temp_id)
-        if temp_id not in target.responses[0].respondents:
-            target.responses[0].respondents.append(temp_id)
-        cross_zero = True
-    
-    merge_df = pd.merge(base.dataframe, target.dataframe, on='resp_id')
-    
-    if merge_df.shape[0] == 0:
-        print('merge shape 0 - base: ', base.responses[0].respondents)
-        print('merge shape 0 - target: ',target.responses[0].respondents)
-    
-    return merge_df, cross_zero
 
 def _sm_ctab(
         base:BaseType, target:QuestionType, 
@@ -265,6 +235,40 @@ def _sm_ctab(
     """
     SingleAnswer-MultipleAnswer crosstab function
     """
+    def _custom_merge(base:BaseType, target:QuestionType):
+        # base = deepcopy(base)
+        # target = deepcopy(target)
+        base.df_config.melt = True
+        target.df_config.melt = True
+        base.df_config.value = 'text'
+        target.df_config.value = 'text'
+        
+        cross_zero = False
+        # temp_id = 999999999999
+        
+        # if len(base.respondents) == 0:
+        #     base.responses[0].respondents.append(temp_id)
+        # if len(target.respondents) == 0:
+        #     target.responses[0].respondents.append(temp_id)
+        
+        # if len(set(base.respondents) & set(target.respondents)) == 0:
+        #     if temp_id not in base.responses[0].respondents:
+        #         base.responses[0].respondents.append(temp_id)
+        #     if temp_id not in target.responses[0].respondents:
+        #         target.responses[0].respondents.append(temp_id)
+        #     cross_zero = True
+        
+        merge_df = pd.merge(base.dataframe, target.dataframe, on='resp_id')
+        
+        if merge_df.shape[0] == 0:
+            cross_zero = True
+            new_row = pd.DataFrame([['temp'] * merge_df.shape[1]], columns=merge_df.columns)
+            merge_df = pd.concat([merge_df, new_row], ignore_index=True)
+            # print('merge shape 0 - base: ', base.responses[0].respondents)
+            # print('merge shape 0 - target: ',target.responses[0].respondents)
+        
+        return merge_df, cross_zero
+
         
     merge_df, cross_zero = _custom_merge(base, target)
 
