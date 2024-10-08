@@ -17,15 +17,15 @@ class CrossTab(BaseModel):
     @property
     def dataframe(self):
         dfs = []
-        args_list = [(self.bases, target, self.config.total, self.config.perc, self.config.round_perc) for target in self.targets]
+        args_list = [(self.bases, target, self.config.total, self.config.perc, self.config.round_perc, self.config.deep_by) for target in self.targets]
         with mp.Pool(mp.cpu_count()) as pool:
             dfs = pool.map(_pivot_target_with_args, args_list)
         # Kết hợp các DataFrame trả về
         return pd.concat(dfs, axis=0)
     
 def _pivot_target_with_args(args):
-    bases, target, total, perc, round_perc = args
-    return _pivot_target(bases, target, total, perc, round_perc)
+    bases, target, total, perc, round_perc, deep_by = args
+    return _pivot_target(bases, target, total, perc, round_perc, deep_by)
 
 def _pivot_target(bases: List[BaseType], target: QuestionType, total=True, perc=True, round_perc=True, deep_by=[]):
     args = {'bases': bases, 'target': target, 'total': total, 'perc': perc, 'round_perc': round_perc, 'deep_by': deep_by}
@@ -36,7 +36,7 @@ def _pivot_target(bases: List[BaseType], target: QuestionType, total=True, perc=
     elif isinstance(target, Number):
         return _pivot_number(**args)
     
-def _custom_merge(bases: List[BaseType], target: QuestionType, deep_by: List[BaseType]):
+def _custom_merge(bases: List[BaseType], target: QuestionType, deep_by: List[BaseType] = []):
     for q in [target] + bases + deep_by:
         q.df_config.melt = False
         q.df_config.value = 'text'
@@ -58,7 +58,7 @@ def _custom_merge(bases: List[BaseType], target: QuestionType, deep_by: List[Bas
         df = df.merge(deep_df, on='resp_id', how='inner')
     return df
         
-def _pivot_sm(bases: List[BaseType], target: QuestionType, total=True, perc=True, round_perc=True, deep_by=[]):
+def _pivot_sm(bases: List[BaseType], target: QuestionType, total=True, perc=True, round_perc=True, deep_by: List[BaseType] = []):
     
     df = _custom_merge(bases, target, deep_by)
     
@@ -117,7 +117,7 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, total=True, perc=True
 
     return pv
 
-def _pivot_number(bases: List[BaseType], target: QuestionType):
+def _pivot_number(bases: List[BaseType], target: QuestionType, deep_by: List[BaseType] = []):
     df = _custom_merge(bases, target)
 
     pv = pd.pivot_table(
