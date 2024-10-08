@@ -1,15 +1,10 @@
-from pydantic import BaseModel
-from typing import Union, List, Callable, Optional, Tuple, Dict
+from typing import Union, List, Callable
 import pandas as pd
 import numpy as np
 from statsmodels.stats.proportion import proportions_ztest
-from ..question import MultipleAnswer, SingleAnswer, Number, Rank, Response
-from ...utils import report_function, CtabConfig, PptConfig
+from ..question import MultipleAnswer, SingleAnswer, Number, Rank
+from ...utils import CtabConfig
 from copy import deepcopy
-from itertools import product
-import multiprocessing
-from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
-from functools import partial
 from multiprocessing import Pool
 
 

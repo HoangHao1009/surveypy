@@ -1,8 +1,6 @@
 from pydantic import BaseModel
-from typing import Union, List, Callable, Optional, Tuple, Dict
+from typing import Union, List, Optional, Tuple, Dict
 import pandas as pd
-import numpy as np
-from statsmodels.stats.proportion import proportions_ztest
 from ..question import MultipleAnswer, SingleAnswer, Number, Rank, Response
 from ...utils import report_function, CtabConfig, PptConfig
 from copy import deepcopy
