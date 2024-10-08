@@ -109,6 +109,21 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
     
 
     pv = pv.loc[~pv.index.get_level_values(0).isin([total_label])]
+
+    if sig:
+        deep_repsonses = [[i.value for i in deep.responses] for deep in deep_by]
+        deep_pairs = list(itertools.product(*deep_repsonses))
+        for pair in deep_pairs:
+            for base in bases:
+                column = pair + (base.code, )
+                sig_test_result = _sig_test(pv.loc[:, column], sig)
+                                
+                if perc:
+                    pv.loc[:, column] = pv.loc[:, column].div(total_df.values, axis=1).fillna(0)
+                    if round_perc:
+                        pv.loc[:, column] = pv.loc[:, column].map(lambda x: f'{round(x*100)}%')
+
+                pv.loc[:, column] = pv.loc[:, column].astype(str) + " " + sig_test_result
                     
     pv = pd.concat([pv, total_df])
 
@@ -140,22 +155,6 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
                 pv = pd.concat([pv, new_row])
         pv = pv.sort_index(level=1, key=lambda x: pd.Categorical(x, categories=desired_indexes, ordered=True))
         
-    if sig:
-        deep_repsonses = [[i.value for i in deep.responses] for deep in deep_by]
-        deep_pairs = list(itertools.product(*deep_repsonses))
-        for pair in deep_pairs:
-            for base in bases:
-                column = pair + (base.code, )
-                sig_test_result = _sig_test(pv.loc[:, column], sig)
-                                
-                # if perc:
-                #     pv.loc[:, column] = pv.loc[:, column].div(total_df.values, axis=1).fillna(0)
-                #     if round_perc:
-                #         pv.loc[:, column] = pv.loc[:, column].map(lambda x: f'{round(x*100)}%')
-
-                # Duyệt qua từng hàng và cộng chuỗi từng phần tử
-                pv.loc[:, column] = pv.loc[:, column].astype(str) + " " + sig_test_result
-
     return pv
 
 def _pivot_number(bases: List[BaseType], target: QuestionType, config: CtabConfig):
