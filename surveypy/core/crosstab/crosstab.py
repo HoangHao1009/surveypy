@@ -79,8 +79,6 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, total=True, perc=True
     column_total_label = "Total"
     pv.rename(columns={total_label: column_total_label}, inplace=True, index={total_label: index_total_label})
     
-    print(pv.columns)
-
     if not total:    
         pv = pv.loc[~pv.index.get_level_values(0).isin([index_total_label]),
                     ~pv.columns.get_level_values(0).isin([column_total_label])]
@@ -88,7 +86,7 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, total=True, perc=True
     desired_columns = []
     if deep_by:
         if total:
-            desired_columns.append(('Total', None, None))
+            desired_columns.append(('Total', '', ''))
 
         for deep in deep_by:
             for deep_response in deep.responses:
@@ -97,12 +95,12 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, total=True, perc=True
                         desired_columns.append((deep_response.value, base.code, response.value))
     else:
         if total:
-            desired_columns.append(('Total', None))
+            desired_columns.append(('Total', ''))
         for base in bases:
             for response in base.responses:
                 desired_columns.append((base.code, response.value))
 
-    missing_cols = (set(desired_columns)) - set(pv.columns)
+    missing_cols = list((set(desired_columns)) - set(pv.columns))
     new_columns = pd.DataFrame(0, index=pv.index, columns=missing_cols)
 
     # Dùng pd.concat để thêm các cột mới vào DataFrame hiện tại
