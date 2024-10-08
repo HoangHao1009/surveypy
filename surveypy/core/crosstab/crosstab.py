@@ -88,9 +88,16 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, total=True, perc=True
                     ~pv.columns.get_level_values(0).isin([column_total_label])]
 
     desired_columns = []
-    for base in bases:
-        for response in base.responses:
-            desired_columns.append((base.code, response.value))
+    if deep_by:
+        for deep in deep_by:
+            for base in bases:
+                for response in base.responses:
+                    desired_columns.append((deep.code, base.code, response.value))
+    else:
+        for base in bases:
+            for response in base.responses:
+                desired_columns.append((deep.code, base.code, response.value))
+
 
     missing_cols = (set(desired_columns)) - set(pv.columns)
     for col in missing_cols:
