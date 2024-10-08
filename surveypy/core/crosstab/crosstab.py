@@ -9,6 +9,8 @@ from copy import deepcopy
 from itertools import product
 import multiprocessing
 from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
+from functools import partial
+
 
 BaseType = Union[SingleAnswer, MultipleAnswer, Rank]
 QuestionType = Union[SingleAnswer, MultipleAnswer, Rank, Number]
@@ -48,19 +50,17 @@ class CrossTab(BaseModel):
             response_pairs = [(response,) for response in self.config.deep_by[0].responses]
 
         # Hàm quản lý đa tiến trình
-        def parallel_process(response_pairs):
+        def parallel_process(response_pairs, base, target, config):
             with ProcessPoolExecutor(max_workers=multiprocessing.cpu_count()) as process_executor:
                 # Sử dụng đa tiến trình để xử lý các cặp
-                results = list(process_executor.map(
-                    lambda pair: process_pair(pair, self.bases, self.targets, self.config),
-                    response_pairs
-                ))
+                process_with_params = partial(process_wrapper, base=base, target=target, config=config)
+                results = list(process_executor.map(process_with_params, response_pairs))
             return dict(results)
 
         # Sử dụng kết hợp đa tiến trình và đa luồng
         with ThreadPoolExecutor() as executor:
             # Kết hợp đa luồng để quản lý các tiến trình nhỏ hơn
-            future = executor.submit(parallel_process, response_pairs)
+            future = executor.submit(parallel_process, response_pairs, self.bases, self.targets, self.config)
             result = future.result()  # Chờ kết quả từ tiến trình chính
 
         return result
@@ -221,6 +221,10 @@ def process_pair(pair, bases, targets, config):
         'col_list': col_list,
         'col_root': [response.root for response in pair]
     }
+    
+def process_wrapper(pair, bases, targets, config):
+    return process_pair(pair, bases, targets, config)
+
                         
 def _ctab(config, bases, targets) -> pd.DataFrame:
     base_dfs = []
