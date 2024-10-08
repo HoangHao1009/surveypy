@@ -99,6 +99,8 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, total=True, perc=True
     for col in missing_cols:
         pv[col] = 0
         
+    print(desired_columns)
+        
     return pv
 
         
