@@ -123,15 +123,15 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
         deep_pairs = list(itertools.product(*deep_repsonses))
         for pair in deep_pairs:
             for base in bases:
-                column = pair + (base.code, )
-                
-                sig_test_result = _sig_test(raw_pv.loc[:, column], sig)
-                                
-                pv.loc[:, column] = pv.loc[:, column].astype(str) + " " + sig_test_result
-                    
+                try:
+                    column = pair + (base.code, )
+                    sig_test_result = _sig_test(raw_pv.loc[:, column], sig)    
+                    pv.loc[:, column] = pv.loc[:, column].astype(str) + " " + sig_test_result
+                except:
+                    pass
+                        
     fill = 0 if not perc else '0%'
-    pv = pd.concat([pv, total_df]).fillna(fill)
-
+    pv = pd.concat([pv, total_df])
     index_total_label = f"{target.code}_Total"
     column_total_label = "Total"
     pv.rename(columns={total_label: column_total_label}, inplace=True, index={total_label: index_total_label})
