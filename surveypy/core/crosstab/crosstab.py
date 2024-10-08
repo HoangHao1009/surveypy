@@ -86,9 +86,10 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, total=True, perc=True
     desired_columns = []
     if deep_by:
         for deep in deep_by:
-            for base in bases:
-                for response in base.responses:
-                    desired_columns.append((deep.code, base.code, response.value))
+            for deep_response in deep.responses:
+                for base in bases:
+                    for response in base.responses:
+                        desired_columns.append((deep_response.value, base.code, response.value))
     else:
         for base in bases:
             for response in base.responses:
@@ -98,11 +99,6 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, total=True, perc=True
     missing_cols = (set(desired_columns)) - set(pv.columns)
     for col in missing_cols:
         pv[col] = 0
-        
-    print(desired_columns)
-        
-    return pv
-
         
     pv = pv.reindex(columns=pd.MultiIndex.from_tuples(desired_columns))
 
