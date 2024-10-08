@@ -120,14 +120,20 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
                 try:
                     sig_test_result = _sig_test(pv.loc[:, column], sig)
                                     
-                    if perc:
-                        pv.loc[:, column] = pv.loc[:, column].div(total_df.loc[:, column].values, axis=1).fillna(0)
-                        if round_perc:
-                            pv.loc[:, column] = pv.loc[:, column].map(lambda x: f'{round(x*100)}%' if not pd.isna(x) else '0%')
+                    # if perc:
+                    #     pv.loc[:, column] = pv.loc[:, column].div(total_df.loc[:, column].values, axis=1).fillna(0)
+                    #     if round_perc:
+                    #         pv.loc[:, column] = pv.loc[:, column].map(lambda x: f'{round(x*100)}%' if not pd.isna(x) else '0%')
 
                     pv.loc[:, column] = pv.loc[:, column].astype(str) + " " + sig_test_result
                 except:
                     pass
+    else:
+        if perc:
+            pv = pv.div(total_df.values, axis=1)
+            pv = pv.fillna(0)
+            if round_perc:
+                pv = pv.map(lambda x: f'{round(x*100)}%')
                     
     fill = 0 if not perc else '0%'
     pv = pd.concat([pv, total_df]).fillna(fill)
@@ -221,9 +227,6 @@ def _sig_test(df: pd.DataFrame, sig: float):
                     nobs1 = df.iloc[:, i].sum()
                     nobs2 = df.iloc[:, j].sum()
                     
-                    if nobs1 == 0 or nobs2 == 0 or pd.isna(group1_count) or pd.isna(group2_count):
-                        continue
-
                     # Kiểm tra nếu tổng của một nhóm bằng 0 (bỏ qua)
                     if nobs1 == 0 or nobs2 == 0:
                         continue
