@@ -152,13 +152,11 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
             for base in bases:
                 column = pair + (base.code, )
                 sig_test_result = _sig_test(pv.loc[:, column], sig)
-
+                
+                pv.loc[:, column] = _sig_test(pv.loc[:, column], sig)
+                
                 # Duyệt qua từng hàng và cộng chuỗi từng phần tử
-                try:
-                    pv.loc[:, column] = pv.loc[:, column].astype(str).combine(sig_test_result, lambda x, y: str(x) + " " + str(y))
-                except:
-                    print(sig_test_result)
-                    print(pv.loc[:, column])
+                # pv.loc[:, column] = pv.loc[:, column].astype(str).combine(sig_test_result, lambda x, y: str(x) + " " + str(y))
 
     return pv
 
