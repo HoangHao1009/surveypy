@@ -80,6 +80,8 @@ def _desired_columns(deep_by, total, bases):
             for response in base.responses:
                 desired_columns.append((base.code, response.value))
 
+    return desired_columns
+
    
 def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
     
