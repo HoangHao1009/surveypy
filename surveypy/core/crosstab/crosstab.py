@@ -106,16 +106,16 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
                         aggfunc=cat_aggfunc, fill_value=0, margins=True, margins_name=total_label)
     
     total_df = raw_pv.loc[[total_label],:]
-    
-
     raw_pv = raw_pv.loc[~raw_pv.index.get_level_values(0).isin([total_label])]
     
     if perc:
+        fill = '0%'
         pv = raw_pv.div(total_df.values, axis=1)
         pv = pv.fillna(0)
         if round_perc:
             pv = pv.map(lambda x: f'{round(x*100)}%')
     else:
+        fill = 0
         pv = raw_pv
                         
     pv = pd.concat([pv, total_df])
@@ -130,7 +130,7 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
     if not dropna:
         desired_columns = _desired_columns(deep_by, total, bases)
         missing_cols = list((set(desired_columns)) - set(pv.columns))
-        new_columns = pd.DataFrame(0, index=pv.index, columns=missing_cols)
+        new_columns = pd.DataFrame(fill, index=pv.index, columns=missing_cols)
 
         # Dùng pd.concat để thêm các cột mới vào DataFrame hiện tại
         pv = pd.concat([pv, new_columns], axis=1)
@@ -147,14 +147,14 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
                 pv = pd.concat([pv, new_row])
         pv = pv.sort_index(level=1, key=lambda x: pd.Categorical(x, categories=desired_indexes, ordered=True))
         
-    if sig:
-        deep_repsonses = [[i.value for i in deep.responses] for deep in deep_by]
-        deep_pairs = list(itertools.product(*deep_repsonses))
-        for pair in deep_pairs:
-            for base in bases:
-                column = pair + (base.code, )
-                sig_test_result = _sig_test(raw_pv.loc[:, column], sig)    
-                pv.loc[:, column] = pv.loc[:, column].astype(str) + " " + sig_test_result
+    # if sig:
+    #     deep_repsonses = [[i.value for i in deep.responses] for deep in deep_by]
+    #     deep_pairs = list(itertools.product(*deep_repsonses))
+    #     for pair in deep_pairs:
+    #         for base in bases:
+    #             column = pair + (base.code, )
+    #             sig_test_result = _sig_test(raw_pv.loc[:, column], sig)    
+    #             pv.loc[:, column] = pv.loc[:, column].astype(str) + " " + sig_test_result
         
     return pv
 
