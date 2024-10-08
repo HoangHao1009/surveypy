@@ -117,7 +117,21 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
     else:
         fill = 0
         pv = raw_pv
-                        
+        
+    if sig:
+        deep_repsonses = [[i.value for i in deep.responses] for deep in deep_by]
+        pairs = list(itertools.product(*deep_repsonses))
+        test_dfs = []
+        for pair in pairs:
+            for base in bases:
+                column = pair + (base.code, )
+                test_df = raw_pv.loc[:, column]
+                test_df.columns = pd.MultiIndex.from_tuples([column + (col,) for col in test_df.columns])
+                test_result = _sig_test(test_df, sig)  
+                test_dfs.append(test_result)
+        final_test = pd.concat(test_dfs, axis=1)
+        pv = pv.astype(str) + " " + final_test  
+                     
     pv = pd.concat([pv, total_df])
     index_total_label = f"{target.code}_Total"
     column_total_label = "Total"
@@ -147,14 +161,6 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
                 pv = pd.concat([pv, new_row])
         pv = pv.sort_index(level=1, key=lambda x: pd.Categorical(x, categories=desired_indexes, ordered=True))
         
-    # if sig:
-    #     deep_repsonses = [[i.value for i in deep.responses] for deep in deep_by]
-    #     deep_pairs = list(itertools.product(*deep_repsonses))
-    #     for pair in deep_pairs:
-    #         for base in bases:
-    #             column = pair + (base.code, )
-    #             sig_test_result = _sig_test(raw_pv.loc[:, column], sig)    
-    #             pv.loc[:, column] = pv.loc[:, column].astype(str) + " " + sig_test_result
         
     return pv
 
