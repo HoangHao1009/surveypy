@@ -2,13 +2,13 @@ from pydantic import BaseModel
 from typing import Union, List, Callable, Optional, Tuple, Dict
 import pandas as pd
 import numpy as np
-from concurrent.futures import ThreadPoolExecutor
 from statsmodels.stats.proportion import proportions_ztest
 from ..question import MultipleAnswer, SingleAnswer, Number, Rank, Response
 from ...utils import report_function, CtabConfig, PptConfig
 from copy import deepcopy
 from itertools import product
 import multiprocessing
+from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
 
 BaseType = Union[SingleAnswer, MultipleAnswer, Rank]
 QuestionType = Union[SingleAnswer, MultipleAnswer, Rank, Number]
@@ -52,34 +52,39 @@ class CrossTab(BaseModel):
             base_dfs.append(pd.concat(result, axis=0))
         
         return pd.concat(base_dfs, axis = 1).fillna(0)
-
     @property
     def _deep_parts(self) -> Dict[str, pd.DataFrame]:
         if not self.config.deep_by:
             raise ValueError('Need to set config: deep_by to take deep_parts')
+        
+        # Hàm tạo các cặp response từ config deep_by
         def create_pairs(list_of_lists):
             return list(product(*list_of_lists))
+        
+        # Hàm filter responses cho từng pair
         def filter_by_responses(questions: List[QuestionType], response_pair: Tuple[Response]):
-            questions = deepcopy(questions)
-            valid_respondents = []
+            # Tránh dùng deepcopy quá nhiều nếu có thể
+            questions = deepcopy(questions)  # Tùy vào yêu cầu có thể tối ưu ở đây
+            valid_respondents = set()
             for response in response_pair:
-                valid_respondents.extend(response.respondents)
-            valid_respondents = list(set(valid_respondents))
+                valid_respondents.update(response.respondents)
             
             for question in questions:
                 for response in question.responses:
                     response.respondents = [r for r in response.respondents if r in valid_respondents]
             return questions
-    
+
+        # Chuẩn bị các cặp response
         if len(self.config.deep_by) > 1:
             response_pairs = create_pairs([q.responses for q in self.config.deep_by])
         else:
             response_pairs = [(response,) for response in self.config.deep_by[0].responses]
-            
+
+        # Hàm xử lý cho từng pair
         def process_pair(pair):
             bases = filter_by_responses(self.bases, pair)
             targets = filter_by_responses(self.targets, pair)
-            crosstab = self._ctab(bases, targets)
+            crosstab = self._ctab(bases, targets)  # Giả sử self._ctab là hàm tính toán tốn tài nguyên
             key = '[SPLIT]'.join([response.code for response in pair])
             col_list = [response.value for response in pair]
             return key, {
@@ -88,12 +93,63 @@ class CrossTab(BaseModel):
                 'col_root': [response.root for response in pair]
             }
 
-        with ThreadPoolExecutor() as executor:
-            results = executor.map(process_pair, response_pairs)
+        # Hàm quản lý đa tiến trình
+        def parallel_process(response_pairs):
+            with ProcessPoolExecutor(max_workers=multiprocessing.cpu_count()) as process_executor:
+                # Sử dụng đa tiến trình để xử lý các cặp
+                results = list(process_executor.map(process_pair, response_pairs))
+            return dict(results)
 
-        result = dict(results)
-        
+        # Sử dụng kết hợp đa tiến trình và đa luồng
+        with ThreadPoolExecutor() as executor:
+            # Kết hợp đa luồng để quản lý các tiến trình nhỏ hơn
+            future = executor.submit(parallel_process, response_pairs)
+            result = future.result()  # Chờ kết quả từ tiến trình chính
+
         return result
+
+
+    # @property
+    # def _deep_parts(self) -> Dict[str, pd.DataFrame]:
+    #     if not self.config.deep_by:
+    #         raise ValueError('Need to set config: deep_by to take deep_parts')
+    #     def create_pairs(list_of_lists):
+    #         return list(product(*list_of_lists))
+    #     def filter_by_responses(questions: List[QuestionType], response_pair: Tuple[Response]):
+    #         questions = deepcopy(questions)
+    #         valid_respondents = []
+    #         for response in response_pair:
+    #             valid_respondents.extend(response.respondents)
+    #         valid_respondents = list(set(valid_respondents))
+            
+    #         for question in questions:
+    #             for response in question.responses:
+    #                 response.respondents = [r for r in response.respondents if r in valid_respondents]
+    #         return questions
+    
+    #     if len(self.config.deep_by) > 1:
+    #         response_pairs = create_pairs([q.responses for q in self.config.deep_by])
+    #     else:
+    #         response_pairs = [(response,) for response in self.config.deep_by[0].responses]
+            
+    #     def process_pair(pair):
+    #         bases = filter_by_responses(self.bases, pair)
+    #         targets = filter_by_responses(self.targets, pair)
+    #         crosstab = self._ctab(bases, targets)
+    #         key = '[SPLIT]'.join([response.code for response in pair])
+    #         col_list = [response.value for response in pair]
+    #         return key, {
+    #             'ctab': crosstab,
+    #             'col_list': col_list,
+    #             'col_root': [response.root for response in pair]
+    #         }
+
+    #     with ThreadPoolExecutor() as executor:
+    #         results = executor.map(process_pair, response_pairs)
+
+    #     result = dict(results)
+        
+    #     return result
 
 
     def _get_dataframe(self) -> pd.DataFrame:
@@ -236,33 +292,31 @@ def _sm_ctab(
     SingleAnswer-MultipleAnswer crosstab function
     """
     def _custom_merge(base:BaseType, target:QuestionType):
-        # base = deepcopy(base)
-        # target = deepcopy(target)
+        base = deepcopy(base)
+        target = deepcopy(target)
         base.df_config.melt = True
         target.df_config.melt = True
         base.df_config.value = 'text'
         target.df_config.value = 'text'
         
         cross_zero = False
-        # temp_id = 999999999999
+        temp_id = 999999999999
         
-        # if len(base.respondents) == 0:
-        #     base.responses[0].respondents.append(temp_id)
-        # if len(target.respondents) == 0:
-        #     target.responses[0].respondents.append(temp_id)
+        if len(base.respondents) == 0:
+            base.responses[0].respondents.append(temp_id)
+        if len(target.respondents) == 0:
+            target.responses[0].respondents.append(temp_id)
         
-        # if len(set(base.respondents) & set(target.respondents)) == 0:
-        #     if temp_id not in base.responses[0].respondents:
-        #         base.responses[0].respondents.append(temp_id)
-        #     if temp_id not in target.responses[0].respondents:
-        #         target.responses[0].respondents.append(temp_id)
-        #     cross_zero = True
+        if len(set(base.respondents) & set(target.respondents)) == 0:
+            if temp_id not in base.responses[0].respondents:
+                base.responses[0].respondents.append(temp_id)
+            if temp_id not in target.responses[0].respondents:
+                target.responses[0].respondents.append(temp_id)
+            cross_zero = True
         
         merge_df = pd.merge(base.dataframe, target.dataframe, on='resp_id')
         
         if merge_df.shape[0] == 0:
-            cross_zero = True
-            new_row = pd.DataFrame([['temp'] * merge_df.shape[1]], columns=merge_df.columns)
             merge_df = pd.concat([merge_df, new_row], ignore_index=True)
             # print('merge shape 0 - base: ', base.responses[0].respondents)
             # print('merge shape 0 - target: ',target.responses[0].respondents)
