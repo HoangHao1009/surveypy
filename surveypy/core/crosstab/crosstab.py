@@ -57,8 +57,10 @@ def _custom_merge(bases: List[BaseType], target: QuestionType, deep_by: List[Bas
         deep_df.columns = ['resp_id', f'deep_core_{index}', f'deep_answer_{index}']
         df = df.merge(deep_df, on='resp_id', how='inner')
     return df
+
+
         
-def _pivot_sm(bases: List[BaseType], target: QuestionType, total=True, perc=True, round_perc=True, deep_by: List[BaseType] = []):
+def _pivot_sm(bases: List[BaseType], target: QuestionType, total=True, perc=True, round_perc=True, sig=None, deep_by: List[BaseType] = []):
     
     df = _custom_merge(bases, target, deep_by)
     
@@ -70,9 +72,15 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, total=True, perc=True
                         aggfunc=pd.Series.nunique, fill_value=0, margins=True, margins_name=total_label)
     
     total_df = pv.loc[[total_label],:]
+    
 
     pv = pv.loc[~pv.index.get_level_values(0).isin([total_label])]
-    pv = pv.div(total_df.values, axis=1).fillna(0)
+    
+    if perc:
+        pv = pv.div(total_df.values, axis=1).fillna(0)
+        if round_perc:
+            pv = pv.map(lambda x: f'{round(x*100)}%')
+    
     pv = pd.concat([pv, total_df])
 
     index_total_label = f"{target.code}_Total"
@@ -122,24 +130,81 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, total=True, perc=True
 
 def _pivot_number(bases: List[BaseType], target: QuestionType, deep_by: List[BaseType] = []):
     df = _custom_merge(bases, target)
+    
+    deep_indexes = [f'deep_answer_{index}' for index in range(1, len(deep_by) + 1)]
+
 
     pv = pd.pivot_table(
     df,
     values='target_answer',
     columns=['target_core'],
-    index=['root', 'answer'],
+    index=deep_indexes + ['root', 'answer'],
     aggfunc=['mean', 'median', 'count', 'min', 'max', 'std', 'var'],
     fill_value=0,
     dropna=True
     ).T
     desired_columns = []
-    for base in bases:
-        for response in base.responses:
-            desired_columns.append((base.code, response.value))
-    missing_cols = (set(desired_columns)) - set(pv.columns)
-    for col in missing_cols:
-        pv[col] = 0
+    if deep_by:
+        for deep in deep_by:
+            for deep_response in deep.responses:
+                for base in bases:
+                    for response in base.responses:
+                        desired_columns.append((deep_response.value, base.code, response.value))
+    else:
+        for base in bases:
+            for response in base.responses:
+                desired_columns.append((base.code, response.value))
 
+    missing_cols = list((set(desired_columns)) - set(pv.columns))
+    new_columns = pd.DataFrame(0, index=pv.index, columns=missing_cols)
+
+    # Dùng pd.concat để thêm các cột mới vào DataFrame hiện tại
+    pv = pd.concat([pv, new_columns], axis=1)
+        
     pv = pv.reindex(columns=pd.MultiIndex.from_tuples(desired_columns))
 
     return pv
+
+def _sig_test(df: pd.DataFrame, sig: float):
+    test_df = pd.DataFrame("", index=df.index, columns=df.columns)
+    num_tests = int(df.shape[1] * (df.shape[1] - 1) / 2)  # Số lượng phép kiểm định
+    if num_tests > 0:
+        bonferroni_sig = sig / num_tests  # Mức ý nghĩa sau khi điều chỉnh
+    else:
+        bonferroni_sig = sig
+
+
+    # Lặp qua từng hàng của DataFrame
+    for index, row in df.iterrows():
+        values = row.values  # Lấy các giá trị trong hàng
+        # total = np.sum(values)  # Tổng giá trị của hàng đó
+
+        # Lặp qua từng cột và so sánh với các cột khác
+        for i in range(len(values)):
+            diff_columns = []
+            for j in range(len(values)):
+                if i != j:
+                    group1_count = df.iloc[:, i].sum()
+                    group2_count = df.iloc[:, j].sum()
+                    total_count = group1_count + group2_count
+
+                    # Kiểm tra nếu tổng của một nhóm bằng 0 (bỏ qua)
+                    if group1_count == 0 or group2_count == 0:
+                        continue
+
+                    # Thực hiện kiểm định z-test cho tỷ lệ
+                    count = np.array([values[i], values[j]])
+                    nobs = np.array([total_count, total_count])
+                    stat, pval = proportions_ztest(count, nobs)
+
+                    # Nếu p-value nhỏ hơn 0.05 thì ghi nhận sự khác biệt
+                    if pval < bonferroni_sig:
+                        alphabe_index = j + 65
+                        # print(j, df.columns[j], chr(alphabe_index))
+                        # diff_columns.append(df.columns[j])
+                        diff_columns.append(chr(alphabe_index))
+
+            # Nếu có cột nào khác biệt, thêm ký tự vào ô đó
+            if len(diff_columns) > 0:
+                test_df.at[index, df.columns[i]] = ''.join(diff_columns)
+    return test_df
