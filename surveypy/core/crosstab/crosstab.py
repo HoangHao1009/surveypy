@@ -102,13 +102,21 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
 
     total_label = 'Total'
 
-    pv = pd.pivot_table(df, columns=deep_indexes + ['root', 'answer'], index=['target_root', 'target_answer'], values='resp_id', 
+    raw_pv = pd.pivot_table(df, columns=deep_indexes + ['root', 'answer'], index=['target_root', 'target_answer'], values='resp_id', 
                         aggfunc=cat_aggfunc, fill_value=0, margins=True, margins_name=total_label)
     
-    total_df = pv.loc[[total_label],:]
+    total_df = raw_pv.loc[[total_label],:]
     
 
-    pv = pv.loc[~pv.index.get_level_values(0).isin([total_label])]
+    raw_pv = raw_pv.loc[~pv.index.get_level_values(0).isin([total_label])]
+    
+    if perc:
+        pv = raw_pv.div(total_df.values, axis=1)
+        pv = pv.fillna(0)
+        if round_perc:
+            pv = pv.map(lambda x: f'{round(x*100)}%')
+    else:
+        pv = raw_pv
 
     if sig:
         deep_repsonses = [[i.value for i in deep.responses] for deep in deep_by]
@@ -117,23 +125,9 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
             for base in bases:
                 column = pair + (base.code, )
                 
-                try:
-                    sig_test_result = _sig_test(pv.loc[:, column], sig)
-                                    
-                    # if perc:
-                    #     pv.loc[:, column] = pv.loc[:, column].div(total_df.loc[:, column].values, axis=1).fillna(0)
-                    #     if round_perc:
-                    #         pv.loc[:, column] = pv.loc[:, column].map(lambda x: f'{round(x*100)}%' if not pd.isna(x) else '0%')
-
-                    pv.loc[:, column] = pv.loc[:, column].astype(str) + " " + sig_test_result
-                except:
-                    pass
-    else:
-        if perc:
-            pv = pv.div(total_df.values, axis=1)
-            pv = pv.fillna(0)
-            if round_perc:
-                pv = pv.map(lambda x: f'{round(x*100)}%')
+                sig_test_result = _sig_test(raw_pv.loc[:, column], sig)
+                                
+                pv.loc[:, column] = pv.loc[:, column].astype(str) + " " + sig_test_result
                     
     fill = 0 if not perc else '0%'
     pv = pd.concat([pv, total_df]).fillna(fill)
