@@ -21,6 +21,10 @@ class CrossTab(BaseModel):
     config: CtabConfig = CtabConfig()
     ppt_config: PptConfig = PptConfig()
     _dataframe: Optional[pd.DataFrame] = None
+
+    def reset(self):
+        self._dataframe = None
+        self.config.to_default()
     
     def __and__(self, target=Union[List[QuestionType], QuestionType]):
         if isinstance(target, list):
