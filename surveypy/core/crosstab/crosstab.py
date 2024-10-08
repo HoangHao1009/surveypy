@@ -5,6 +5,8 @@ from typing import Union, List, Optional, Tuple, Dict, Callable
 import pandas as pd
 import multiprocessing as mp
 import itertools
+import numpy as np
+from statsmodels.stats.proportion import proportions_ztest
 
 
 BaseType = Union[SingleAnswer, MultipleAnswer, Rank]
