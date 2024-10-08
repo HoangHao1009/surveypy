@@ -133,7 +133,6 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
                 except:
                     pass
         final_test = pd.concat(test_dfs, axis=1)
-        return final_test
         pv = pv.astype(str) + " " + final_test  
                      
     pv = pd.concat([pv, total_df])
