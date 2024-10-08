@@ -10,29 +10,29 @@ from itertools import product
 import multiprocessing
 from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
 from functools import partial
+from multiprocessing import Pool
+
 
 BaseType = Union[SingleAnswer, MultipleAnswer, Rank]
 QuestionType = Union[SingleAnswer, MultipleAnswer, Rank, Number]
 
-
-
-
 def _ctab(config, bases, targets) -> pd.DataFrame:
     base_dfs = []
-    
-    for base in bases:
-        if isinstance(base, (SingleAnswer, MultipleAnswer)):
-            with ThreadPoolExecutor() as executor:
-                result = list(executor.map(lambda target: _process_target(base, target, config), targets))
-        elif isinstance(base, Rank):
-            with ThreadPoolExecutor() as executor:
-                result = list(executor.map(lambda target: _process_rank(base, target), targets))
-        else:
-            raise ValueError(f'Invalid base type. Required: SingleAnswer, MultipleAnswer or Rank.')
-    
-        base_dfs.append(pd.concat(result, axis=0))
-    
-    return pd.concat(base_dfs, axis = 1).fillna(0)
+    with Pool(processes=4) as pool:  # Sử dụng multiprocessing với 4 tiến trình
+        for base in bases:
+            if isinstance(base, (SingleAnswer, MultipleAnswer)):
+                # Sử dụng starmap để truyền nhiều tham số cho hàm _process_target
+                result = pool.starmap(_process_target, [(base, target, config) for target in targets])
+            elif isinstance(base, Rank):
+                # Sử dụng starmap cho hàm _process_rank
+                result = pool.starmap(_process_rank, [(base, target) for target in targets])
+            else:
+                raise ValueError(f'Invalid base type. Required: SingleAnswer, MultipleAnswer or Rank.')
+
+            # Kết hợp kết quả
+            base_dfs.append(pd.concat(result, axis=0))
+
+    return pd.concat(base_dfs, axis=1).fillna(0)
 
 def sig_test(df: pd.DataFrame, sig: float):
     test_df = pd.DataFrame("", index=df.index, columns=df.columns)
@@ -140,8 +140,8 @@ def _sm_ctab(
         
         merge_df = pd.merge(base.dataframe, target.dataframe, on='resp_id')
         
-        if merge_df.shape[0] == 0:
-            merge_df = pd.concat([merge_df, new_row], ignore_index=True)
+        # if merge_df.shape[0] == 0:
+        #     merge_df = pd.concat([merge_df, new_row], ignore_index=True)
             # print('merge shape 0 - base: ', base.responses[0].respondents)
             # print('merge shape 0 - target: ',target.responses[0].respondents)
         
