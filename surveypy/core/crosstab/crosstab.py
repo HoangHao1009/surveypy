@@ -118,7 +118,7 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
             for base in bases:
                 column = pair + (base.code, )
                 df = pv.loc[:, column]
-                tested_df = _sig_test(df)
+                tested_df = _sig_test(df, sig)
                 dfs.append(tested_df)
         final_tested_df = pd.concat(dfs, axis=1)
     
