@@ -69,15 +69,10 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, total=True, perc=True
     pv = pd.pivot_table(df, columns=deep_indexes + ['root', 'answer'], index=['target_root', 'target_answer'], values='resp_id', 
                         aggfunc=pd.Series.nunique, fill_value=0, margins=True, margins_name=total_label)
     
-    return pv
-
     total_df = pv.loc[[total_label],:]
 
     pv = pv.loc[~pv.index.get_level_values(0).isin([total_label])]
-
-    pv = pv.div(total_df.values, axis=1)
-    pv = pv.fillna(0)
-
+    pv = pv.div(total_df.values, axis=1).fillna(0)
     pv = pd.concat([pv, total_df])
 
     index_total_label = f"{target.code}_Total"
