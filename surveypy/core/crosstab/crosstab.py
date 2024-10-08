@@ -202,38 +202,39 @@ def _sig_test(df: pd.DataFrame, sig: float):
     else:
         bonferroni_sig = sig
 
-
     # Lặp qua từng hàng của DataFrame
     for index, row in df.iterrows():
         values = row.values  # Lấy các giá trị trong hàng
-        # total = np.sum(values)  # Tổng giá trị của hàng đó
 
         # Lặp qua từng cột và so sánh với các cột khác
         for i in range(len(values)):
             diff_columns = []
             for j in range(len(values)):
                 if i != j:
-                    group1_count = df.iloc[:, i].sum()
-                    group2_count = df.iloc[:, j].sum()
-                    total_count = group1_count + group2_count
+                    # Lấy số lượng của từng nhóm từ hàng hiện tại
+                    group1_count = values[i]
+                    group2_count = values[j]
+
+                    # Lấy tổng số mẫu của từng nhóm (giả định tổng mẫu của cột là tổng của cả DataFrame)
+                    nobs1 = df.iloc[:, i].sum()
+                    nobs2 = df.iloc[:, j].sum()
 
                     # Kiểm tra nếu tổng của một nhóm bằng 0 (bỏ qua)
-                    if group1_count == 0 or group2_count == 0:
+                    if nobs1 == 0 or nobs2 == 0:
                         continue
 
                     # Thực hiện kiểm định z-test cho tỷ lệ
-                    count = np.array([values[i], values[j]])
-                    nobs = np.array([total_count, total_count])
+                    count = np.array([group1_count, group2_count])
+                    nobs = np.array([nobs1, nobs2])
                     stat, pval = proportions_ztest(count, nobs)
 
-                    # Nếu p-value nhỏ hơn 0.05 thì ghi nhận sự khác biệt
+                    # Nếu p-value nhỏ hơn mức ý nghĩa đã điều chỉnh, ghi nhận sự khác biệt
                     if pval < bonferroni_sig:
-                        alphabe_index = j + 65
-                        # print(j, df.columns[j], chr(alphabe_index))
-                        # diff_columns.append(df.columns[j])
+                        alphabe_index = j + 65  # Tạo chữ cái đại diện cho cột khác biệt
                         diff_columns.append(chr(alphabe_index))
 
             # Nếu có cột nào khác biệt, thêm ký tự vào ô đó
             if len(diff_columns) > 0:
                 test_df.at[index, df.columns[i]] = ''.join(diff_columns)
+    
     return test_df
