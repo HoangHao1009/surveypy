@@ -120,7 +120,7 @@ class CrossTab(BaseModel):
                 dfs.append(df)
             return pd.concat(dfs, axis=0)
         else:
-            return _ctab(self.bases, self.targets)
+            return _ctab(self.config, self.bases, self.targets)
             
     def __and__(self, target=Union[List[QuestionType], QuestionType]):
         if isinstance(target, list):
@@ -207,10 +207,10 @@ def filter_by_responses(questions: List[QuestionType], response_pair: Tuple[Resp
     return questions
 
 # Hàm xử lý cho từng pair
-def process_pair(pair, bases, targets):
+def process_pair(pair, bases, targets, config):
     bases = filter_by_responses(bases, pair)
     targets = filter_by_responses(targets, pair)
-    crosstab = _ctab(bases, targets)  # Giả sử self._ctab là hàm tính toán tốn tài nguyên
+    crosstab = _ctab(config, bases, targets)  # Giả sử self._ctab là hàm tính toán tốn tài nguyên
     key = '[SPLIT]'.join([response.code for response in pair])
     col_list = [response.value for response in pair]
     return key, {
