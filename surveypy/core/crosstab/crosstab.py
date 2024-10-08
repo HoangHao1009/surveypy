@@ -121,7 +121,7 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
                 if perc:
                     pv.loc[:, column] = pv.loc[:, column].div(total_df.loc[:, column].values, axis=1).fillna(0)
                     if round_perc:
-                        pv.loc[:, column] = pv.loc[:, column].map(lambda x: f'{round(x*100)}%')
+                        pv.loc[:, column] = pv.loc[:, column].map(lambda x: f'{round(x*100)}%' if not pd.isna(x) else '0%')
 
                 pv.loc[:, column] = pv.loc[:, column].astype(str) + " " + sig_test_result
                     
