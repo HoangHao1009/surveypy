@@ -111,7 +111,7 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
     pv = pv.loc[~pv.index.get_level_values(0).isin([total_label])]
     
     if sig:
-        deep_repsonses = [[i.code for i in deep.responses] for deep in deep_by]
+        deep_repsonses = [[i.value for i in deep.responses] for deep in deep_by]
         deep_pairs = list(itertools.product(*deep_repsonses))
         dfs = []
         for pair in deep_pairs:
