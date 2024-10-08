@@ -215,6 +215,9 @@ def _sig_test(df: pd.DataFrame, sig: float):
                     # Lấy tổng số mẫu của từng nhóm (giả định tổng mẫu của cột là tổng của cả DataFrame)
                     nobs1 = df.iloc[:, i].sum()
                     nobs2 = df.iloc[:, j].sum()
+                    
+                    if nobs1 == 0 or nobs2 == 0 or pd.isna(group1_count) or pd.isna(group2_count):
+                        continue
 
                     # Kiểm tra nếu tổng của một nhóm bằng 0 (bỏ qua)
                     if nobs1 == 0 or nobs2 == 0:
