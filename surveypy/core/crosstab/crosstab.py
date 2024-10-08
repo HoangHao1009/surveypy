@@ -116,16 +116,21 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
         for pair in deep_pairs:
             for base in bases:
                 column = pair + (base.code, )
-                sig_test_result = _sig_test(pv.loc[:, column], sig)
-                                
-                if perc:
-                    pv.loc[:, column] = pv.loc[:, column].div(total_df.loc[:, column].values, axis=1).fillna(0)
-                    if round_perc:
-                        pv.loc[:, column] = pv.loc[:, column].map(lambda x: f'{round(x*100)}%' if not pd.isna(x) else '0%')
+                
+                try:
+                    sig_test_result = _sig_test(pv.loc[:, column], sig)
+                                    
+                    if perc:
+                        pv.loc[:, column] = pv.loc[:, column].div(total_df.loc[:, column].values, axis=1).fillna(0)
+                        if round_perc:
+                            pv.loc[:, column] = pv.loc[:, column].map(lambda x: f'{round(x*100)}%' if not pd.isna(x) else '0%')
 
-                pv.loc[:, column] = pv.loc[:, column].astype(str) + " " + sig_test_result
+                    pv.loc[:, column] = pv.loc[:, column].astype(str) + " " + sig_test_result
+                except:
+                    pass
                     
-    pv = pd.concat([pv, total_df])
+    fill = 0 if not perc else '0%'
+    pv = pd.concat([pv, total_df]).fillna(fill)
 
     index_total_label = f"{target.code}_Total"
     column_total_label = "Total"
