@@ -108,7 +108,7 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
     total_df = raw_pv.loc[[total_label],:]
     
 
-    raw_pv = raw_pv.loc[~pv.index.get_level_values(0).isin([total_label])]
+    raw_pv = raw_pv.loc[~raw_pv.index.get_level_values(0).isin([total_label])]
     
     if perc:
         pv = raw_pv.div(total_df.values, axis=1)
