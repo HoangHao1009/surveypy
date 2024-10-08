@@ -151,7 +151,10 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
         for pair in deep_pairs:
             for base in bases:
                 column = pair + (base.code, )
-                pv.loc[:, column] = pv.loc[:, column].astype(str) + " " + _sig_test(pv.loc[:, column], sig)
+                sig_test_result = _sig_test(pv.loc[:, column], sig)
+
+                # Duyệt qua từng hàng và cộng chuỗi từng phần tử
+                pv.loc[:, column] = pv.loc[:, column].astype(str).combine(sig_test_result, lambda x, y: x + " " + y)
 
     return pv
 
