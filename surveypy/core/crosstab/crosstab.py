@@ -148,10 +148,10 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
                 column = pair + (base.code, )
                 sig_test_result = _sig_test(pv.loc[:, column], sig)
                                 
-                if perc:
-                    pv.loc[:, column] = pv.loc[:, column].div(total_df.values, axis=1).fillna(0)
-                    if round_perc:
-                        pv.loc[:, column] = pv.loc[:, column].map(lambda x: f'{round(x*100)}%')
+                # if perc:
+                #     pv.loc[:, column] = pv.loc[:, column].div(total_df.values, axis=1).fillna(0)
+                #     if round_perc:
+                #         pv.loc[:, column] = pv.loc[:, column].map(lambda x: f'{round(x*100)}%')
 
                 # Duyệt qua từng hàng và cộng chuỗi từng phần tử
                 pv.loc[:, column] = pv.loc[:, column].astype(str) + " " + sig_test_result
