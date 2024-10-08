@@ -109,27 +109,12 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
     
 
     pv = pv.loc[~pv.index.get_level_values(0).isin([total_label])]
-    
-    if sig:
-        deep_repsonses = [[i.value for i in deep.responses] for deep in deep_by]
-        deep_pairs = list(itertools.product(*deep_repsonses))
-        dfs = []
-        for pair in deep_pairs:
-            for base in bases:
-                column = pair + (base.code, )
-                df = pv.loc[:, column]
-                tested_df = _sig_test(df, sig)
-                dfs.append(tested_df)
-        final_tested_df = pd.concat(dfs, axis=1)
-    
+        
     if perc:
         pv = pv.div(total_df.values, axis=1).fillna(0)
         if round_perc:
             pv = pv.map(lambda x: f'{round(x*100)}%')
             
-    if sig:
-        pv = pv.astype(str) + " " + final_tested_df
-
     pv = pd.concat([pv, total_df])
 
     index_total_label = f"{target.code}_Total"
@@ -159,6 +144,14 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
                 new_row = pd.DataFrame([[0] * len(pv.columns)], columns=pv.columns, index=new_index)
                 pv = pd.concat([pv, new_row])
         pv = pv.sort_index(level=1, key=lambda x: pd.Categorical(x, categories=desired_indexes, ordered=True))
+        
+    if sig:
+        deep_repsonses = [[i.value for i in deep.responses] for deep in deep_by]
+        deep_pairs = list(itertools.product(*deep_repsonses))
+        for pair in deep_pairs:
+            for base in bases:
+                column = pair + (base.code, )
+                pv.loc[:, column] = pv.loc[:, column].astype(str) + " " + _sig_test(pv.loc[:, column], sig)
 
     return pv
 
