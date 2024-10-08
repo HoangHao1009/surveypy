@@ -99,6 +99,9 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, total=True, perc=True
     for col in missing_cols:
         pv[col] = 0
         
+    return pv
+
+        
     pv = pv.reindex(columns=pd.MultiIndex.from_tuples(desired_columns))
 
     desired_indexes = [response.value for response in target.responses]
