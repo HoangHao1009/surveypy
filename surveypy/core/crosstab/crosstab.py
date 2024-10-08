@@ -1,14 +1,9 @@
+from ..question import MultipleAnswer, SingleAnswer, Number, Rank, Response
+from ...utils import report_function, CtabConfig, PptConfig
 from pydantic import BaseModel
 from typing import Union, List, Optional, Tuple, Dict
 import pandas as pd
-from ..question import MultipleAnswer, SingleAnswer, Number, Rank, Response
-from ...utils import report_function, CtabConfig, PptConfig
-from copy import deepcopy
-from itertools import product
-import multiprocessing
-from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
-from functools import partial
-from .ctab_function import _ctab
+import multiprocessing as mp
 
 BaseType = Union[SingleAnswer, MultipleAnswer, Rank]
 QuestionType = Union[SingleAnswer, MultipleAnswer, Rank, Number]
@@ -18,155 +13,117 @@ class CrossTab(BaseModel):
     targets: List[QuestionType] = []
     config: CtabConfig = CtabConfig()
     ppt_config: PptConfig = PptConfig()
-    _dataframe: Optional[pd.DataFrame] = None
-
-    def reset(self):
-        self._dataframe = None
-        self.config.to_default()
-    
-    def __and__(self, target=Union[List[QuestionType], QuestionType]):
-        if isinstance(target, list):
-            lst = self.targets + target
-        elif isinstance(target, (SingleAnswer, MultipleAnswer, Rank, Number)):
-            lst = self.targets + [target]
-        return CrossTab(
-            bases=self.bases,
-            targets=lst,
-            **self.config.format
-        )
-    
-    def __or__(self, target: Union[List[BaseType], BaseType]):
-        if isinstance(target, list):
-            lst = self.bases + target
-        elif isinstance(target, (SingleAnswer, MultipleAnswer, Rank, Number)):
-            lst = self.bases + [target]
-        
-        return CrossTab(
-            bases=lst,
-            targets=self.targets,
-            **self.config.format
-        )
-
-    def to_excel(self, excel_path: str, sheet_name: str=None):
-        if not sheet_name:
-            sheet_name = 'CrossTab1'
-        report_function.df_to_excel(self.dataframe, excel_path, sheet_name)
-
-    def to_ppt(self, ppt_path: str):
-        for base in self.bases:
-            for target in self.targets:
-                ctab = CrossTab(
-                    bases=[base],
-                    targets=[target],
-                    **self.config.format
-                )
-                if not self.config.deep_by:
-                    df = ctab.dataframe
-                    title = str(ctab.title)
-                    df.columns = df.columns.get_level_values(1)
-                    df.reset_index(level='row_value', inplace=True)
-
-                    type = 'bar' if isinstance(target, Number) else 'column'
-
-                    report_function.create_pptx_chart(
-                        template_path=ppt_path,
-                        dataframe=df,
-                        type=type,
-                        title=title,
-                        config=self.ppt_config
-                    )
-                else:
-                    ctab.config.deep_by = self.config.deep_by
-                    for k, v in ctab._deep_parts.items():
-                        df = v['ctab']
-                        title = '_'.join(k.split('[SPLIT]')) + ':' + str(ctab.title)
-                        df.columns = df.columns.get_level_values(1)
-                        df.reset_index(level='row_value', inplace=True)
-                        type = 'bar' if isinstance(target, Number) else 'column'
-                        report_function.create_pptx_chart(
-                            template_path=ppt_path,
-                            dataframe=df,
-                            type=type,
-                            title=title,
-                            config=self.ppt_config
-                        )
+    # _dataframe: Optional[pd.DataFrame] = None
 
     @property
-    def dataframe(self) -> pd.DataFrame:
-        if self._dataframe is None:
-            self._dataframe = self._get_dataframe()
-        return self._dataframe
+    def dataframe(self):
+        dfs = []
+        args_list = [(self.bases, target) for target in self.targets]
+        with mp.Pool(mp.cpu_count()) as pool:
+            dfs = pool.map(_pivot_target_with_args, args_list)
+        # Kết hợp các DataFrame trả về
+        return pd.concat(dfs, axis=0)
+    
+def _pivot_target_with_args(args):
+    bases, target = args
+    return _pivot_target(bases, target)
 
-    def _get_dataframe(self) -> pd.DataFrame:
-        if self.config.deep_by:
-            parts = self._deep_parts
-            dfs = []
-            for k, v in parts.items():
-                df = v['ctab']
-                col_list = v['col_list']
-                col_roots = v['col_root']
-                names = col_roots + df.columns.names
-                cols = pd.MultiIndex.from_tuples([tuple(col_list) +  i for i in df.columns], names=names)
-                df.columns = cols
-                dfs.append(df)
-            return pd.concat(dfs, axis=1)
-        else:
-            return _ctab(self.config, self.bases, self.targets)
+def _pivot_target(bases: List[BaseType], target: QuestionType, total=True, perc=True, round_perc=True):
+    if isinstance(target, (SingleAnswer, MultipleAnswer)):
+        return _pivot_sm(bases, target, total, perc, round_perc)
+    elif isinstance(target, Rank):
+        return pd.concat([_pivot_sm(bases, sa, total, perc, round_perc) for sa in target.decompose()], axis=0)
+    elif isinstance(target, Number):
+        return _pivot_number(bases, target, total, perc, round_perc)
+    
+def _custom_merge(bases: List[BaseType], target: QuestionType):
+    for q in [target] + bases:
+        q.df_config.melt = False
+        q.df_config.value = 'text'
+    df = pd.concat([i.dataframe for i in bases], axis=1)
+    df = df.stack(dropna=True).stack(dropna=True).reset_index()
+    df.columns = ['resp_id', 'core', 'root', 'answer']
+    df = df.query('answer != 0')
+    target_df = target.dataframe.stack().reset_index()
+    target_df.columns = ['resp_id', 'target_core', 'target_answer']
+    target_df = target_df.query('target_answer != 0')
+
+    target_df.loc[:, ['target_root']] = target_df['target_core'].apply(lambda x: '_'.join(x.split('_')[:-1]) if '_' in x else x)
+
+    df = df.merge(target_df, on='resp_id', how='inner')
+    
+    return df
         
-    @property
-    def _deep_parts(self) -> Dict[str, pd.DataFrame]:
-        if not self.config.deep_by:
-            raise ValueError('Need to set config: deep_by to take deep_parts')
-
-        # Chuẩn bị các cặp response
-        if len(self.config.deep_by) > 1:
-            response_pairs = _create_pairs([q.responses for q in self.config.deep_by])
-        else:
-            response_pairs = [(response,) for response in self.config.deep_by[0].responses]
-
-        # Hàm quản lý đa tiến trình
-        def parallel_process(response_pairs, base, target, config):
-            with ProcessPoolExecutor(max_workers=multiprocessing.cpu_count()) as process_executor:
-                # Sử dụng đa tiến trình để xử lý các cặp
-                process_with_params = partial(_process_pair, bases=base, targets=target, config=config)
-                results = list(process_executor.map(process_with_params, response_pairs))
-            return dict(results)
-
-        # Sử dụng kết hợp đa tiến trình và đa luồng
-        with ThreadPoolExecutor() as executor:
-            # Kết hợp đa luồng để quản lý các tiến trình nhỏ hơn
-            future = executor.submit(parallel_process, response_pairs, self.bases, self.targets, self.config)
-            result = future.result()  # Chờ kết quả từ tiến trình chính
-
-        return result
+def _pivot_sm(bases: List[BaseType], target: QuestionType, total=True, perc=True, round_perc=True):
     
-def _create_pairs(list_of_lists):
-    return list(product(*list_of_lists))
+    df = _custom_merge(bases, target)
 
-# Hàm filter responses cho từng pair
-def _filter_by_responses(questions: List[QuestionType], response_pair: Tuple[Response]):
-    # Tránh dùng deepcopy quá nhiều nếu có thể
-    questions = deepcopy(questions)  # Tùy vào yêu cầu có thể tối ưu ở đây
-    valid_respondents = set()
-    for response in response_pair:
-        valid_respondents.update(response.respondents)
+    total_label = 'Total'
+
+    pv = pd.pivot_table(df, columns=['root', 'answer'], index=['target_root', 'target_answer'], values='resp_id', 
+                        aggfunc=pd.Series.nunique, fill_value=0, margins=True, margins_name=total_label)
     
-    for question in questions:
-        for response in question.responses:
-            response.respondents = [r for r in response.respondents if r in valid_respondents]
-    return questions
 
-# Hàm xử lý cho từng pair
-def _process_pair(pair, bases, targets, config):
-    bases = _filter_by_responses(bases, pair)
-    targets = _filter_by_responses(targets, pair)
-    crosstab = _ctab(config, bases, targets)  # Giả sử self._ctab là hàm tính toán tốn tài nguyên
-    key = '[SPLIT]'.join([response.code for response in pair])
-    col_list = [response.value for response in pair]
-    return key, {
-        'ctab': crosstab,
-        'col_list': col_list,
-        'col_root': [response.root for response in pair]
-    }
+    total_df = pv.loc[[total_label],:]
 
+    pv = pv.loc[~pv.index.get_level_values(0).isin([total_label])]
 
+    pv = pv.div(total_df.values, axis=1)
+    pv = pv.fillna(0)
+
+    pv = pd.concat([pv, total_df])
+
+    index_total_label = f"{target.code}_Total"
+    column_total_label = "Total"
+    pv.rename(columns={total_label: column_total_label}, inplace=True, index={total_label: index_total_label})
+
+    if not total:    
+        pv = pv.loc[~pv.index.get_level_values(0).isin([index_total_label]),
+                    ~pv.columns.get_level_values(0).isin([column_total_label])]
+
+    desired_columns = []
+    for base in bases:
+        for response in base.responses:
+            desired_columns.append((base.code, response.value))
+
+    missing_cols = (set(desired_columns)) - set(pv.columns)
+    for col in missing_cols:
+        pv[col] = 0
+        
+    pv = pv.reindex(columns=pd.MultiIndex.from_tuples(desired_columns))
+
+    desired_indexes = [response.value for response in target.responses]
+    current_indexes = pv.index.get_level_values(1)
+    for idx in desired_indexes:
+        if idx not in current_indexes:
+            # Thêm các hàng mới với giá trị mặc định là 0 cho các index không có
+            new_index = pd.MultiIndex.from_tuples([(target.code, idx)], names=pv.index.names)
+            new_row = pd.DataFrame([[0] * len(pv.columns)], columns=pv.columns, index=new_index)
+            pv = pd.concat([pv, new_row])
+    pv = pv.sort_index(level=1, key=lambda x: pd.Categorical(x, categories=desired_indexes, ordered=True))
+
+    return pv
+
+def _pivot_number(bases: List[BaseType], target: QuestionType):
+    df = _custom_merge(bases, target)
+
+    pv = pd.pivot_table(
+    df,
+    values='target_answer',
+    columns=['target_core'],
+    index=['root', 'answer'],
+    aggfunc=['mean', 'median', 'count', 'min', 'max', 'std', 'var'],
+    fill_value=0,
+    dropna=True
+    ).T
+    desired_columns = []
+    for base in bases:
+        for response in base.responses:
+            desired_columns.append((base.code, response.value))
+    missing_cols = (set(desired_columns)) - set(pv.columns)
+    for col in missing_cols:
+        pv[col] = 0
+
+    pv = pv.reindex(columns=pd.MultiIndex.from_tuples(desired_columns))
+
+    return pv
