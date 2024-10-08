@@ -13,31 +13,31 @@ class CrossTab(BaseModel):
     targets: List[QuestionType] = []
     config: CtabConfig = CtabConfig()
     ppt_config: PptConfig = PptConfig()
-    # _dataframe: Optional[pd.DataFrame] = None
 
     @property
     def dataframe(self):
         dfs = []
-        args_list = [(self.bases, target) for target in self.targets]
+        args_list = [(self.bases, target, self.config.total, self.config.perc, self.config.round_perc) for target in self.targets]
         with mp.Pool(mp.cpu_count()) as pool:
             dfs = pool.map(_pivot_target_with_args, args_list)
         # Kết hợp các DataFrame trả về
         return pd.concat(dfs, axis=0)
     
 def _pivot_target_with_args(args):
-    bases, target = args
-    return _pivot_target(bases, target)
+    bases, target, total, perc, round_perc = args
+    return _pivot_target(bases, target, total, perc, round_perc)
 
-def _pivot_target(bases: List[BaseType], target: QuestionType, total=True, perc=True, round_perc=True):
+def _pivot_target(bases: List[BaseType], target: QuestionType, total=True, perc=True, round_perc=True, deep_by=[]):
+    args = {'bases': bases, 'target': target, 'total': total, 'perc': perc, 'round_perc': round_perc, 'deep_by': deep_by}
     if isinstance(target, (SingleAnswer, MultipleAnswer)):
-        return _pivot_sm(bases, target, total, perc, round_perc)
+        return _pivot_sm(**args)
     elif isinstance(target, Rank):
-        return pd.concat([_pivot_sm(bases, sa, total, perc, round_perc) for sa in target.decompose()], axis=0)
+        return pd.concat([_pivot_sm(bases, sa, total, perc, round_perc, deep_by) for sa in target.decompose()], axis=0)
     elif isinstance(target, Number):
-        return _pivot_number(bases, target, total, perc, round_perc)
+        return _pivot_number(**args)
     
-def _custom_merge(bases: List[BaseType], target: QuestionType):
-    for q in [target] + bases:
+def _custom_merge(bases: List[BaseType], target: QuestionType, deep_by: List[BaseType]):
+    for q in [target] + bases + deep_by:
         q.df_config.melt = False
         q.df_config.value = 'text'
     df = pd.concat([i.dataframe for i in bases], axis=1)
@@ -49,18 +49,24 @@ def _custom_merge(bases: List[BaseType], target: QuestionType):
     target_df = target_df.query('target_answer != 0')
 
     target_df.loc[:, ['target_root']] = target_df['target_core'].apply(lambda x: '_'.join(x.split('_')[:-1]) if '_' in x else x)
-
-    df = df.merge(target_df, on='resp_id', how='inner')
     
+    df = df.merge(target_df, on='resp_id', how='inner')
+
+    for index, deep in enumerate(deep_by, 1):
+        deep_df = deep.dataframe.stack().reset_index()
+        deep_df.columns = ['resp_id', f'deep_core_{index}', f'deep_answer_{index}']
+        df = df.merge(deep_df, on='resp_id', how='inner')
     return df
         
-def _pivot_sm(bases: List[BaseType], target: QuestionType, total=True, perc=True, round_perc=True):
+def _pivot_sm(bases: List[BaseType], target: QuestionType, total=True, perc=True, round_perc=True, deep_by=[]):
     
-    df = _custom_merge(bases, target)
+    df = _custom_merge(bases, target, deep_by)
+    
+    deep_indexes = [f'deep_answer_{index}' for index in range(1, len(deep_by) + 1)]
 
     total_label = 'Total'
 
-    pv = pd.pivot_table(df, columns=['root', 'answer'], index=['target_root', 'target_answer'], values='resp_id', 
+    pv = pd.pivot_table(df, columns=deep_indexes + ['root', 'answer'], index=['target_root', 'target_answer'], values='resp_id', 
                         aggfunc=pd.Series.nunique, fill_value=0, margins=True, margins_name=total_label)
     
 
