@@ -96,7 +96,7 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, total=True, perc=True
     else:
         for base in bases:
             for response in base.responses:
-                desired_columns.append((deep.code, base.code, response.value))
+                desired_columns.append(base.code, response.value)
 
 
     missing_cols = (set(desired_columns)) - set(pv.columns)
