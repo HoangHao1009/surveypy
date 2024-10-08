@@ -154,7 +154,7 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
                 sig_test_result = _sig_test(pv.loc[:, column], sig)
 
                 # Duyệt qua từng hàng và cộng chuỗi từng phần tử
-                pv.loc[:, column] = pv.loc[:, column].astype(str).combine(sig_test_result, lambda x, y: x + " " + y)
+                pv.loc[:, column] = pv.loc[:, column].astype(str).combine(sig_test_result, lambda x, y: str(x) + " " + str(y))
 
     return pv
 
