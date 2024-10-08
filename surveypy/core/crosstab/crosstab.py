@@ -109,12 +109,7 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
     
 
     pv = pv.loc[~pv.index.get_level_values(0).isin([total_label])]
-        
-    if perc:
-        pv = pv.div(total_df.values, axis=1).fillna(0)
-        if round_perc:
-            pv = pv.map(lambda x: f'{round(x*100)}%')
-            
+                    
     pv = pd.concat([pv, total_df])
 
     index_total_label = f"{target.code}_Total"
@@ -152,11 +147,14 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
             for base in bases:
                 column = pair + (base.code, )
                 sig_test_result = _sig_test(pv.loc[:, column], sig)
-                
-                pv.loc[:, column] = _sig_test(pv.loc[:, column], sig)
-                
+                                
+                if perc:
+                    pv.loc[:, column] = pv.loc[:, column].div(total_df.values, axis=1).fillna(0)
+                    if round_perc:
+                        pv.loc[:, column] = pv.loc[:, column].map(lambda x: f'{round(x*100)}%')
+
                 # Duyệt qua từng hàng và cộng chuỗi từng phần tử
-                # pv.loc[:, column] = pv.loc[:, column].astype(str).combine(sig_test_result, lambda x, y: str(x) + " " + str(y))
+                pv.loc[:, column] = pv.loc[:, column].astype(str) + " " + sig_test_result
 
     return pv
 
