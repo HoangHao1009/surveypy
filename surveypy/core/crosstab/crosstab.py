@@ -53,7 +53,7 @@ class CrossTab(BaseModel):
         def parallel_process(response_pairs, base, target, config):
             with ProcessPoolExecutor(max_workers=multiprocessing.cpu_count()) as process_executor:
                 # Sử dụng đa tiến trình để xử lý các cặp
-                process_with_params = partial(process_wrapper, base=base, target=target, config=config)
+                process_with_params = partial(process_pair, bases=base, targets=target, config=config)
                 results = list(process_executor.map(process_with_params, response_pairs))
             return dict(results)
 
@@ -222,9 +222,6 @@ def process_pair(pair, bases, targets, config):
         'col_root': [response.root for response in pair]
     }
     
-def process_wrapper(pair, bases, targets, config):
-    return process_pair(pair, bases, targets, config)
-
                         
 def _ctab(config, bases, targets) -> pd.DataFrame:
     base_dfs = []
