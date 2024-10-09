@@ -11,7 +11,8 @@ QuestionType = Union[SingleAnswer, MultipleAnswer, Rank, Number]
 
 def _custom_merge(bases: List[BaseType], target: QuestionType, deep_by: List[BaseType] = []):
     for q in [target] + bases + deep_by:
-        q.df_config.update({'melt': False, 'value': 'text'})
+        q.df_config.melt = False
+        q.df_config.value = 'text'
 
     df = pd.concat([base.dataframe for base in bases], axis=1).stack(dropna=True).stack(dropna=True).reset_index()
     df.columns = ['resp_id', 'core', 'root', 'answer']
