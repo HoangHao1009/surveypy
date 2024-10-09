@@ -61,7 +61,7 @@ class CrossTab(BaseModel):
             sheet_name = 'CrossTab1'
         report_function.df_to_excel(self.dataframe, excel_path, sheet_name)
         
-    def to_ppt(self, ppt_path: str):
+    # def to_ppt(self, ppt_path: str):
         self.config.total = False
         self.config.sig = None
         self.config.round_perc = False
@@ -109,50 +109,50 @@ class CrossTab(BaseModel):
                     print(f'Error processing {row} x {column}: {e}')
 
 
-    # def to_ppt(self, ppt_path: str):
-    #     self.config.total = False
-    #     self.config.sig = None
-    #     self.config.round_perc = False
-    #     df = self.dataframe
-    #     if self.config.deep_by:
-    #         deep_repsonses = [[i.value for i in deep.responses] for deep in self.config.deep_by]
-    #         pairs = list(itertools.product(*deep_repsonses))
-    #         for pair in pairs:
-    #             for base in self.bases:
-    #                 for target in self.targets:
-    #                     column = pair + (base.code, )
-    #                     row = target.code
-    #                     title = f'{row} x {column}'
-    #                     try:
-    #                         part_df = df.loc[row, column].reset_index()
-    #                         part_df.rename({'target_answer': 'row_value'}, inplace = True, axis=1)
-    #                         report_function.create_pptx_chart(
-    #                             template_path=ppt_path,
-    #                             dataframe=part_df,
-    #                             type='column',
-    #                             title=title,
-    #                             config=self.ppt_config
-    #                         )
-    #                     except:
-    #                         print(f'{base.code}x{target.code}x{pair} Error to ppt')
+    def to_ppt(self, ppt_path: str):
+        self.config.total = False
+        self.config.sig = None
+        self.config.round_perc = False
+        df = self.dataframe
+        if self.config.deep_by:
+            deep_repsonses = [[i.value for i in deep.responses] for deep in self.config.deep_by]
+            pairs = list(itertools.product(*deep_repsonses))
+            for pair in pairs:
+                for base in self.bases:
+                    for target in self.targets:
+                        column = pair + (base.code, )
+                        row = target.code
+                        title = f'{row} x {column}'
+                        try:
+                            part_df = df.loc[row, column].reset_index()
+                            part_df.rename({'target_answer': 'row_value'}, inplace = True, axis=1)
+                            report_function.create_pptx_chart(
+                                template_path=ppt_path,
+                                dataframe=part_df,
+                                type='column',
+                                title=title,
+                                config=self.ppt_config
+                            )
+                        except:
+                            print(f'{base.code}x{target.code}x{pair} Error to ppt')
 
-    #     else:
-    #         for base in self.bases:
-    #             for target in self.targets:
-    #                 column = base.code
-    #                 row = target.code
-    #                 title = f'{row} x {column}'
-    #                 try:
-    #                     part_df = df.loc[row, column].reset_index()
-    #                     part_df.rename({'target_answer': 'row_value'}, inplace = True, axis=1)
-    #                     report_function.create_pptx_chart(
-    #                         template_path=ppt_path,
-    #                         dataframe=part_df,
-    #                         type='column',
-    #                         title=title,
-    #                         config=self.ppt_config
-    #                     )
-    #                 except:
-    #                     print(f'{base.code}x{target.code} Error to ppt')
+        else:
+            for base in self.bases:
+                for target in self.targets:
+                    column = base.code
+                    row = target.code
+                    title = f'{row} x {column}'
+                    try:
+                        part_df = df.loc[row, column].reset_index()
+                        part_df.rename({'target_answer': 'row_value'}, inplace = True, axis=1)
+                        report_function.create_pptx_chart(
+                            template_path=ppt_path,
+                            dataframe=part_df,
+                            type='column',
+                            title=title,
+                            config=self.ppt_config
+                        )
+                    except:
+                        print(f'{base.code}x{target.code} Error to ppt')
 
     
