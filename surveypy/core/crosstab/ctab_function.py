@@ -55,31 +55,6 @@ def _desired_columns(deep_by, total, bases):
 
     return desired_columns
 
-
-# def _desired_columns(deep_by, total, bases):
-#     desired_columns = []
-
-#     # Thêm nhãn Total nếu cần
-#     if total:
-#         total_label = ('Total',) + ('',) * len(deep_by)
-#         desired_columns.append(total_label)
-
-#     if deep_by:
-#         for deep in deep_by:
-#             for deep_response in deep.responses:
-#                 for base in bases:
-#                     for response in base.responses:
-#                         desired_columns.append((deep_response.value, base.code, response.value))
-                        
-#     else:
-#         # Không có deep_by, chỉ làm việc với bases
-#         for base in bases:
-#             desired_columns.extend(
-#                 [(base.code, response.value) for response in base.responses]
-#             )
-            
-#     return desired_columns
-
 def _df_parts(pv, deep_by, bases) -> Dict:
     result = {}
     deep_repsonses = [[i.value for i in deep.responses] for deep in deep_by]
@@ -156,7 +131,7 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
 
         desired_indexes = [response.value for response in target.responses]
         missing_indexes = set(desired_indexes) - set(pv.index.get_level_values(1))
-        new_rows = pd.DataFrame([[0] * len(pv.columns)], columns=pv.columns, 
+        new_rows = pd.DataFrame([[fill] * len(pv.columns)], columns=pv.columns, 
                                 index=pd.MultiIndex.from_tuples([(target.code, idx) for idx in missing_indexes], 
                                 names=pv.index.names))
         pv = pd.concat([pv, new_rows]).sort_index(level=1, key=lambda x: pd.Categorical(x, categories=desired_indexes, ordered=True))
