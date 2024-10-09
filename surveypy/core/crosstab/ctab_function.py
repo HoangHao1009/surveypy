@@ -95,7 +95,7 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
     if config.perc:
         pv = raw_pv.div(total_df.values, axis=1).fillna(0)
         if config.round_perc:
-            pv = pv.applymap(lambda x: f'{round(x * 100)}%')
+            pv = pv.map(lambda x: f'{round(x*100)}%')
         fill = '0%'
     else:
         pv = raw_pv
