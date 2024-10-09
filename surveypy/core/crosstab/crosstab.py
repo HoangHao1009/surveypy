@@ -84,7 +84,21 @@ def _desired_columns(deep_by, total, bases):
 
     return desired_columns
 
-   
+def _df_parts(pv, deep_by, bases):
+    result = {}
+    
+    deep_repsonses = [[i.value for i in deep.responses] for deep in deep_by]
+    pairs = list(itertools.product(*deep_repsonses))
+    for pair in pairs:
+        for base in bases:
+            try:
+                column = pair + (base.code, )
+                part_df = pv.loc[:, column]
+                result[column] = part_df
+            except:
+                pass   
+    return result
+        
 def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
     
     total = config.total
@@ -119,34 +133,38 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
         pv = raw_pv
         
     if sig:
-        deep_repsonses = [[i.value for i in deep.responses] for deep in deep_by]
-        pairs = list(itertools.product(*deep_repsonses))
-        test_dfs = []
-        for pair in pairs:
-            for base in bases:
-                try:
-                    column = pair + (base.code, )
-                    test_df = raw_pv.loc[:, column]
-                    test_df.columns = pd.MultiIndex.from_tuples([column + (col,) for col in test_df.columns])
-                    test_result = _sig_test(test_df, sig)  
-                    test_dfs.append(test_result)
-                except:
-                    pass
-        final_test = pd.concat(test_dfs, axis=1)
+        dfs = []
+        df_parts = _df_parts(pv, deep_by, bases)
+        for column, df in df_parts.items():
+            df.columns = pd.MultiIndex.from_tuples([column + (col,) for col in df.columns])
+            test_df = _sig_test(df)
+            dfs.append(test_df)
+        final_test = pd.concat(dfs, axis=1)
         missing_columns = pv.columns.difference(final_test.columns)
         for col in missing_columns:
             final_test[col] = ''
         final_test = final_test[pv.columns]
-
-        # print('final_test.shape', final_test.shape)
-        # print('pv.shape', pv.shape)
-        # print('equal', final_test.columns.equals(pv.columns))
-        # print('final_test.columns', final_test.columns)
-        # print('pv.columns', pv.columns)
-        # print('final_test.index', final_test.index)
-        # print('pv.index', pv.index)
-
         pv = pv.astype(str) + " " + final_test  
+
+        # deep_repsonses = [[i.value for i in deep.responses] for deep in deep_by]
+        # pairs = list(itertools.product(*deep_repsonses))
+        # test_dfs = []
+        # for pair in pairs:
+        #     for base in bases:
+        #         try:
+        #             column = pair + (base.code, )
+        #             test_df = raw_pv.loc[:, column]
+        #             test_df.columns = pd.MultiIndex.from_tuples([column + (col,) for col in test_df.columns])
+        #             test_result = _sig_test(test_df, sig)  
+        #             test_dfs.append(test_result)
+        #         except:
+        #             pass
+        # final_test = pd.concat(test_dfs, axis=1)
+        # missing_columns = pv.columns.difference(final_test.columns)
+        # for col in missing_columns:
+        #     final_test[col] = ''
+        # final_test = final_test[pv.columns]
+        # pv = pv.astype(str) + " " + final_test  
                      
     pv = pd.concat([pv, total_df])
     index_total_label = f"{target.code}_Total"
