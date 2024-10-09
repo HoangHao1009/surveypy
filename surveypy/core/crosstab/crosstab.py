@@ -99,7 +99,7 @@ class CrossTab(BaseModel):
                     tasks.append((target.code, column, title))
 
         # Sử dụng ThreadPoolExecutor để tạo biểu đồ song song
-        with concurrent.futures.ThreadPoolExecutor() as executor:
+        with concurrent.futures.ProcessPoolExecutor() as executor:
             futures = {executor.submit(create_chart, row, column, title): (row, column) for row, column, title in tasks}
             for future in concurrent.futures.as_completed(futures):
                 row, column = futures[future]
