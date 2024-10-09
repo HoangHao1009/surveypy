@@ -137,7 +137,7 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
         
     if sig:
         dfs = []
-        df_parts = _df_parts(pv, deep_by, bases)
+        df_parts = _df_parts(raw_pv, deep_by, bases)
 
         for key, value in df_parts.items():
             column = value['column']
