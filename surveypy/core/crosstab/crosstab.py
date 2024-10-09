@@ -133,8 +133,14 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
                 except:
                     pass
         final_test = pd.concat(test_dfs, axis=1)
+        missing_columns = pv.columns.difference(final_test.columns)
+        for col in missing_columns:
+            final_test[col] = ''
+        final_test = final_test[pv.columns]
+
         print('final_test.shape', final_test.shape)
         print('pv.shape', pv.shape)
+        print('equal', final_test.columns.equals(pv.columns))
         print('final_test.columns', final_test.columns)
         print('pv.columns', pv.columns)
         print('final_test.index', final_test.index)
