@@ -35,27 +35,50 @@ def _custom_merge(bases: List[BaseType], target: QuestionType, deep_by: List[Bas
 
 def _desired_columns(deep_by, total, bases):
     desired_columns = []
-
-    # Thêm nhãn Total nếu cần
-    if total:
-        total_label = ('Total',) + ('',) * len(deep_by)
-        desired_columns.append(total_label)
-
     if deep_by:
+        if total:
+            total_label = ('Total', '')
+            for i in range(len(deep_by)):
+                total_label += ('', )
+            desired_columns.append(total_label)
         for deep in deep_by:
             for deep_response in deep.responses:
                 for base in bases:
                     for response in base.responses:
                         desired_columns.append((deep_response.value, base.code, response.value))
-                        
     else:
-        # Không có deep_by, chỉ làm việc với bases
+        if total:
+            desired_columns.append(('Total', ''))
         for base in bases:
-            desired_columns.extend(
-                [(base.code, response.value) for response in base.responses]
-            )
-            
+            for response in base.responses:
+                desired_columns.append((base.code, response.value))
+
     return desired_columns
+
+
+# def _desired_columns(deep_by, total, bases):
+#     desired_columns = []
+
+#     # Thêm nhãn Total nếu cần
+#     if total:
+#         total_label = ('Total',) + ('',) * len(deep_by)
+#         desired_columns.append(total_label)
+
+#     if deep_by:
+#         for deep in deep_by:
+#             for deep_response in deep.responses:
+#                 for base in bases:
+#                     for response in base.responses:
+#                         desired_columns.append((deep_response.value, base.code, response.value))
+                        
+#     else:
+#         # Không có deep_by, chỉ làm việc với bases
+#         for base in bases:
+#             desired_columns.extend(
+#                 [(base.code, response.value) for response in base.responses]
+#             )
+            
+#     return desired_columns
 
 def _df_parts(pv, deep_by, bases) -> Dict:
     result = {}
@@ -257,27 +280,6 @@ def _pivot_target_with_args(args: Tuple[List[BaseType], QuestionType, CtabConfig
 #     return df
 
 
-# def _desired_columns(deep_by, total, bases):
-#     desired_columns = []
-#     if deep_by:
-#         if total:
-#             total_label = ('Total', '')
-#             for i in range(len(deep_by)):
-#                 total_label += ('', )
-#             desired_columns.append(total_label)
-#         for deep in deep_by:
-#             for deep_response in deep.responses:
-#                 for base in bases:
-#                     for response in base.responses:
-#                         desired_columns.append((deep_response.value, base.code, response.value))
-#     else:
-#         if total:
-#             desired_columns.append(('Total', ''))
-#         for base in bases:
-#             for response in base.responses:
-#                 desired_columns.append((base.code, response.value))
-
-#     return desired_columns
 
 # def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
     
