@@ -134,6 +134,9 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
         new_rows = pd.DataFrame([[fill] * len(pv.columns)], columns=pv.columns, 
                                 index=pd.MultiIndex.from_tuples([(target.code, idx) for idx in missing_indexes], 
                                 names=pv.index.names))
+        
+        print(new_rows)
+        
         pv = pd.concat([pv, new_rows]).sort_index(level=1, key=lambda x: pd.Categorical(x, categories=desired_indexes, ordered=True))
 
     return pv
