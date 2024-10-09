@@ -1,220 +1,163 @@
-from typing import Union, List, Callable
+from ..question import MultipleAnswer, SingleAnswer, Number, Rank, Response
+from ...utils import CtabConfig
+from typing import Union, List, Tuple, Dict
 import pandas as pd
+import itertools
 import numpy as np
 from statsmodels.stats.proportion import proportions_ztest
-from ..question import MultipleAnswer, SingleAnswer, Number, Rank
-from ...utils import CtabConfig
-from copy import deepcopy
-from multiprocessing import Pool
 
 
 BaseType = Union[SingleAnswer, MultipleAnswer, Rank]
 QuestionType = Union[SingleAnswer, MultipleAnswer, Rank, Number]
 
-def _ctab(config, bases, targets) -> pd.DataFrame:
-    base_dfs = []
-    with Pool(processes=4) as pool:  # Sử dụng multiprocessing với 4 tiến trình
-        for base in bases:
-            if isinstance(base, (SingleAnswer, MultipleAnswer)):
-                # Sử dụng starmap để truyền nhiều tham số cho hàm _process_target
-                result = pool.starmap(_process_target, [(base, target, config) for target in targets])
-            elif isinstance(base, Rank):
-                # Sử dụng starmap cho hàm _process_rank
-                result = pool.starmap(_process_rank, [(base, target) for target in targets])
-            else:
-                raise ValueError(f'Invalid base type. Required: SingleAnswer, MultipleAnswer or Rank.')
 
-            # Kết hợp kết quả
-            base_dfs.append(pd.concat(result, axis=0))
+def _pivot_target_with_args(args: Tuple[List[BaseType], QuestionType, CtabConfig]):
+    bases, target, config = args
+    return _pivot_target(bases, target, config)
 
-    return pd.concat(base_dfs, axis=1).fillna(0)
-
-def sig_test(df: pd.DataFrame, sig: float):
-    test_df = pd.DataFrame("", index=df.index, columns=df.columns)
-    num_tests = int(df.shape[1] * (df.shape[1] - 1) / 2)  # Số lượng phép kiểm định
-    if num_tests > 0:
-        bonferroni_sig = sig / num_tests  # Mức ý nghĩa sau khi điều chỉnh
-    else:
-        bonferroni_sig = sig
-
-
-    # Lặp qua từng hàng của DataFrame
-    for index, row in df.iterrows():
-        values = row.values  # Lấy các giá trị trong hàng
-        # total = np.sum(values)  # Tổng giá trị của hàng đó
-
-        # Lặp qua từng cột và so sánh với các cột khác
-        for i in range(len(values)):
-            diff_columns = []
-            for j in range(len(values)):
-                if i != j:
-                    group1_count = df.iloc[:, i].sum()
-                    group2_count = df.iloc[:, j].sum()
-                    total_count = group1_count + group2_count
-
-                    # Kiểm tra nếu tổng của một nhóm bằng 0 (bỏ qua)
-                    if group1_count == 0 or group2_count == 0:
-                        continue
-
-                    # Thực hiện kiểm định z-test cho tỷ lệ
-                    count = np.array([values[i], values[j]])
-                    nobs = np.array([total_count, total_count])
-                    stat, pval = proportions_ztest(count, nobs)
-
-                    # Nếu p-value nhỏ hơn 0.05 thì ghi nhận sự khác biệt
-                    if pval < bonferroni_sig:
-                        alphabe_index = j + 65
-                        # print(j, df.columns[j], chr(alphabe_index))
-                        # diff_columns.append(df.columns[j])
-                        diff_columns.append(chr(alphabe_index))
-
-            # Nếu có cột nào khác biệt, thêm ký tự vào ô đó
-            if len(diff_columns) > 0:
-                test_df.at[index, df.columns[i]] = ''.join(diff_columns)
-    return test_df
-
-
-def _process_target(base, target, config: CtabConfig):
-    if isinstance(target, (SingleAnswer, MultipleAnswer)):
-        return _sm_ctab(base, target, **config.cat_format)
-    elif isinstance(target, Rank):
-        return _rank_ctab(base, target, **config.cat_format)
-    elif isinstance(target, Number):
-        return _num_ctab(base, target, config.num_aggfunc)
-    else:
-        raise ValueError(f'Target required type: SingleAnswer, MultipleAnswer, Rank or Number. Your input type: {type(target)}: {target}')
+def _pivot_target(bases: List[BaseType], target: QuestionType, config: CtabConfig):
     
-def _process_rank(base, target, config: CtabConfig):
     if isinstance(target, (SingleAnswer, MultipleAnswer)):
-        return _rank_ctab(target, base, **config.cat_format)
+        return _pivot_sm(bases, target, config)
     elif isinstance(target, Rank):
-        r = []
-        for element in base.decompose():
-            r.append(_rank_ctab(element, target, **config.cat_format))
-        return pd.concat(r, axis=1).fillna(0)
+        return pd.concat([_pivot_sm(bases, sa, config) for sa in target.decompose()], axis=0)
     elif isinstance(target, Number):
-        r = []
-        for element in base.decompose():
-            r.append(_num_ctab(element, target, config.num_aggfunc))
-        return pd.concat(r, axis=1, join='inner')
+        return _pivot_number(bases, target, config)
+    
+def _custom_merge(bases: List[BaseType], target: QuestionType, deep_by: List[BaseType] = []):
+    for q in [target] + bases + deep_by:
+        q.df_config.melt = False
+        q.df_config.value = 'text'
+    df = pd.concat([i.dataframe for i in bases], axis=1)
+    df = df.stack(dropna=True).stack(dropna=True).reset_index()
+    df.columns = ['resp_id', 'core', 'root', 'answer']
+    df = df.query('answer != 0')
+    target_df = target.dataframe.stack().reset_index()
+    target_df.columns = ['resp_id', 'target_core', 'target_answer']
+    target_df = target_df.query('target_answer != 0')
+
+    target_df.loc[:, ['target_root']] = target_df['target_core'].apply(lambda x: '_'.join(x.split('_')[:-1]) if '_' in x else x)
+    
+    df = df.merge(target_df, on='resp_id', how='inner')
+
+    for index, deep in enumerate(deep_by, 1):
+        deep_df = deep.dataframe.stack().reset_index()
+        deep_df.columns = ['resp_id', f'deep_core_{index}', f'deep_answer_{index}']
+        df = df.merge(deep_df, on='resp_id', how='inner')
+    return df
+
+def _desired_columns(deep_by, total, bases):
+    desired_columns = []
+    if deep_by:
+        if total:
+            total_label = ('Total', '')
+            for i in range(len(deep_by)):
+                total_label += ('', )
+            desired_columns.append(total_label)
+        for deep in deep_by:
+            for deep_response in deep.responses:
+                for base in bases:
+                    for response in base.responses:
+                        desired_columns.append((deep_response.value, base.code, response.value))
     else:
-        raise ValueError(f'Target required type: SingleAnswer, MultipleAnswer, Rank or Number. Your input type: {type(target)}')
+        if total:
+            desired_columns.append(('Total', ''))
+        for base in bases:
+            for response in base.responses:
+                desired_columns.append((base.code, response.value))
 
-def _sm_ctab(
-        base:BaseType, target:QuestionType, 
-        total:bool, perc:bool, round_perc=bool,
-        cat_aggfunc:Union[Callable, str] = pd.Series.nunique,
-        sig=None,
-        dropna=False
-    ) -> pd.DataFrame:
-    """
-    SingleAnswer-MultipleAnswer crosstab function
-    """
-    def _custom_merge(base:BaseType, target:QuestionType):
-        base = deepcopy(base)
-        target = deepcopy(target)
-        base.df_config.melt = True
-        target.df_config.melt = True
-        base.df_config.value = 'text'
-        target.df_config.value = 'text'
-        
-        cross_zero = False
-        temp_id = 999999999999
-        
-        if len(base.respondents) == 0:
-            base.responses[0].respondents.append(temp_id)
-        if len(target.respondents) == 0:
-            target.responses[0].respondents.append(temp_id)
-        
-        if len(set(base.respondents) & set(target.respondents)) == 0:
-            if temp_id not in base.responses[0].respondents:
-                base.responses[0].respondents.append(temp_id)
-            if temp_id not in target.responses[0].respondents:
-                target.responses[0].respondents.append(temp_id)
-            cross_zero = True
-        
-        merge_df = pd.merge(base.dataframe, target.dataframe, on='resp_id')
-        
-        # if merge_df.shape[0] == 0:
-        #     merge_df = pd.concat([merge_df, new_row], ignore_index=True)
-            # print('merge shape 0 - base: ', base.responses[0].respondents)
-            # print('merge shape 0 - target: ',target.responses[0].respondents)
-        
-        return merge_df, cross_zero
+    return desired_columns
 
-        
-    merge_df, cross_zero = _custom_merge(base, target)
 
-    suffix = '_x' if base.code == target.code else ''
+def _df_parts(pv, deep_by, bases) -> Dict:
+    result = {}
+    deep_repsonses = [[i.value for i in deep.responses] for deep in deep_by]
+    pairs = list(itertools.product(*deep_repsonses))
+    for pair in pairs:
+        for base in bases:
+            try:
+                column = pair + (base.code, )
+                test_df = pv.loc[:, column]
+                key = '_'.join(column)
+                result[key] = {}
+                result[key]['column'] = column
+                result[key]['df'] = test_df
+            except:
+                pass
+    return result
 
-    # if base.type == 'matrix_checkbox':
-    #     merge_df[f'{base.code}_core{suffix}'] = merge_df[f'{base.code}_core'].str.rsplit('_', n=1).str[0]
-    # if target.type == 'matrix_checkbox':
-    #     merge_df[f'{target.code}_core{suffix}'] = merge_df[f'{target.code}_core'].str.rsplit('_', n=1).str[0]
-
-    base_root = f'{base.code}_root{suffix}' if 'matrix' not in base.type else f'{base.code}_core{suffix}'
-    base_value = f'{base.code}_value{suffix}'
-
-    target_suffix = '_y' if suffix else ''
-    target_root = f'{target.code}_root{target_suffix}' if 'matrix' not in target.type else f'{target.code}_core{suffix}'
-    target_value = f'{target.code}_value{target_suffix}'
-
-    index = [target_root, target_value]
-    columns = [base_root, base_value]
-    index_total_label = f"{target.code}_Total"
-    column_total_label = f"{base.code}_Total"
+def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
+    
+    total = config.total
+    perc = config.perc
+    deep_by = config.deep_by
+    round_perc = config.round_perc
+    sig = config.sig
+    cat_aggfunc = config.cat_aggfunc
+    dropna = config.dropna
+    
+    
+    df = _custom_merge(bases, target, deep_by)
+    
+    deep_indexes = [f'deep_answer_{index}' for index in range(1, len(deep_by) + 1)]
 
     total_label = 'Total'
-    
-    pv = pd.pivot_table(
-        merge_df,
-        values='resp_id',
-        index=index,
-        columns=columns,
-        aggfunc=cat_aggfunc,
-        fill_value=0,
-        margins=True,
-        margins_name=total_label,
-        dropna=False
-    )
-    
-    if cross_zero:
-        pv.loc[:, :] = 0
 
-    pv.rename_axis(index=['row', 'row_value'], columns=['col', 'col_value'], inplace=True)
+    raw_pv = pd.pivot_table(df, columns=deep_indexes + ['root', 'answer'], index=['target_root', 'target_answer'], values='resp_id', 
+                        aggfunc=cat_aggfunc, fill_value=0, margins=True, margins_name=total_label)
     
-    total_df = pv.loc[[total_label],:]
-
-    pv = pv.loc[~pv.index.get_level_values(0).isin([total_label])]
-    if sig:
-        pv_test = pv.loc[:,~pv.columns.get_level_values(0).isin([total_label])]
-        test_df = sig_test(pv_test, sig)
+    total_df = raw_pv.loc[[total_label],:]
+    raw_pv = raw_pv.loc[~raw_pv.index.get_level_values(0).isin([total_label])]
+    
+    fill = 0
+    
     if perc:
-        pv = pv.div(total_df.values, axis=1)
+        pv = raw_pv.div(total_df.values, axis=1)
         pv = pv.fillna(0)
         if round_perc:
             pv = pv.map(lambda x: f'{round(x*100)}%')
-    
+            fill = '0%'
+    else:
+        
+        pv = raw_pv
+        
     if sig:
-        pv = pv.astype(str) + " " + test_df
+        dfs = []
+        df_parts = _df_parts(raw_pv, deep_by, bases)
 
+        for key, value in df_parts.items():
+            column = value['column']
+            test_df = value['df']
+            test_df.columns = pd.MultiIndex.from_tuples([column + (col,) for col in test_df.columns])
+            test_result = _sig_test(test_df, sig)
+            dfs.append(test_result)
+        final_test = pd.concat(dfs, axis=1)
+        missing_columns = pv.columns.difference(final_test.columns)
+        for col in missing_columns:
+            final_test[col] = ''
+        final_test = final_test[pv.columns]
+        pv = pv.astype(str) + " " + final_test  
+                     
     pv = pd.concat([pv, total_df])
-
+    index_total_label = f"{target.code}_Total"
+    column_total_label = "Total"
     pv.rename(columns={total_label: column_total_label}, inplace=True, index={total_label: index_total_label})
-
+    
     if not total:    
         pv = pv.loc[~pv.index.get_level_values(0).isin([index_total_label]),
                     ~pv.columns.get_level_values(0).isin([column_total_label])]
-    
+
     if not dropna:
-        desired_columns = [response.value for response in base.responses]
+        desired_columns = _desired_columns(deep_by, total, bases)
+        missing_cols = list((set(desired_columns)) - set(pv.columns))
+        new_columns = pd.DataFrame(fill, index=pv.index, columns=missing_cols)
+
+        # Dùng pd.concat để thêm các cột mới vào DataFrame hiện tại
+        pv = pd.concat([pv, new_columns], axis=1)
+            
+        pv = pv.reindex(columns=pd.MultiIndex.from_tuples(desired_columns))
+
         desired_indexes = [response.value for response in target.responses]
-
-        missing_cols = (set(desired_columns)) - set(pv.columns.get_level_values(1))
-
-        for col in missing_cols:
-            pv[(base.code, col)] = 0
-
         current_indexes = pv.index.get_level_values(1)
         for idx in desired_indexes:
             if idx not in current_indexes:
@@ -222,59 +165,94 @@ def _sm_ctab(
                 new_index = pd.MultiIndex.from_tuples([(target.code, idx)], names=pv.index.names)
                 new_row = pd.DataFrame([[0] * len(pv.columns)], columns=pv.columns, index=new_index)
                 pv = pd.concat([pv, new_row])
-
-        pv = pv.sort_index(axis=1, level=1, key=lambda x: pd.Categorical(x, categories=desired_columns, ordered=True))
         pv = pv.sort_index(level=1, key=lambda x: pd.Categorical(x, categories=desired_indexes, ordered=True))
-
+        
+        
     return pv
 
-def _num_ctab(
-        base:BaseType, target:Number,
-        num_aggfunc: List[Union[Callable, str]]
-    ) -> pd.DataFrame:
+def _pivot_number(bases: List[BaseType], target: QuestionType, config: CtabConfig):
+    
+    deep_by = config.deep_by
+    num_aggfunc = config.num_aggfunc
+    dropna = config.dropna
 
-    base.df_config.melt = True
-    target.df_config.melt = True
+    df = _custom_merge(bases, target)
+    
+    deep_indexes = [f'deep_answer_{index}' for index in range(1, len(deep_by) + 1)]
 
-    merge = pd.merge(base.dataframe, target.dataframe, on='resp_id')
 
     pv = pd.pivot_table(
-        merge,
-        values=f'{target.code}_value',
-        columns=[f'{target.code}_core'],
-        index=[f'{base.code}_root', f'{base.code}_value'],
-        aggfunc=num_aggfunc,
-        fill_value=0,
-        dropna=False
+    df,
+    values='target_answer',
+    columns=['target_core'],
+    index=deep_indexes + ['root', 'answer'],
+    aggfunc=num_aggfunc,
+    fill_value=0,
+    dropna=True
     ).T
-    pv.rename_axis(index=['row', 'row_value'], columns=['col', 'col_value'], inplace=True)
-    pv.index = pv.index.map(lambda x: (x[-1], x[0]))
+    
+    if not dropna:
+        desired_columns = _desired_columns(deep_by=deep_by, total=False, bases=bases)
+
+        missing_cols = list((set(desired_columns)) - set(pv.columns))
+        new_columns = pd.DataFrame(0, index=pv.index, columns=missing_cols)
+
+        # Dùng pd.concat để thêm các cột mới vào DataFrame hiện tại
+        pv = pd.concat([pv, new_columns], axis=1)
+            
+        pv = pv.reindex(columns=pd.MultiIndex.from_tuples(desired_columns))
+
     return pv
 
-def _rank_ctab(        
-        base:BaseType, target:BaseType, 
-        total:bool, perc:bool,
-        cat_aggfunc:Union[Callable, str] = pd.Series.nunique,
-        sig=None,
-        dropna=False
-    ) -> pd.DataFrame:
+def _sig_test(df: pd.DataFrame, sig: float):
+    test_df = pd.DataFrame("", index=df.index, columns=df.columns)
+    num_tests = int(df.shape[1] * (df.shape[1] - 1) / 2)  # Số lượng phép kiểm định
+    if num_tests > 0:
+        bonferroni_sig = sig / num_tests  # Mức ý nghĩa sau khi điều chỉnh
+    else:
+        bonferroni_sig = sig
+
+    # Lặp qua từng hàng của DataFrame
+    for index, row in df.iterrows():
+        values = row.values  # Lấy các giá trị trong hàng
+
+        # Lặp qua từng cột và so sánh với các cột khác
+        for i in range(len(values)):
+            diff_columns = []
+            for j in range(len(values)):
+                if i != j:
+                    # Lấy số lượng của từng nhóm từ hàng hiện tại
+                    group1_count = values[i]
+                    group2_count = values[j]
+
+                    # Lấy tổng số mẫu của từng nhóm (giả định tổng mẫu của cột là tổng của cả DataFrame)
+                    nobs1 = df.iloc[:, i].sum()
+                    nobs2 = df.iloc[:, j].sum()
+                    
+                    # Kiểm tra nếu tổng của một nhóm bằng 0 hoặc giá trị đếm bằng NaN (bỏ qua)
+                    if nobs1 == 0 or nobs2 == 0 or np.isnan(group1_count) or np.isnan(group2_count):
+                        continue
+
+                    # Kiểm tra nếu giá trị đếm nhỏ hơn 0 (tránh lỗi trong phép chia)
+                    if group1_count < 0 or group2_count < 0:
+                        continue
+
+                    # Thực hiện kiểm định z-test cho tỷ lệ
+                    count = np.array([group1_count, group2_count])
+                    nobs = np.array([nobs1, nobs2])
+
+                    # Kiểm tra nếu tổng số mẫu khác 0 để tránh lỗi chia cho 0
+                    with np.errstate(divide='ignore', invalid='ignore'):
+                        # Đoạn mã có thể gây ra cảnh báo
+                        stat, pval = proportions_ztest(count, nobs)
+
+                    # Nếu p-value nhỏ hơn mức ý nghĩa đã điều chỉnh, ghi nhận sự khác biệt
+                    if pval < bonferroni_sig:
+                        alphabe_index = j + 65  # Tạo chữ cái đại diện cho cột khác biệt
+                        diff_columns.append(chr(alphabe_index))
+
+            # Nếu có cột nào khác biệt, thêm ký tự vào ô đó
+            if len(diff_columns) > 0:
+                test_df.at[index, df.columns[i]] = ''.join(diff_columns)
     
-    from .crosstab import CrossTab
-
-    if not isinstance(target, Rank) or isinstance(base, Rank):
-        raise ValueError('Need base or target is Rank')
-
-    config = CtabConfig(total=total, perc=perc, 
-                         cat_aggfunc=cat_aggfunc, sig=sig, dropna=dropna)
-
-    if isinstance(target, Rank):
-        ctabs = [CrossTab(bases=[base], targets=[element]) for element in target.decompose()]
-        axis = 0
-    elif isinstance(base, Rank):
-        ctabs = [CrossTab(bases=[element], targets=[base]) for element in base.decompose()] 
-        axis = 1
-
-    for ctab in ctabs:
-        ctab.config = config
-    dfs = [ctab.dataframe for ctab in ctabs] 
-    return pd.concat(dfs, axis=axis)
+    return test_df
