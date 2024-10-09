@@ -140,9 +140,9 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
         df_parts = _df_parts(pv, deep_by, bases)
         print(df_parts)
 
-        for item in df_parts.items():
-            df = item['df']
-            column = item['column']
+        for key, value in df_parts.items():
+            df = value['df']
+            column = value['column']
             df.columns = pd.MultiIndex.from_tuples([column + (col,) for col in df.columns])
             test_df = _sig_test(df, sig)
             dfs.append(test_df)
