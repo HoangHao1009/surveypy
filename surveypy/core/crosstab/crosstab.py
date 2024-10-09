@@ -67,20 +67,6 @@ class CrossTab(BaseModel):
         self.config.round_perc = False
         df = self.dataframe
 
-        def create_chart(row, column, title):
-            try:
-                part_df = df.loc[row, column].reset_index()
-                part_df.rename({'target_answer': 'row_value'}, inplace=True, axis=1)
-                report_function.create_pptx_chart(
-                    template_path=ppt_path,
-                    dataframe=part_df,
-                    type='column',
-                    title=title,
-                    config=self.ppt_config
-                )
-            except Exception as e:
-                print(f'Error creating chart for {row} x {column}: {e}')
-
         tasks = []
 
         if self.config.deep_by:
@@ -100,13 +86,27 @@ class CrossTab(BaseModel):
 
         # Sử dụng ThreadPoolExecutor để tạo biểu đồ song song
         with concurrent.futures.ProcessPoolExecutor() as executor:
-            futures = {executor.submit(create_chart, row, column, title): (row, column) for row, column, title in tasks}
+            futures = {executor.submit(_create_chart, df, row, column, title, ppt_path, self.ppt_config): (row, column) for row, column, title in tasks}
             for future in concurrent.futures.as_completed(futures):
                 row, column = futures[future]
                 try:
                     future.result()
                 except Exception as e:
                     print(f'Error processing {row} x {column}: {e}')
+
+def _create_chart(df, row, column, title, ppt_path, config):
+    try:
+        part_df = df.loc[row, column].reset_index()
+        part_df.rename({'target_answer': 'row_value'}, inplace=True, axis=1)
+        report_function.create_pptx_chart(
+            template_path=ppt_path,
+            dataframe=part_df,
+            type='column',
+            title=title,
+            config=config
+        )
+    except Exception as e:
+        print(f'Error creating chart for {row} x {column}: {e}')
 
 
     # def to_ppt(self, ppt_path: str):
