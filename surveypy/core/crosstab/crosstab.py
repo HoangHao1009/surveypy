@@ -27,6 +27,54 @@ class CrossTab(BaseModel):
         # Kết hợp các DataFrame trả về
         return pd.concat(dfs, axis=0)
     
+    @property
+    def title(self) -> Union[str, list]:
+        base_str = ' '.join([base.code for base in self.bases])
+        target_str = ' '.join([target.code for target in self.targets])
+        return f'{base_str} x {target_str}'
+
+    def __and__(self, target=Union[List[QuestionType], QuestionType]):
+        if isinstance(target, list):
+            lst = self.targets + target
+        elif isinstance(target, (SingleAnswer, MultipleAnswer, Rank, Number)):
+            lst = self.targets + [target]
+        return CrossTab(
+            bases=self.bases,
+            targets=lst,
+            **self.config.format
+        )
+    
+    def __or__(self, target: Union[List[BaseType], BaseType]):
+        if isinstance(target, list):
+            lst = self.bases + target
+        elif isinstance(target, (SingleAnswer, MultipleAnswer, Rank, Number)):
+            lst = self.bases + [target]
+        
+        return CrossTab(
+            bases=lst,
+            targets=self.targets,
+            **self.config.format
+        )
+
+    def to_excel(self, excel_path: str, sheet_name: str=None):
+        if not sheet_name:
+            sheet_name = 'CrossTab1'
+        report_function.df_to_excel(self.dataframe, excel_path, sheet_name)
+
+    def to_ppt(self, ppt_path: str):
+        df = self.dataframe
+        deep_repsonses = [[i.value for i in deep.responses] for deep in self.deep_by]
+        pairs = list(itertools.product(*deep_repsonses))
+        for pair in pairs:
+            for base in self.bases:
+                try:
+                    column = pair + (base.code, )
+                    part_df = df.loc[: column]
+                    
+                except:
+                    pass
+        
+    
 def _pivot_target_with_args(args: Tuple[List[BaseType], QuestionType, CtabConfig]):
     bases, target, config = args
     return _pivot_target(bases, target, config)
@@ -243,14 +291,23 @@ def _sig_test(df: pd.DataFrame, sig: float):
                     nobs1 = df.iloc[:, i].sum()
                     nobs2 = df.iloc[:, j].sum()
                     
-                    # Kiểm tra nếu tổng của một nhóm bằng 0 (bỏ qua)
-                    if nobs1 == 0 or nobs2 == 0:
+                    # Kiểm tra nếu tổng của một nhóm bằng 0 hoặc giá trị đếm bằng NaN (bỏ qua)
+                    if nobs1 == 0 or nobs2 == 0 or np.isnan(group1_count) or np.isnan(group2_count):
+                        continue
+
+                    # Kiểm tra nếu giá trị đếm nhỏ hơn 0 (tránh lỗi trong phép chia)
+                    if group1_count < 0 or group2_count < 0:
                         continue
 
                     # Thực hiện kiểm định z-test cho tỷ lệ
                     count = np.array([group1_count, group2_count])
                     nobs = np.array([nobs1, nobs2])
-                    stat, pval = proportions_ztest(count, nobs)
+
+                    # Kiểm tra nếu tổng số mẫu khác 0 để tránh lỗi chia cho 0
+                    if np.all(nobs > 0):
+                        stat, pval = proportions_ztest(count, nobs)
+                    else:
+                        continue
 
                     # Nếu p-value nhỏ hơn mức ý nghĩa đã điều chỉnh, ghi nhận sự khác biệt
                     if pval < bonferroni_sig:
