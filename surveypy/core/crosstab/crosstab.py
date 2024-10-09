@@ -138,13 +138,13 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
             final_test[col] = ''
         final_test = final_test[pv.columns]
 
-        print('final_test.shape', final_test.shape)
-        print('pv.shape', pv.shape)
-        print('equal', final_test.columns.equals(pv.columns))
-        print('final_test.columns', final_test.columns)
-        print('pv.columns', pv.columns)
-        print('final_test.index', final_test.index)
-        print('pv.index', pv.index)
+        # print('final_test.shape', final_test.shape)
+        # print('pv.shape', pv.shape)
+        # print('equal', final_test.columns.equals(pv.columns))
+        # print('final_test.columns', final_test.columns)
+        # print('pv.columns', pv.columns)
+        # print('final_test.index', final_test.index)
+        # print('pv.index', pv.index)
 
         pv = pv.astype(str) + " " + final_test  
                      
