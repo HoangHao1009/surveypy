@@ -84,21 +84,24 @@ def _desired_columns(deep_by, total, bases):
 
     return desired_columns
 
-def _df_parts(pv, deep_by, bases) -> Dict[Tuple, pd.DataFrame]:
+
+def _df_parts(pv, deep_by, bases) -> Dict:
     result = {}
-    
     deep_repsonses = [[i.value for i in deep.responses] for deep in deep_by]
     pairs = list(itertools.product(*deep_repsonses))
     for pair in pairs:
         for base in bases:
             try:
                 column = pair + (base.code, )
-                part_df = pv.loc[:, column]
-                result[column] = part_df
+                test_df = pv.loc[:, column]
+                key = '_'.join(column)
+                result[key] = {}
+                result['column'] = column
+                result['df'] = test_df
             except:
-                pass   
+                pass
     return result
-        
+
 def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
     
     total = config.total
@@ -137,7 +140,9 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
         df_parts = _df_parts(pv, deep_by, bases)
         print(df_parts)
 
-        for column, df in df_parts.items():
+        for item in df_parts.items():
+            df = item['df']
+            column = item['column']
             df.columns = pd.MultiIndex.from_tuples([column + (col,) for col in df.columns])
             test_df = _sig_test(df, sig)
             dfs.append(test_df)
