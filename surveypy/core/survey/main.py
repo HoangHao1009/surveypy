@@ -117,16 +117,21 @@ class Survey(BaseModel):
         mapping = {
             'main': ['sa', 'ma', 'sa_matrix', 'ma_matrix', 'rank', 'number'],
             'info': ['respondent_info'],
-            'oe': ['text', 'text_dynamic', 'text_other', 'text_matrix']
+            'oe': ['text', 'text_dynamic', 'text_other', 'text_matrix'],
+            'others': [],
         }
         
         result = {}
+        valid_type = list(set(mapping['main']) & set(mapping['info']) & set(mapping['oe']))
         for i, v in mapping.items():
-            questions = [q for q in self.questions if q.type in v]
+            if v  == []:
+                questions = [q for q in self.questions if q.type in v]
+            else:
+                questions = [q for q in self.questions if q.type not in valid_type]
             survey = self.copy()
             survey.questions = questions
             result[i] = survey
-        
+                
         return result
         
     @property
