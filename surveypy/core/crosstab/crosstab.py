@@ -84,7 +84,7 @@ def _desired_columns(deep_by, total, bases):
 
     return desired_columns
 
-def _df_parts(pv, deep_by, bases):
+def _df_parts(pv, deep_by, bases) -> Dict[Tuple, pd.DataFrame]:
     result = {}
     
     deep_repsonses = [[i.value for i in deep.responses] for deep in deep_by]
@@ -135,6 +135,8 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
     if sig:
         dfs = []
         df_parts = _df_parts(pv, deep_by, bases)
+        print(df_parts)
+
         for column, df in df_parts.items():
             df.columns = pd.MultiIndex.from_tuples([column + (col,) for col in df.columns])
             test_df = _sig_test(df, sig)
