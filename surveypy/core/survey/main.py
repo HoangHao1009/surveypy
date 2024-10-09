@@ -451,15 +451,16 @@ class Survey(BaseModel):
                 question.to_ppt(ppt_path, self.ctab_config.perc)
 
         if self.control_variables:
-            for var in self.control_variables:
-                for question in self.questions:
-                    ctab = self[var] | question
-                    ctab.config = self.ctab_config
-                    ctab.ppt_config = self.ppt_config
-                    try:
-                        ctab.to_ppt(ppt_path)
-                    except Exception as e:
-                        print(f'{ctab.title} error when to_ppt: {e}')
+            self.ctab.to_ppt(ppt_path)
+            # for var in self.control_variables:
+            #     for question in self.questions:
+            #         ctab = self[var] | question
+            #         ctab.config = self.ctab_config
+            #         ctab.ppt_config = self.ppt_config
+            #         try:
+            #             ctab.to_ppt(ppt_path)
+            #         except Exception as e:
+            #             print(f'{ctab.title} error when to_ppt: {e}')
                         
     def datasets(self, to: Literal['no_return', 'csv', 'excel'] = 'no_return'):
         self.df_config.value = 'text'

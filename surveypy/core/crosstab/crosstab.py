@@ -74,6 +74,26 @@ class CrossTab(BaseModel):
                         column = pair + (base.code, )
                         row = target.code
                         title = f'{row} x {column}'
+                        try:
+                            part_df = df.loc[row, column].reset_index()
+                            part_df.rename({'target_answer': 'row_value'}, inplace = True, axis=1)
+                            report_function.create_pptx_chart(
+                                template_path=ppt_path,
+                                dataframe=df,
+                                type='column',
+                                title=title,
+                                config=self.ppt_config
+                            )
+                        except:
+                            print(f'{base.code}x{target.code}x{pair} Error to ppt')
+
+        else:
+            for base in self.bases:
+                for target in self.targets:
+                    column = base.code
+                    row = target.code
+                    title = f'{row} x {column}'
+                    try:
                         part_df = df.loc[row, column].reset_index()
                         part_df.rename({'target_answer': 'row_value'}, inplace = True, axis=1)
                         report_function.create_pptx_chart(
@@ -83,21 +103,8 @@ class CrossTab(BaseModel):
                             title=title,
                             config=self.ppt_config
                         )
-        else:
-            for base in self.bases:
-                for target in self.targets:
-                    column = base.code
-                    row = target.code
-                    title = f'{row} x {column}'
-                    part_df = df.loc[row, column].reset_index()
-                    part_df.rename({'target_answer': 'row_value'}, inplace = True, axis=1)
-                    report_function.create_pptx_chart(
-                        template_path=ppt_path,
-                        dataframe=df,
-                        type='column',
-                        title=title,
-                        config=self.ppt_config
-                    )
+                    except:
+                        print(f'{base.code}x{target.code} Error to ppt')
 
     
 def _pivot_target_with_args(args: Tuple[List[BaseType], QuestionType, CtabConfig]):
