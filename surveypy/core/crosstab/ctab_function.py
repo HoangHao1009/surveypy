@@ -95,7 +95,6 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
         pv = raw_pv.div(total_df.values, axis=1)
         if config.round_perc:
             pv = pv.map(lambda x: f'{round(x*100)}%')
-        fill = '0%'
     else:
         pv = raw_pv
         
@@ -134,9 +133,7 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
         new_rows = pd.DataFrame([[fill] * len(pv.columns)], columns=pv.columns, 
                                 index=pd.MultiIndex.from_tuples([(target.code, idx) for idx in missing_indexes], 
                                 names=pv.index.names))
-        
-        print(new_rows)
-        
+                
         pv = pd.concat([pv, new_rows]).sort_index(level=1, key=lambda x: pd.Categorical(x, categories=desired_indexes, ordered=True))
 
     return pv
