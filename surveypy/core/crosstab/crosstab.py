@@ -64,6 +64,7 @@ class CrossTab(BaseModel):
     def to_ppt(self, ppt_path: str):
         self.config.total = False
         self.config.sig = None
+        self.config.round_perc = False
         df = self.dataframe
         if self.config.deep_by:
             deep_repsonses = [[i.value for i in deep.responses] for deep in self.config.deep_by]
@@ -79,7 +80,7 @@ class CrossTab(BaseModel):
                             part_df.rename({'target_answer': 'row_value'}, inplace = True, axis=1)
                             report_function.create_pptx_chart(
                                 template_path=ppt_path,
-                                dataframe=df,
+                                dataframe=part_df,
                                 type='column',
                                 title=title,
                                 config=self.ppt_config
@@ -98,7 +99,7 @@ class CrossTab(BaseModel):
                         part_df.rename({'target_answer': 'row_value'}, inplace = True, axis=1)
                         report_function.create_pptx_chart(
                             template_path=ppt_path,
-                            dataframe=df,
+                            dataframe=part_df,
                             type='column',
                             title=title,
                             config=self.ppt_config
@@ -205,14 +206,16 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
     total_df = raw_pv.loc[[total_label],:]
     raw_pv = raw_pv.loc[~raw_pv.index.get_level_values(0).isin([total_label])]
     
+    fill = 0
+    
     if perc:
-        fill = '0%'
         pv = raw_pv.div(total_df.values, axis=1)
         pv = pv.fillna(0)
         if round_perc:
             pv = pv.map(lambda x: f'{round(x*100)}%')
+            fill = '0%'
     else:
-        fill = 0
+        
         pv = raw_pv
         
     if sig:
