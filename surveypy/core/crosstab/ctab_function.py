@@ -138,13 +138,12 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
                                 names=pv.index.names))
         pv = pd.concat([pv, new_rows]).sort_index(level=1, key=lambda x: pd.Categorical(x, categories=desired_indexes, ordered=True))
 
-    return pv.fillna(fill)
+    return pv
 
 def _pivot_number(bases: List[BaseType], target: QuestionType, config: CtabConfig):
     df = _custom_merge(bases, target)
     
     deep_indexes = [f'deep_answer_{index}' for index in range(1, len(config.deep_by) + 1)]
-
 
     pv = pd.pivot_table(
     df,
