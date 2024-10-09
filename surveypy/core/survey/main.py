@@ -124,10 +124,11 @@ class Survey(BaseModel):
         result = {}
         valid_type = list(set(mapping['main']) | set(mapping['info']) | set(mapping['oe']))
         for i, v in mapping.items():
-            if v  == []:
+            if v  != []:
                 questions = [q for q in self.questions if q.type in v]
             else:
                 questions = [q for q in self.questions if q.type not in valid_type]
+                
             survey = self.copy()
             survey.questions = questions
             result[i] = survey
