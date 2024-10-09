@@ -138,14 +138,14 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
     if sig:
         dfs = []
         df_parts = _df_parts(pv, deep_by, bases)
-        print(df_parts)
 
         for key, value in df_parts.items():
-            df = value['df']
             column = value['column']
-            df.columns = pd.MultiIndex.from_tuples([column + (col,) for col in df.columns])
-            test_df = _sig_test(df, sig)
-            dfs.append(test_df)
+            test_df = value['df']
+            test_df.columns = pd.MultiIndex.from_tuples([column + (col,) for col in test_df.columns])
+            print(test_df)
+            test_result = _sig_test(test_df, sig)
+            dfs.append(test_result)
         final_test = pd.concat(dfs, axis=1)
         missing_columns = pv.columns.difference(final_test.columns)
         for col in missing_columns:
