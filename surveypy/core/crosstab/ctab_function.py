@@ -102,11 +102,21 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
         fill = 0
         
     if config.sig:
-        final_test = pd.concat(
-            [_sig_test(value['df'], config.sig).reindex(columns=[value['column'] + (c,) for c in value['df'].columns]) 
-             for key, value in _df_parts(raw_pv, config.deep_by, bases).items()], axis=1
-        ).reindex(columns=pv.columns, fill_value='')
-        pv = pv.astype(str) + " " + final_test
+        dfs = []
+        df_parts = _df_parts(raw_pv, config.deep_by, bases)
+
+        for key, value in df_parts.items():
+            column = value['column']
+            test_df = value['df']
+            test_df.columns = pd.MultiIndex.from_tuples([column + (col,) for col in test_df.columns])
+            test_result = _sig_test(test_df, config.sig)
+            dfs.append(test_result)
+        final_test = pd.concat(dfs, axis=1)
+        missing_columns = pv.columns.difference(final_test.columns)
+        for col in missing_columns:
+            final_test[col] = ''
+        final_test = final_test[pv.columns]
+        pv = pv.astype(str) + " " + final_test  
 
     pv = pd.concat([pv, total_df])
     pv.rename(columns={total_label: "Total"}, index={total_label: f"{target.code}_Total"}, inplace=True)
