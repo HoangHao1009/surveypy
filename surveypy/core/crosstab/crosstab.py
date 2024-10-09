@@ -66,7 +66,7 @@ class CrossTab(BaseModel):
         self.config.sig = None
         df = self.dataframe
         if self.config.deep_by:
-            deep_repsonses = [[i.value for i in deep.responses] for deep in self.deep_by]
+            deep_repsonses = [[i.value for i in deep.responses] for deep in self.config.deep_by]
             pairs = list(itertools.product(*deep_repsonses))
             for pair in pairs:
                 for base in self.bases:
