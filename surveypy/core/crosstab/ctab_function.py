@@ -93,7 +93,7 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
     raw_pv = raw_pv.loc[~raw_pv.index.get_level_values(0).isin([total_label])]
 
     if config.perc:
-        pv = raw_pv.div(total_df.values, axis=1).fillna(0)
+        pv = raw_pv.div(total_df.values, axis=1)
         if config.round_perc:
             pv = pv.map(lambda x: f'{round(x*100)}%')
         fill = '0%'
@@ -138,7 +138,7 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
                                 names=pv.index.names))
         pv = pd.concat([pv, new_rows]).sort_index(level=1, key=lambda x: pd.Categorical(x, categories=desired_indexes, ordered=True))
 
-    return pv
+    return pv.fillna(fill)
 
 def _pivot_number(bases: List[BaseType], target: QuestionType, config: CtabConfig):
     df = _custom_merge(bases, target)
