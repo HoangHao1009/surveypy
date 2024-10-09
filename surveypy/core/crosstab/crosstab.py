@@ -63,18 +63,42 @@ class CrossTab(BaseModel):
 
     def to_ppt(self, ppt_path: str):
         self.config.total = False
+        self.config.sig = None
         df = self.dataframe
-        deep_repsonses = [[i.value for i in deep.responses] for deep in self.deep_by]
-        pairs = list(itertools.product(*deep_repsonses))
-        for pair in pairs:
+        if self.config.deep_by:
+            deep_repsonses = [[i.value for i in deep.responses] for deep in self.deep_by]
+            pairs = list(itertools.product(*deep_repsonses))
+            for pair in pairs:
+                for base in self.bases:
+                    for target in self.targets:
+                        column = pair + (base.code, )
+                        row = target.code
+                        title = f'{row} x {column}'
+                        part_df = df.loc[row, column].reset_index()
+                        part_df.rename({'target_answer': 'row_value'}, inplace = True, axis=1)
+                        report_function.create_pptx_chart(
+                            template_path=ppt_path,
+                            dataframe=df,
+                            type='column',
+                            title=title,
+                            config=self.ppt_config
+                        )
+        else:
             for base in self.bases:
-                try:
-                    column = pair + (base.code, )
-                    part_df = df.loc[: column]
-                    df.columns = df.columns.get_level_values(-1)
-                except:
-                    pass
-        
+                for target in self.targets:
+                    column = base.code
+                    row = target.code
+                    title = f'{row} x {column}'
+                    part_df = df.loc[row, column].reset_index()
+                    part_df.rename({'target_answer': 'row_value'}, inplace = True, axis=1)
+                    report_function.create_pptx_chart(
+                        template_path=ppt_path,
+                        dataframe=df,
+                        type='column',
+                        title=title,
+                        config=self.ppt_config
+                    )
+
     
 def _pivot_target_with_args(args: Tuple[List[BaseType], QuestionType, CtabConfig]):
     bases, target, config = args
