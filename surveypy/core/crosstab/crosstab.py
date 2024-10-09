@@ -96,8 +96,8 @@ def _df_parts(pv, deep_by, bases) -> Dict:
                 test_df = pv.loc[:, column]
                 key = '_'.join(column)
                 result[key] = {}
-                result['column'] = column
-                result['df'] = test_df
+                result[key]['column'] = column
+                result[key]['df'] = test_df
             except:
                 pass
     return result
