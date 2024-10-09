@@ -133,12 +133,12 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
                 except:
                     pass
         final_test = pd.concat(test_dfs, axis=1)
-        print(final_test.shape)
-        print(pv.shape)
-        print(final_test.columns)
-        print(pv.columns)
-        print(final_test.index)
-        print(pv.index)
+        print('final_test.shape', final_test.shape)
+        print('pv.shape', pv.shape)
+        print('final_test.columns', final_test.columns)
+        print('pv.columns', pv.columns)
+        print('final_test.index', final_test.index)
+        print('pv.index', pv.index)
 
         pv = pv.astype(str) + " " + final_test  
                      
