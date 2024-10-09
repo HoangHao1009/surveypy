@@ -62,6 +62,7 @@ class CrossTab(BaseModel):
         report_function.df_to_excel(self.dataframe, excel_path, sheet_name)
 
     def to_ppt(self, ppt_path: str):
+        self.config.total = False
         df = self.dataframe
         deep_repsonses = [[i.value for i in deep.responses] for deep in self.deep_by]
         pairs = list(itertools.product(*deep_repsonses))
@@ -70,7 +71,7 @@ class CrossTab(BaseModel):
                 try:
                     column = pair + (base.code, )
                     part_df = df.loc[: column]
-                    
+                    df.columns = df.columns.get_level_values(-1)
                 except:
                     pass
         
@@ -304,10 +305,9 @@ def _sig_test(df: pd.DataFrame, sig: float):
                     nobs = np.array([nobs1, nobs2])
 
                     # Kiểm tra nếu tổng số mẫu khác 0 để tránh lỗi chia cho 0
-                    if np.all(nobs > 0):
+                    with np.errstate(divide='ignore', invalid='ignore'):
+                        # Đoạn mã có thể gây ra cảnh báo
                         stat, pval = proportions_ztest(count, nobs)
-                    else:
-                        continue
 
                     # Nếu p-value nhỏ hơn mức ý nghĩa đã điều chỉnh, ghi nhận sự khác biệt
                     if pval < bonferroni_sig:
