@@ -151,26 +151,6 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
             final_test[col] = ''
         final_test = final_test[pv.columns]
         pv = pv.astype(str) + " " + final_test  
-
-        # deep_repsonses = [[i.value for i in deep.responses] for deep in deep_by]
-        # pairs = list(itertools.product(*deep_repsonses))
-        # test_dfs = []
-        # for pair in pairs:
-        #     for base in bases:
-        #         try:
-        #             column = pair + (base.code, )
-        #             test_df = raw_pv.loc[:, column]
-        #             test_df.columns = pd.MultiIndex.from_tuples([column + (col,) for col in test_df.columns])
-        #             test_result = _sig_test(test_df, sig)  
-        #             test_dfs.append(test_result)
-        #         except:
-        #             pass
-        # final_test = pd.concat(test_dfs, axis=1)
-        # missing_columns = pv.columns.difference(final_test.columns)
-        # for col in missing_columns:
-        #     final_test[col] = ''
-        # final_test = final_test[pv.columns]
-        # pv = pv.astype(str) + " " + final_test  
                      
     pv = pd.concat([pv, total_df])
     index_total_label = f"{target.code}_Total"
