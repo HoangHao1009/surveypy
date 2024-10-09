@@ -500,11 +500,8 @@ class Survey(BaseModel):
         dimRespondentChose = parts['main'].dataframe.reset_index()
         
         dimRespondentInfo['timestamp'] = dimRespondentInfo['timestamp'].map(_parse_timestamp)
-        dimRespondentInfo['day'] = dimRespondentInfo['timestamp'].dt.day
-        dimRespondentInfo['month'] = dimRespondentInfo['timestamp'].dt.month
-        dimRespondentInfo['year'] = dimRespondentInfo['timestamp'].dt.year
-        dimRespondentInfo['hour'] = dimRespondentInfo['timestamp'].dt.hour
-        
+        dimRespondentInfo['date'] = dimRespondentInfo['timestamp'].dt.date
+        dimRespondentInfo['hour'] = dimRespondentInfo['timestamp'].dt.hour        
         dataset = {
             'dimRespondentInfo': dimRespondentInfo,
             'dimRespondentChose': dimRespondentChose,
