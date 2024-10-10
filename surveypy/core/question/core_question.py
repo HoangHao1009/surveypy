@@ -150,9 +150,8 @@ class Question(BaseModel):
             mapping = []
 
             for new_response in new_responses:
-                for k, v in construct_dict.items():
-                    if new_response.value in v:
-                        old_label = k
+                for old_label, new_label_list in construct_dict.items():
+                    if new_response.value in new_label_list:
                         new_respondents = old_label_to_respondents[old_label]
                         new_response.respondents.extend(new_respondents)
                         
