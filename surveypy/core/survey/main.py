@@ -516,8 +516,8 @@ class Survey(BaseModel):
                 
         dataset = {
             'dimRespondentInfo': dimRespondentInfo,
-            'dimRespondentWide': dimRespondentWide,
-            'dimResponseLong': dimResponseLong,
+            'dimRespondentChose': dimRespondentWide,
+            'dimResponse': dimResponseLong,
             'dimAnswer': dimAnswer,
             'dimQuestion': dimQuestion
         }
