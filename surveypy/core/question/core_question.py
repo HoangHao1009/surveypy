@@ -122,12 +122,13 @@ class Question(BaseModel):
                 new_responses.append(new_response)
                 
                 for respondent in new_respondents:
-                    mapping.append({
-                        'resp_id': respondent, 
-                        'question_code': self.code, 
-                        'answer_text': new_label,
-                        'old_answer_text': old_label_list
-                    })
+                    for old_label in old_label_list:
+                        mapping.append({
+                            'resp_id': respondent, 
+                            'question_code': self.code, 
+                            'answer_text': new_label,
+                            'old_answer_text': old_label
+                        })
                 
             if to_ma or isinstance(self, MultipleAnswer):
                 question = MultipleAnswer(**self._info, responses=new_responses)
