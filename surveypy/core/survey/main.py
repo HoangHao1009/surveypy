@@ -508,6 +508,12 @@ class Survey(BaseModel):
         dimRespondentInfo['timestamp'] = dimRespondentInfo['timestamp'].map(_parse_timestamp)
         dimRespondentInfo['date'] = dimRespondentInfo['timestamp'].dt.date
         dimRespondentInfo['hour'] = dimRespondentInfo['timestamp'].dt.hour        
+        for part in [parts['oe'], parts['others']]:
+            if part.questions:
+                part.df_config.col_type = 'single'
+                df = part.dataframe.reset_index()
+                dimRespondentWide = pd.merge(dimRespondentWide, df, how='left', on='resp_id')
+                
         dataset = {
             'dimRespondentInfo': dimRespondentInfo,
             'dimRespondentWide': dimRespondentWide,
@@ -515,13 +521,6 @@ class Survey(BaseModel):
             'dimAnswer': dimAnswer,
             'dimQuestion': dimQuestion
         }
-                    
-        for part in [parts['oe'], parts['others']]:
-            if part.questions:
-                print('append')
-                part.df_config.col_type = 'single'
-                df = part.dataframe.reset_index()
-                dimRespondentWide = pd.merge(dimRespondentWide, df, how='left', on='resp_id')
                 
         if parts['reconstructed'].questions:
             dataset['dimReconstructMapping'] = pd.concat(
