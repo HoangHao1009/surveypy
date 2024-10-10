@@ -505,7 +505,7 @@ class Survey(BaseModel):
         parts['main'].df_config.col_type = 'single'
         dimRespondentWide = parts['main'].dataframe.reset_index()
         
-        dimRespondentInfo['timestamp'] = dimRespondentInfo['timestamp'].map(_parse_timestamp)
+        dimRespondentInfo['timestamp'] = dimRespondentInfo['timestamp'].map(str_function._parse_timestamp)
         dimRespondentInfo['date'] = dimRespondentInfo['timestamp'].dt.date
         dimRespondentInfo['hour'] = dimRespondentInfo['timestamp'].dt.hour        
         for part in [parts['oe'], parts['others']]:
@@ -544,18 +544,7 @@ class Survey(BaseModel):
         self.to_spss()
         self.to_ppt()
         self.datasets(to=datasets_to)
-        
-    
-def _parse_timestamp(timestamp):
-    
-    # Loại bỏ phần ICT khỏi chuỗi thời gian
-    dt_without_tz = " ".join(timestamp.split()[:-1])
-    # Chuyển đổi chuỗi thành datetime
-    dt = pd.to_datetime(dt_without_tz)
-    # Áp dụng lại múi giờ ICT
-    return dt.tz_localize('Asia/Bangkok')
-
-         
+                 
 # def _to_utc(series):
 #     # Chuyển đổi thời gian với errors='coerce' để lỗi chuyển thành NaT
 #     series = pd.to_datetime(series, format='%d %b, %Y %I:%M:%S %p ICT', errors='coerce')

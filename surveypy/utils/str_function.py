@@ -1,5 +1,16 @@
 import re
 from bs4 import BeautifulSoup
+import pandas as pd
+
+def _parse_timestamp(timestamp):
+    
+    # Loại bỏ phần ICT khỏi chuỗi thời gian
+    dt_without_tz = " ".join(timestamp.split()[:-1])
+    # Chuyển đổi chuỗi thành datetime
+    dt = pd.to_datetime(dt_without_tz)
+    # Áp dụng lại múi giờ ICT
+    return dt.tz_localize('Asia/Bangkok')
+
 
 def custom_sort(item, priority_list=[]):
     def split_key(item):
