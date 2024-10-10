@@ -66,7 +66,7 @@ class SingleAnswer(Question):
     
     def to_scale(self):
         from .number import Number
-        return Number(
+        number = Number(
             code=f'{self.code}S',
             text=f'{self.text}_Scale',
             type='sa_to_numeric',
@@ -74,6 +74,8 @@ class SingleAnswer(Question):
             responses=self.responses,
             df_config=self.df_config,
         )
+        number.reset()
+        return number
     
     @property
     def dataframe(self) -> pd.DataFrame:
