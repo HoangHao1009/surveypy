@@ -591,17 +591,6 @@ def _process_question(loop_on: str, question_dict: Dict[str, dict]):
             responses=all_info['responses'],
         )
     
-            
-        # if question_info['type'] in ['multiplechoice_radio', 'multiplechoice_dropdown', 'matrix_slider', 
-        #                              'matrix_radio', 'multiplechoice_smiley',
-        #                              'text_multiple_row', 'text_single_row', 'matrix_text']:
-        #     question_obj = SingleAnswer(**info_dict)
-        #     if question_obj.type not in ['text_multiple_row', 'text_single_row', 'matrix_text']:
-        #         construct_dict = {option: [option] for option in question_info['options']} if 'options' in question_info else {}
-        #         question_obj = question_obj.reconstruct(construct_dict)
-        #     else:
-        #         for index, response in enumerate(question_obj.responses, 1):
-        #             response.scale = index
         if question_info['type'] in ['multiplechoice_radio', 'multiplechoice_dropdown', 
                                      'multiplechoice_smiley', 'matrix_slider', 'matrix_radio']:
             info_dict['type'] = 'sa' if 'matrix' not in question_info['type'] else 'sa_matrix'

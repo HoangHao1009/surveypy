@@ -119,7 +119,7 @@ class Question(BaseModel):
 
             for index, (new_label, old_label_list) in enumerate(construct_dict.items(), 1):
                 new_respondents = list(set(r for old_label in old_label_list for r in old_label_to_respondents.get(old_label, [])))
-                new_response = Response(value=new_label, scale=index, root=self.code, respondents=new_respondents)
+                new_response = Response(code=f'{self.code}_{index}',value=new_label, scale=index, root=self.code, respondents=new_respondents)
                 new_responses.append(new_response)
                 
                 for respondent in new_respondents:
@@ -127,6 +127,7 @@ class Question(BaseModel):
                         mapping.append({
                             'resp_id': respondent, 
                             'question_code': self.code, 
+                            'answer_code': new_response.code,
                             'answer_text': new_label,
                             'old_answer_text': old_label
                         })
@@ -139,7 +140,7 @@ class Question(BaseModel):
         
         elif method == 'classify':
             new_labels = list(set(label for labels in construct_dict.values() for label in labels))
-            new_responses = [Response(value=new_label, scale=index, root=self.code) for index, new_label in enumerate(new_labels, 1) if not pd.isna(new_label)]
+            new_responses = [Response(code=f'{self.code}_{index}', value=new_label, scale=index, root=self.code) for index, new_label in enumerate(new_labels, 1) if not pd.isna(new_label)]
 
             old_labels = list(construct_dict.keys())
             with ThreadPoolExecutor() as executor:
@@ -161,7 +162,8 @@ class Question(BaseModel):
                             mapping.append({
                                 'resp_id': respondent, 
                                 'question_code': self.code, 
-                                'answer_text': new_response.value,
+                                'answer_code': new_response.code,
+                                'answer_text': new_label,
                                 'old_answer_text': old_label
                             })
 
