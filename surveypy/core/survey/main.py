@@ -483,8 +483,6 @@ class Survey(BaseModel):
                     d = {'id': str(respondent) + str(response.code),
                         'resp_id': respondent,
                         'question_code': question.code,
-                        # 'answer_text': response.value,
-                        # 'answer_scale': response.scale,
                         'answer_code': f'{question.code}_{response.code}'}
                     response_data.append(d)
                     
