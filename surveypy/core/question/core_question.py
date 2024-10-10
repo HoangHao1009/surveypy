@@ -90,8 +90,6 @@ class Question(BaseModel):
         if isinstance(self, Rank):
             raise ValueError('Rank can not be reconstructed')
         
-        if save_dict:
-            self.reconstruct_dict = construct_dict
 
         def get_respondents_for_label(old_label):
             try:
@@ -100,7 +98,6 @@ class Question(BaseModel):
                 return []
         
         if method == 'cluster':
-            self.reconstruct_type = 'cluster'
             old_labels = [label for labels in construct_dict.values() for label in labels]
             to_ma = len(old_labels) != len(set(old_labels))
             if to_ma:
@@ -128,7 +125,6 @@ class Question(BaseModel):
                 question = SingleAnswer(**self._info, responses=new_responses)
         
         elif method == 'classify':
-            self.reconstruct_type = 'classify'
             new_labels = list(set(label for labels in construct_dict.values() for label in labels))
             new_responses = [Response(value=new_label, scale=index, root=self.code) for index, new_label in enumerate(new_labels, 1) if not pd.isna(new_label)]
 
@@ -154,6 +150,11 @@ class Question(BaseModel):
         if new_type is not None:
             question.type = new_type 
         question.reset()
+        
+        if save_dict:
+            question.reconstruct_dict = construct_dict
+            
+        question.reconstruct_type = method
 
         return question
    

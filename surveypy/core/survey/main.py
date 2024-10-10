@@ -132,6 +132,11 @@ class Survey(BaseModel):
             survey = self.copy()
             survey.questions = questions
             result[i] = survey
+        
+        reconstructed_questions = [q for q in self.questions if q.reconstruct_dict != {}]
+        survey = self.copy()
+        survey.questions = reconstructed_questions
+        result['reconstructed'] = survey
                 
         return result
         
