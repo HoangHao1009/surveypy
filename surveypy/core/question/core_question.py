@@ -24,7 +24,7 @@ class Question(BaseModel):
     df_config: DfConfig = DfConfig()
     ppt_config: PptConfig = PptConfig()
     reconstruct_type: Optional[Literal['classify', 'cluster']] =  None
-    reconstruct_dict: Dict = {}
+    reconstruct_mapping: List = []
 
     @property
     def root(self) -> str:
@@ -113,16 +113,27 @@ class Question(BaseModel):
                 for future in as_completed(future_to_old_label):
                     old_label = future_to_old_label[future]
                     old_label_to_respondents[old_label] = future.result()
+                    
+            mapping = []
 
             for index, (new_label, old_label_list) in enumerate(construct_dict.items(), 1):
                 new_respondents = list(set(r for old_label in old_label_list for r in old_label_to_respondents.get(old_label, [])))
                 new_response = Response(value=new_label, scale=index, root=self.code, respondents=new_respondents)
                 new_responses.append(new_response)
-
+                
+                for respondent in new_respondents:
+                    mapping.append({
+                        'resp_id': respondent, 
+                        'question_code': self.code, 
+                        'answer_text': new_label,
+                        'old_answer_text': old_label_list
+                    })
+                
             if to_ma or isinstance(self, MultipleAnswer):
                 question = MultipleAnswer(**self._info, responses=new_responses)
             else:
                 question = SingleAnswer(**self._info, responses=new_responses)
+                
         
         elif method == 'classify':
             new_labels = list(set(label for labels in construct_dict.values() for label in labels))
@@ -135,13 +146,23 @@ class Question(BaseModel):
                 for future in as_completed(future_to_old_label):
                     old_label = future_to_old_label[future]
                     old_label_to_respondents[old_label] = future.result().respondents
+                    
+            mapping = []
 
             for new_response in new_responses:
                 for k, v in construct_dict.items():
                     if new_response.value in v:
                         old_label = k
-                        # old_label = new_response.value
-                        new_response.respondents.extend(old_label_to_respondents[old_label])
+                        new_respondents = old_label_to_respondents[old_label]
+                        new_response.respondents.extend(new_respondents)
+                        
+                        for respondent in new_respondents:
+                            mapping.append({
+                                'resp_id': respondent, 
+                                'question_code': self.code, 
+                                'answer_text': new_response.value,
+                                'old_answer_text': old_label
+                            })
 
             question = MultipleAnswer(**self._info, responses=new_responses)
 
@@ -151,9 +172,9 @@ class Question(BaseModel):
             question.type = new_type 
         question.reset()
         
-        if save_dict:
-            question.reconstruct_dict = construct_dict
-            
+        if save_dict:   
+            question.reconstruct_mapping = mapping
+        
         question.reconstruct_type = method
 
         return question
