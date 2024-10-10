@@ -496,7 +496,7 @@ class Survey(BaseModel):
 
         response_data = take_data([parts['main'], parts['oe'], parts['others']])
                             
-        dimResponseLong = pd.DataFrame(response_data)
+        FactResponse = pd.DataFrame(response_data)
         
         dimAnswer = pd.DataFrame(answer_info)
         dimQuestion = pd.DataFrame(question_info)
@@ -517,7 +517,7 @@ class Survey(BaseModel):
         dataset = {
             'dimRespondentInfo': dimRespondentInfo,
             'dimRespondentChose': dimRespondentWide,
-            'dimResponse': dimResponseLong,
+            'FactResponse': FactResponse,
             'dimAnswer': dimAnswer,
             'dimQuestion': dimQuestion
         }

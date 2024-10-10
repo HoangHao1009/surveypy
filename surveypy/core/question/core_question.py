@@ -127,7 +127,7 @@ class Question(BaseModel):
                         mapping.append({
                             'resp_id': respondent, 
                             'question_code': self.code, 
-                            'answer_code': new_response,
+                            'answer_code': new_response.code,
                             'answer_text': new_label,
                             'old_answer_text': old_label
                         })
@@ -162,7 +162,7 @@ class Question(BaseModel):
                             mapping.append({
                                 'resp_id': respondent, 
                                 'question_code': self.code, 
-                                'answer_code': new_response,
+                                'answer_code': new_response.code,
                                 'answer_text': new_response.value,
                                 'old_answer_text': old_label
                             })
