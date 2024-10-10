@@ -465,16 +465,17 @@ class Survey(BaseModel):
             self.ctab.to_ppt(ppt_path)
                         
     def datasets(self, to: Literal['no_return', 'csv', 'excel'] = 'no_return'):
-        def take_data(part):
+        def take_data(parts):
             response_data = []
-            for question in part.questions:
-                for response in question.responses:
-                    for respondent in response.respondents:
-                        d = {'id': str(respondent) + str(response.code),
-                            'resp_id': respondent,
-                            'question_code': question.code,
-                            'answer_code': f'{question.code}_{response.code}'}
-                        response_data.append(d)
+            for part in parts:
+                for question in part.questions:
+                    for response in question.responses:
+                        for respondent in response.respondents:
+                            d = {'id': str(respondent) + str(response.code),
+                                'resp_id': respondent,
+                                'question_code': question.code,
+                                'answer_code': f'{question.code}_{response.code}'}
+                            response_data.append(d)
             return response_data
 
         self.df_config.value = 'text'
@@ -493,11 +494,9 @@ class Survey(BaseModel):
                 answer_info['answer_scale'].append(response.scale)
                 answer_info['answer_code'].append(f'{question.code}_{response.code}')
 
-        main_response_data = take_data(parts['main'])
-        oe_response_data = take_data(parts['oe'])
-        other_response_data = take_data(parts['others'])
+        response_data = take_data([parts['main'], parts['oe'], parts['others']])
                             
-        dimResponseMainLong = pd.DataFrame(main_response_data)
+        dimResponseLong = pd.DataFrame(response_data)
         
         dimAnswer = pd.DataFrame(answer_info)
         dimQuestion = pd.DataFrame(question_info)
@@ -512,23 +511,21 @@ class Survey(BaseModel):
         dataset = {
             'dimRespondentInfo': dimRespondentInfo,
             'dimRespondentChose': dimRespondentWide,
-            'dimResponseMainLong': dimResponseMainLong,
+            'dimResponseLong': dimResponseLong,
             'dimAnswer': dimAnswer,
             'dimQuestion': dimQuestion
         }
-        
-        if oe_response_data:
-            dimResponseOELong = pd.DataFrame(oe_response_data)
-            dataset['dimResponseOELong'] = dimResponseOELong
-        if other_response_data:
-            dimResponseOtherLong = pd.DataFrame(other_response_data)
-            dataset['dimResponseOtherLong'] = dimResponseOtherLong
-            
+                    
         for part in [parts['oe'], parts['others']]:
             if part.questions:
                 part.df_config.col_type = 'single'
                 df = part.dataframe.reset_index()
                 dimRespondentWide = pd.merge(dimRespondentWide, df, how='left', on='resp_id')
+                
+        if parts['reconstructed'].questions:
+            dataset['dimReconstructMapping'] = pd.concat(
+                [pd.DataFrame(q.reconstruct_mapping) for q in parts['reconstructed'].questions],
+                axis = 0)
         
         if to != 'no_return':
             path = os.path.join(self.working_dir, 'datasets')
