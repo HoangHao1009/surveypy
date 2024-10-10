@@ -510,7 +510,7 @@ class Survey(BaseModel):
         dimRespondentInfo['hour'] = dimRespondentInfo['timestamp'].dt.hour        
         dataset = {
             'dimRespondentInfo': dimRespondentInfo,
-            'dimRespondentChose': dimRespondentWide,
+            'dimRespondentWide': dimRespondentWide,
             'dimResponseLong': dimResponseLong,
             'dimAnswer': dimAnswer,
             'dimQuestion': dimQuestion
@@ -518,6 +518,7 @@ class Survey(BaseModel):
                     
         for part in [parts['oe'], parts['others']]:
             if part.questions:
+                print('append')
                 part.df_config.col_type = 'single'
                 df = part.dataframe.reset_index()
                 dimRespondentWide = pd.merge(dimRespondentWide, df, how='left', on='resp_id')
