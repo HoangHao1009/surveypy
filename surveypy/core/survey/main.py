@@ -474,7 +474,7 @@ class Survey(BaseModel):
                             d = {'id': str(respondent) + str(response.code),
                                 'resp_id': respondent,
                                 'question_code': question.code,
-                                'answer_code': f'{question.code}_{response.code}'}
+                                'answer_code': response.code}
                             response_data.append(d)
             return response_data
 
@@ -492,7 +492,7 @@ class Survey(BaseModel):
                 answer_info['question_code'].append(question.code)
                 answer_info['answer_text'].append(response.value)
                 answer_info['answer_scale'].append(response.scale)
-                answer_info['answer_code'].append(f'{question.code}_{response.code}')
+                answer_info['answer_code'].append(response.code)
 
         response_data = take_data([parts['main'], parts['oe'], parts['others']])
                             

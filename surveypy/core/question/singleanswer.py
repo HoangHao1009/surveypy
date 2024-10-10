@@ -36,30 +36,32 @@ class SingleAnswer(Question):
             self._mode = 'normal'
     
     def to_topbottom(self):
+        new_code = f"{self.code}TB"
+
         if self.mode == 'normal':
             raise(f'Set question mode to reconstruct')
+        
         elif self.mode == '1-5':
             tb =  self.reconstruct({
                 'B2B': [1, 2],
                 'Neutral': [3],
                 'T2B': [4, 5]
-            }, by='scale')
+            }, by='scale', new_code=new_code, save_dict=True)
         elif self.mode == '1-10':
             tb = self.reconstruct({
                 'B5B': [1, 2, 3, 4, 5],
                 'Central': [6, 7, 8],
                 'T3B': [8, 9, 10]
-            }, by='scale')
+            }, by='scale', new_code=new_code, save_dict=True)
         #review spss-syntax creator function
         elif self.mode == '1-4':
             tb = self.reconstruct({
                 'B2B': [1, 2],
                 'T2B': [3, 4]
-            }, by='scale')
+            }, by='scale', new_code=new_code, save_dict=True)
         else:
             raise(f'mode {self.mode} can not be reconstruct')
         
-        tb.code = f"{self.code}TB"
         return tb
     
     def to_scale(self):
