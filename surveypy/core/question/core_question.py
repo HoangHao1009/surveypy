@@ -168,9 +168,9 @@ class Question(BaseModel):
             question = MultipleAnswer(**self._info, responses=new_responses)
             
 
-        question.code = new_code if new_code else f'{question.code}_NEW'
+        question.code = new_code if new_code else question.code
         question.type = new_type if new_type else question.type
-        question.text = new_text if new_text else f'{question.text}_{question.code}'
+        question.text = new_text if new_text else question.text
         question.reset()
         
         if save_dict:   
