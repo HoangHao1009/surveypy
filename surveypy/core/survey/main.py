@@ -523,7 +523,7 @@ class Survey(BaseModel):
         }
                 
         if parts['reconstructed'].questions:
-            dataset['dimReconstructMapping'] = pd.concat(
+            dataset['FactReconstructMapping'] = pd.concat(
                 [pd.DataFrame(q.reconstruct_mapping) for q in parts['reconstructed'].questions],
                 axis = 0)
         
