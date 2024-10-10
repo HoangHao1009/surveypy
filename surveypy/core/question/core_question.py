@@ -81,6 +81,7 @@ class Question(BaseModel):
         by: Literal['value', 'scale']='value', 
         new_code: Optional[str] = None, 
         new_type: Optional[str] = None,
+        new_text: Optional[str] = None,
         save_dict: bool = False,
     ):
         from .multipleanswer import MultipleAnswer
@@ -89,7 +90,7 @@ class Question(BaseModel):
 
         if isinstance(self, Rank):
             raise ValueError('Rank can not be reconstructed')
-        
+                
 
         def get_respondents_for_label(old_label):
             try:
@@ -165,11 +166,11 @@ class Question(BaseModel):
                             })
 
             question = MultipleAnswer(**self._info, responses=new_responses)
+            
 
-        if new_code is not None:
-            question.code = new_code 
-        if new_type is not None:
-            question.type = new_type 
+        question.code = new_code if new_code else f'{question.code}_NEW'
+        question.type = new_type if new_type else question.type
+        question.text = new_text if new_text else f'{question.text}_{question.code}'
         question.reset()
         
         if save_dict:   
