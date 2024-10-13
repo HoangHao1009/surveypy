@@ -91,18 +91,10 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
         margins=True, 
         margins_name=total_label
     )
-
-    ##test
     total_df = pv.loc[[total_label],:]
     pv = pv.loc[~pv.index.get_level_values(0).isin([total_label])]
     
     fill = 0
-    # if config.perc:
-    #     pv = pv.div(total_df.values, axis=1)
-    #     if config.round_perc:
-    #         pv = pv.map(lambda x: f'{round(x*100)}%' if x != 0 else 0)
-    # else:
-    #     pv = pv
     
     if not config.dropna:
         desired_columns = _desired_columns(config.deep_by, config.total, bases)
@@ -179,8 +171,8 @@ def _sig_test(crosstab: pd.DataFrame, alpha: float, perc: bool, round_perc: bool
     crosstab = deepcopy(crosstab)
     if perc:
         crosstab = crosstab.div(crosstab.sum(axis=0), axis=1)
-        if round_perc:
-            crosstab = crosstab.map(lambda x: f'{round(x*100)}%' if x != 0 else 0)
+        # if round_perc:
+        #     crosstab = crosstab.map(lambda x: f'{round(x*100)}%' if x != 0 else 0)
     
     num_cols = crosstab.shape[1]
 
