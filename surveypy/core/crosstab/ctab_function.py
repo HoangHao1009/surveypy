@@ -118,6 +118,8 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
         for col in missing_columns:
             final_test[col] = ''
         final_test = final_test[pv.columns]
+        print(final_test.shape)
+        print(pv.shape)
         pv = pv.astype(str) + " " + final_test  
         
     
