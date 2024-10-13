@@ -113,7 +113,7 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
             test_result = _sig_test(test_df, config.alpha)
             dfs.append(test_result)
         final_test = pd.concat(dfs, axis=1)
-        return final_test
+        # return final_test
         missing_columns = pv.columns.difference(final_test.columns)
         for col in missing_columns:
             final_test[col] = ''
