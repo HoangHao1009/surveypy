@@ -4,6 +4,7 @@ from typing import Union, List, Tuple, Dict
 import pandas as pd
 import itertools
 import numpy as np
+from copy import deepcopy
 from statsmodels.stats.proportion import proportions_ztest
 from statsmodels.stats.multitest import multipletests
 np.seterr(divide='ignore', invalid='ignore')
@@ -175,6 +176,7 @@ def _pivot_number(bases: List[BaseType], target: QuestionType, config: CtabConfi
     return pv
 
 def _sig_test(crosstab: pd.DataFrame, alpha: float, perc: bool, round_perc: bool):
+    crosstab = deepcopy(crosstab)
     if perc:
         crosstab = crosstab.div(crosstab.sum(axis=0), axis=1)
         if round_perc:
