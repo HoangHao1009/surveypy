@@ -109,7 +109,7 @@ def _process_responses(responses: List[Dict], result_dict: defaultdict, question
 
                 if dynamic_text != '' and question_code in question_dict:
                     text = a['answerText'].replace(' ', '')
-                    det_code = f"{question_code}_{text}_DET"
+                    det_code = f"{question_code}_{text}DET"
                     question_dict[det_code] = {}
                     question_dict[det_code]['code'] = det_code
                     question_dict[det_code]['type'] = 'text_dynamic'
@@ -123,7 +123,7 @@ def _process_responses(responses: List[Dict], result_dict: defaultdict, question
 
                 if other_text != '' and question_code in question_dict:
                     text = a['answerText'].replace(' ', '')
-                    other_code = f"{question_code}_{text}_OTHER"
+                    other_code = f"{question_code}_{text}OTHER"
                     question_dict[other_code] = {}
                     question_dict[other_code]['code'] = other_code
                     question_dict[other_code]['type'] = 'text_other'
