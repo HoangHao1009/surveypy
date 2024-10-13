@@ -118,6 +118,8 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
             final_test[col] = ''
         final_test = final_test[pv.columns]
         pv = pv.astype(str) + " " + final_test  
+        
+    return final_test
 
     pv = pd.concat([pv, total_df])
     pv.rename(columns={total_label: "Total"}, index={total_label: f"{target.code}_Total"}, inplace=True)
