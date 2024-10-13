@@ -95,12 +95,12 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
     raw_pv = raw_pv.loc[~raw_pv.index.get_level_values(0).isin([total_label])]
     
     fill = 0
-    if config.perc:
-        pv = raw_pv.div(total_df.values, axis=1)
-        if config.round_perc:
-            pv = pv.map(lambda x: f'{round(x*100)}%' if x != 0 else 0)
-    else:
-        pv = raw_pv
+    # if config.perc:
+    #     pv = raw_pv.div(total_df.values, axis=1)
+    #     if config.round_perc:
+    #         pv = pv.map(lambda x: f'{round(x*100)}%' if x != 0 else 0)
+    # else:
+    #     pv = raw_pv
         
     if config.alpha:
         dfs = []
@@ -114,19 +114,15 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
             dfs.append(test_result)
         final_test = pd.concat(dfs, axis=1)
         # return final_test
-        missing_columns = pv.columns.difference(final_test.columns)
+        missing_columns = raw_pv.columns.difference(final_test.columns)
         for col in missing_columns:
             final_test[col] = ''
-        final_test = final_test[pv.columns]
-        print(final_test.shape)
-        print(pv.shape)
-        print(final_test.colummns)
-        print(pv.colummns)
+        final_test = final_test[raw_pv.columns]
 
-        pv = pv.astype(str) + " " + final_test  
+        # pv = pv.astype(str) + " " + final_test  
         
     
-    pv = pd.concat([pv, total_df])
+    pv = pd.concat([final_test, total_df])
     pv.rename(columns={total_label: "Total"}, index={total_label: f"{target.code}_Total"}, inplace=True)
 
     if not config.total:
@@ -177,7 +173,12 @@ def _pivot_number(bases: List[BaseType], target: QuestionType, config: CtabConfi
 
     return pv
 
-def _sig_test(crosstab: pd.DataFrame, alpha: float):
+def _sig_test(crosstab: pd.DataFrame, alpha: float, perc: bool, round_perc: bool):
+    if perc:
+        crosstab = crosstab.div(crosstab.sum(axis=0), axis=1)
+        if round_perc:
+            crosstab = crosstab.map(lambda x: f'{round(x*100)}%' if x != 0 else 0)
+    
     num_cols = crosstab.shape[1]
 
     test_df = pd.DataFrame('', index=crosstab.index, columns=crosstab.columns)
@@ -226,6 +227,8 @@ def _sig_test(crosstab: pd.DataFrame, alpha: float):
                             test_df.iloc[row, i] = f'{col2_letter}'
                         else:
                             test_df.iloc[row, j] = f'{col1_letter}'
+                            
+    final_df = crosstab.astype(str) + ' ' + test_df
     return test_df
 
 def _pivot_target(bases: List[BaseType], target: QuestionType, config: CtabConfig):
