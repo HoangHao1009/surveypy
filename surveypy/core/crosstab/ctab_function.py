@@ -118,6 +118,7 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
         for col in missing_columns:
             final_test[col] = ''
         final_test = final_test[raw_pv.columns]
+    return final_test
 
         # pv = pv.astype(str) + " " + final_test  
         
@@ -229,7 +230,7 @@ def _sig_test(crosstab: pd.DataFrame, alpha: float, perc: bool, round_perc: bool
                             test_df.iloc[row, j] = f'{col1_letter}'
                             
     final_df = crosstab.astype(str) + ' ' + test_df
-    return test_df
+    return final_df
 
 def _pivot_target(bases: List[BaseType], target: QuestionType, config: CtabConfig):
     if isinstance(target, (SingleAnswer, MultipleAnswer)):
