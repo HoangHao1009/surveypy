@@ -5,6 +5,8 @@ import pandas as pd
 import itertools
 import numpy as np
 from statsmodels.stats.proportion import proportions_ztest
+from statsmodels.stats.multitest import multipletests
+
 
 BaseType = Union[SingleAnswer, MultipleAnswer, Rank]
 QuestionType = Union[SingleAnswer, MultipleAnswer, Rank, Number]
@@ -166,57 +168,53 @@ def _pivot_number(bases: List[BaseType], target: QuestionType, config: CtabConfi
 
     return pv
 
-def _sig_test(df: pd.DataFrame, sig: float):
-    test_df = pd.DataFrame("", index=df.index, columns=df.columns)
-    num_tests = int(df.shape[1] * (df.shape[1] - 1) / 2)  # Số lượng phép kiểm định
-    if num_tests > 0:
-        bonferroni_sig = sig / num_tests  # Mức ý nghĩa sau khi điều chỉnh
-    else:
-        bonferroni_sig = sig
+def _sig_test(crosstab: pd.DataFrame, alpha: float):
+    p_values = []
+    letters = crosstab.columns.get_level_values(-1).tolist()
 
-    # Lặp qua từng hàng của DataFrame
-    for index, row in df.iterrows():
-        values = row.values  # Lấy các giá trị trong hàng
+    num_cols = crosstab.shape[1]
 
-        # Lặp qua từng cột và so sánh với các cột khác
-        for i in range(len(values)):
-            diff_columns = []
-            for j in range(len(values)):
-                if i != j:
-                    # Lấy số lượng của từng nhóm từ hàng hiện tại
-                    group1_count = values[i]
-                    group2_count = values[j]
 
-                    # Lấy tổng số mẫu của từng nhóm (giả định tổng mẫu của cột là tổng của cả DataFrame)
-                    nobs1 = df.iloc[:, i].sum()
-                    nobs2 = df.iloc[:, j].sum()
-                    
-                    # Kiểm tra nếu tổng của một nhóm bằng 0 hoặc giá trị đếm bằng NaN (bỏ qua)
-                    if nobs1 == 0 or nobs2 == 0 or np.isnan(group1_count) or np.isnan(group2_count):
-                        continue
+    test_df = pd.DataFrame('', index=crosstab.index, columns=crosstab.columns)
 
-                    # Kiểm tra nếu giá trị đếm nhỏ hơn 0 (tránh lỗi trong phép chia)
-                    if group1_count < 0 or group2_count < 0:
-                        continue
+    for i in range(num_cols):
+        for j in range(i + 1, num_cols):
+            # col1_letter = letters[i]
+            # col2_letter = letters[j]
+            col1_letter = chr(65 + i)
+            col2_letter = chr(65 + j)
 
-                    # Thực hiện kiểm định z-test cho tỷ lệ
-                    count = np.array([group1_count, group2_count])
-                    nobs = np.array([nobs1, nobs2])
+            # Lấy số lượng cho từng hàng của cột i và j
+            count1 = crosstab.iloc[:, i].values
+            count2 = crosstab.iloc[:, j].values
 
-                    # Kiểm tra nếu tổng số mẫu khác 0 để tránh lỗi chia cho 0
-                    with np.errstate(divide='ignore', invalid='ignore'):
-                        # Đoạn mã có thể gây ra cảnh báo
-                        stat, pval = proportions_ztest(count, nobs)
+            # Tổng số cho các cột
+            n = crosstab.sum(axis=0).values
 
-                    # Nếu p-value nhỏ hơn mức ý nghĩa đã điều chỉnh, ghi nhận sự khác biệt
-                    if pval < bonferroni_sig:
-                        alphabe_index = j + 65  # Tạo chữ cái đại diện cho cột khác biệt
-                        diff_columns.append(chr(alphabe_index))
+            p_vals = []
+            for row in range(len(count1)):
+                current_col1 = count1[row]
+                current_col2 = count2[row]
+                total_col1 = n[i]
+                total_col2 = n[j]
+                col1_proportion = current_col1 / total_col1
+                col2_proportion = current_col2 / total_col2
+                if current_col1 + current_col2 > 0:  # Kiểm tra có đủ dữ liệu không
+                    z_stat, p_val = proportions_ztest([current_col1, current_col2], [total_col1, total_col2])
+                    p_vals.append(p_val)
+                else:
+                    p_vals.append(np.nan)  # Không có dữ liệu cho hàng này
 
-            # Nếu có cột nào khác biệt, thêm ký tự vào ô đó
-            if len(diff_columns) > 0:
-                test_df.at[index, df.columns[i]] = ''.join(diff_columns)
-    
+            reject, p_adjusted, _, _ = multipletests(p_vals, method='bonferroni', alpha=alpha)
+            for row in range(len(count1)):
+                row_reject = reject[row]
+                row_p_adjusted = p_adjusted[row]
+                if row_reject:
+                    if row_p_adjusted < alpha:
+                        if col1_proportion > col2_proportion:
+                            test_df.iloc[row, i] = f'{col2_letter}'
+                        else:
+                            test_df.iloc[row, j] = f'{col1_letter}'
     return test_df
 
 def _pivot_target(bases: List[BaseType], target: QuestionType, config: CtabConfig):
