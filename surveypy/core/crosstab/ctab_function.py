@@ -168,12 +168,6 @@ def _pivot_number(bases: List[BaseType], target: QuestionType, config: CtabConfi
     return pv
 
 def _sig_test(crosstab: pd.DataFrame, alpha: float, perc: bool, round_perc: bool):
-    crosstab = deepcopy(crosstab)
-    n = crosstab.sum(axis=0).values
-    if perc:
-        crosstab = crosstab.div(crosstab.sum(axis=0), axis=1)
-        if round_perc:
-            crosstab = crosstab.map(lambda x: f'{round(x*100)}%' if x != 0 else 0)
     
     num_cols = crosstab.shape[1]
 
@@ -191,6 +185,7 @@ def _sig_test(crosstab: pd.DataFrame, alpha: float, perc: bool, round_perc: bool
             count2 = crosstab.iloc[:, j].values
 
             # Tổng số cho các cột
+            n = crosstab.sum(axis=0).values
 
             p_vals = []
             for row in range(len(count1)):
@@ -223,6 +218,11 @@ def _sig_test(crosstab: pd.DataFrame, alpha: float, perc: bool, round_perc: bool
                         else:
                             test_df.iloc[row, j] = f'{col1_letter}'
                             
+    if perc:
+        crosstab = crosstab.div(crosstab.sum(axis=0), axis=1)
+        if round_perc:
+            crosstab = crosstab.map(lambda x: f'{round(x*100)}%' if x != 0 else 0)
+                      
     final_df = crosstab.astype(str) + ' ' + test_df.astype(str)
     return final_df
 
