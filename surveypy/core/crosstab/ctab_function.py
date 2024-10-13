@@ -6,6 +6,8 @@ import itertools
 import numpy as np
 from statsmodels.stats.proportion import proportions_ztest
 from statsmodels.stats.multitest import multipletests
+np.seterr(divide='ignore', invalid='ignore')
+
 
 
 BaseType = Union[SingleAnswer, MultipleAnswer, Rank]
