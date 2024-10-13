@@ -80,7 +80,7 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
     deep_indexes = [f'deep_answer_{index}' for index in range(1, len(config.deep_by) + 1)]
     total_label = 'Total'
 
-    raw_pv = pd.pivot_table(
+    pv = pd.pivot_table(
         df, 
         columns=deep_indexes + ['root', 'answer'], 
         index=['target_root', 'target_answer'], 
@@ -91,45 +91,17 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
         margins_name=total_label
     )
 
-    total_df = raw_pv.loc[[total_label],:]
-    raw_pv = raw_pv.loc[~raw_pv.index.get_level_values(0).isin([total_label])]
+    total_df = pv.loc[[total_label],:]
+    pv = pv.loc[~pv.index.get_level_values(0).isin([total_label])]
     
     fill = 0
     # if config.perc:
-    #     pv = raw_pv.div(total_df.values, axis=1)
+    #     pv = pv.div(total_df.values, axis=1)
     #     if config.round_perc:
     #         pv = pv.map(lambda x: f'{round(x*100)}%' if x != 0 else 0)
     # else:
-    #     pv = raw_pv
-        
-    if config.alpha:
-        dfs = []
-        df_parts = _df_parts(raw_pv, config.deep_by, bases)
-
-        for key, value in df_parts.items():
-            column = value['column']
-            test_df = value['df']
-            test_df.columns = pd.MultiIndex.from_tuples([column + (col,) for col in test_df.columns])
-            test_result = _sig_test(test_df, config.alpha, config.perc, config.round_perc)
-            dfs.append(test_result)
-        final_test = pd.concat(dfs, axis=1)
-        # return final_test
-        missing_columns = raw_pv.columns.difference(final_test.columns)
-        for col in missing_columns:
-            final_test[col] = ''
-        final_test = final_test[raw_pv.columns]
-    return final_test
-
-        # pv = pv.astype(str) + " " + final_test  
-        
+    #     pv = pv
     
-    pv = pd.concat([final_test, total_df])
-    pv.rename(columns={total_label: "Total"}, index={total_label: f"{target.code}_Total"}, inplace=True)
-
-    if not config.total:
-        pv = pv.loc[~pv.index.get_level_values(0).isin([f"{target.code}_Total"]),
-                    ~pv.columns.get_level_values(0).isin(["Total"])]
-
     if not config.dropna:
         desired_columns = _desired_columns(config.deep_by, config.total, bases)
         missing_cols = list(set(desired_columns) - set(pv.columns))
@@ -143,6 +115,32 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
                                 names=pv.index.names))
                 
         pv = pd.concat([pv, new_rows]).sort_index(level=1, key=lambda x: pd.Categorical(x, categories=desired_indexes, ordered=True))
+        
+    if config.alpha:
+        dfs = []
+        df_parts = _df_parts(pv, config.deep_by, bases)
+
+        for key, value in df_parts.items():
+            column = value['column']
+            test_df = value['df']
+            test_df.columns = pd.MultiIndex.from_tuples([column + (col,) for col in test_df.columns])
+            test_result = _sig_test(test_df, config.alpha, config.perc, config.round_perc)
+            dfs.append(test_result)
+        final_test = pd.concat(dfs, axis=1)
+        # return final_test
+        missing_columns = pv.columns.difference(final_test.columns)
+        for col in missing_columns:
+            final_test[col] = ''
+        final_test = final_test[pv.columns]
+        
+    
+    pv = pd.concat([final_test, total_df])
+    pv.rename(columns={total_label: "Total"}, index={total_label: f"{target.code}_Total"}, inplace=True)
+
+    if not config.total:
+        pv = pv.loc[~pv.index.get_level_values(0).isin([f"{target.code}_Total"]),
+                    ~pv.columns.get_level_values(0).isin(["Total"])]
+
 
     return pv
 
