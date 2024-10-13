@@ -145,7 +145,7 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
     if config.round_perc:
         pv = pv.map(lambda x: '0%' if x == 0 else x)
 
-    return pv
+    return pv.fillna(0)
 
 def _pivot_number(bases: List[BaseType], target: QuestionType, config: CtabConfig):
     df = _custom_merge(bases, target)
