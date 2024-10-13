@@ -28,7 +28,8 @@ class Question(BaseModel):
 
     @property
     def root(self) -> str:
-        root = self.code.split('_')[0]
+        split_part = self.code.split('_')[0]
+        root = '_'.join(split_part[:-2])
         return root
     
     def __or__(self, other):
