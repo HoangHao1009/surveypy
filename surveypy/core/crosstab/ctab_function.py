@@ -7,6 +7,8 @@ import numpy as np
 from copy import deepcopy
 from statsmodels.stats.proportion import proportions_ztest
 from statsmodels.stats.multitest import multipletests
+import warnings
+warnings.filterwarnings("ignore", category=pd.errors.PerformanceWarning)
 np.seterr(divide='ignore', invalid='ignore')
 
 
@@ -94,7 +96,7 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
     total_df = pv.loc[[total_label],:]
     pv = pv.loc[~pv.index.get_level_values(0).isin([total_label])]
     
-    fill = 0
+    fill = 0 
     
     if not config.dropna:
         desired_columns = _desired_columns(config.deep_by, config.total, bases)
@@ -140,6 +142,8 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
         pv = pv.loc[~pv.index.get_level_values(0).isin([f"{target.code}_Total"]),
                     ~pv.columns.get_level_values(0).isin(["Total"])]
 
+    if config.round_perc:
+        pv = pv.map(lambda x: '0%' if x == 0 else x)
 
     return pv
 
