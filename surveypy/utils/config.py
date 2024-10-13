@@ -24,12 +24,12 @@ class CtabConfig(BaseModel):
     round_perc: bool = True
     cat_aggfunc: Union[str, Callable, List[Union[Callable, str]]] = pd.Series.nunique
     num_aggfunc: List[Union[str, Callable]] = ['mean', 'median', 'count', 'min', 'max', 'std', 'var']
-    sig: Union[float, None] = Field(None, ge=0, le=1, allow_none=True)
+    alpha: Union[float, None] = Field(None, ge=0, le=1, allow_none=True)
     dropna: bool=False
     deep_by: List = []
 
-    @field_validator('sig')
-    def validate_sig(cls, v):
+    @field_validator('alpha')
+    def validate_alpha(cls, v):
         if v is not None and (v < 0 or v > 1):
             raise ValueError('Value must be between 0 and 1, or None')
         return v
@@ -52,7 +52,7 @@ class CtabConfig(BaseModel):
                 'perc': self.perc,
                 'cat_aggfunc': self.cat_aggfunc,
                 'num_aggfunc': self.num_aggfunc,
-                'sig': self.sig}
+                'alpha': self.alpha}
 
     @property
     def cat_format(self) -> dict:
@@ -60,7 +60,7 @@ class CtabConfig(BaseModel):
                 'perc': self.perc,
                 'round_perc': self.round_perc,
                 'cat_aggfunc': self.cat_aggfunc,
-                'sig': self.sig,
+                'alpha': self.alpha,
                 'dropna': self.dropna}
 
 class SpssConfig(BaseModel):
