@@ -111,9 +111,7 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
                                 names=pv.index.names))
                 
         pv = pd.concat([pv, new_rows]).sort_index(level=1, key=lambda x: pd.Categorical(x, categories=desired_indexes, ordered=True))
-        
-    pv = pv.fillna(0)
-        
+                
     if config.alpha:
         dfs = []
         df_parts = _df_parts(pv, config.deep_by, bases)
@@ -139,6 +137,8 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
         pv = pd.concat([pv, total_df])
         
     pv.rename(columns={total_label: "Total"}, index={total_label: f"{target.code}_Total"}, inplace=True)
+    pv = pv.fillna(0)
+
 
     if not config.total:
         pv = pv.loc[~pv.index.get_level_values(0).isin([f"{target.code}_Total"]),
