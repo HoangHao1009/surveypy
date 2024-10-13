@@ -128,6 +128,10 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
         final_test = final_test[pv.columns]
         pv = pd.concat([final_test, total_df])
     else:
+        if config.perc:
+            pv = pv.div(pv.sum(axis=0), axis=1)
+            if config.round_perc:
+                pv = pv.map(lambda x: f'{round(x*100)}%' if x != 0 else 0)
         pv = pd.concat([pv, total_df])
         
     pv.rename(columns={total_label: "Total"}, index={total_label: f"{target.code}_Total"}, inplace=True)
