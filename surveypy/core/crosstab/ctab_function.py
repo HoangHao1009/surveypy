@@ -171,8 +171,8 @@ def _sig_test(crosstab: pd.DataFrame, alpha: float, perc: bool, round_perc: bool
     crosstab = deepcopy(crosstab)
     if perc:
         crosstab = crosstab.div(crosstab.sum(axis=0), axis=1)
-        # if round_perc:
-        #     crosstab = crosstab.map(lambda x: f'{round(x*100)}%' if x != 0 else 0)
+        if round_perc:
+            crosstab = crosstab.map(lambda x: f'{round(x*100)}%' if x != 0 else 0)
     
     num_cols = crosstab.shape[1]
 
@@ -223,7 +223,7 @@ def _sig_test(crosstab: pd.DataFrame, alpha: float, perc: bool, round_perc: bool
                         else:
                             test_df.iloc[row, j] = f'{col1_letter}'
                             
-    final_df = crosstab.astype(str) + ' ' + test_df
+    final_df = crosstab.astype(str) + ' ' + test_df.astype(str)
     return final_df
 
 def _pivot_target(bases: List[BaseType], target: QuestionType, config: CtabConfig):
