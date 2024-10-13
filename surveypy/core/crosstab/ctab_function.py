@@ -144,7 +144,7 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
         pv = pv.loc[~pv.index.get_level_values(0).isin([f"{target.code}_Total"]),
                     ~pv.columns.get_level_values(0).isin(["Total"])]
 
-    if config.round_perc:
+    if config.round_perc and config.perc:
         pv = pv.map(lambda x: '0%' if x == 0 else x)
 
     return pv
