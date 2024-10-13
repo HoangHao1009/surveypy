@@ -133,11 +133,10 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
         for col in missing_columns:
             final_test[col] = ''
         final_test = final_test[pv.columns]
+        pv = pd.concat([final_test, total_df])
+    else:
+        pv = pd.concat([pv, total_df])
         
-    a = 1
-    
-    
-    pv = pd.concat([final_test, total_df])
     pv.rename(columns={total_label: "Total"}, index={total_label: f"{target.code}_Total"}, inplace=True)
 
     if not config.total:
