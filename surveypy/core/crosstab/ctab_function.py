@@ -91,6 +91,7 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
         margins_name=total_label
     )
 
+    ##test
     total_df = pv.loc[[total_label],:]
     pv = pv.loc[~pv.index.get_level_values(0).isin([total_label])]
     
@@ -133,6 +134,8 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
             final_test[col] = ''
         final_test = final_test[pv.columns]
         
+    a = 1
+    
     
     pv = pd.concat([final_test, total_df])
     pv.rename(columns={total_label: "Total"}, index={total_label: f"{target.code}_Total"}, inplace=True)
