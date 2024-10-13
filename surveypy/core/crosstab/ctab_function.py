@@ -169,11 +169,7 @@ def _pivot_number(bases: List[BaseType], target: QuestionType, config: CtabConfi
     return pv
 
 def _sig_test(crosstab: pd.DataFrame, alpha: float):
-    p_values = []
-    letters = crosstab.columns.get_level_values(-1).tolist()
-
     num_cols = crosstab.shape[1]
-
 
     test_df = pd.DataFrame('', index=crosstab.index, columns=crosstab.columns)
 
@@ -197,6 +193,12 @@ def _sig_test(crosstab: pd.DataFrame, alpha: float):
                 current_col2 = count2[row]
                 total_col1 = n[i]
                 total_col2 = n[j]
+                
+                # Kiểm tra nếu tổng bằng 0 để tránh chia cho 0
+                if total_col1 == 0 or total_col2 == 0:
+                    p_vals.append(np.nan)  # Bỏ qua nếu không có dữ liệu
+                    continue                
+
                 col1_proportion = current_col1 / total_col1
                 col2_proportion = current_col2 / total_col2
                 if current_col1 + current_col2 > 0:  # Kiểm tra có đủ dữ liệu không
