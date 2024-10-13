@@ -120,6 +120,9 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
         final_test = final_test[pv.columns]
         print(final_test.shape)
         print(pv.shape)
+        print(final_test.colummns)
+        print(pv.colummns)
+
         pv = pv.astype(str) + " " + final_test  
         
     
