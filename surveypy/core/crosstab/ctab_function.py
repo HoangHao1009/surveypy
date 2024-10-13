@@ -112,6 +112,8 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
                 
         pv = pd.concat([pv, new_rows]).sort_index(level=1, key=lambda x: pd.Categorical(x, categories=desired_indexes, ordered=True))
         
+    pv = pv.fillna(0)
+        
     if config.alpha:
         dfs = []
         df_parts = _df_parts(pv, config.deep_by, bases)
@@ -145,7 +147,7 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
     if config.round_perc:
         pv = pv.map(lambda x: '0%' if x == 0 else x)
 
-    return pv.fillna(0)
+    return pv
 
 def _pivot_number(bases: List[BaseType], target: QuestionType, config: CtabConfig):
     df = _custom_merge(bases, target)
