@@ -203,8 +203,11 @@ def _sig_test(crosstab: pd.DataFrame, alpha: float):
                 col2_proportion = current_col2 / total_col2
                 if current_col1 + current_col2 > 0:  # Kiểm tra có đủ dữ liệu không
                     z_stat, p_val = proportions_ztest([current_col1, current_col2], [total_col1, total_col2])
-                    print('total1', total_col1)
-                    print('total2', total_col2)
+                    print('current_col1', current_col1)
+                    print('current_col2', current_col2)
+                    print('total_col1', total_col1)
+                    print('total_col2', total_col2)
+                    print('---')
                     p_vals.append(p_val)
                 else:
                     p_vals.append(np.nan)  # Không có dữ liệu cho hàng này
