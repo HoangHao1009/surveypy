@@ -157,11 +157,12 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
     if config.round_perc and config.perc:
         pv = pv.map(lambda x: '0%' if x == 0 else x)
         
-    column_letter_mapping = {}
-    for q in bases + target:
-        column_letter_mapping[q.value] = q.value + ' ' + chr(64 + q.scale)
+    if config.alpha:
+        column_letter_mapping = {}
+        for q in bases + target:
+            column_letter_mapping[q.value] = q.value + ' ' + chr(64 + q.scale)
     
-    pv.rename(columns=lambda x: column_letter_mapping[x], level=-1, inplace=True)
+        pv.rename(columns=lambda x: column_letter_mapping[x], level=-1, inplace=True)
 
     return pv
 
