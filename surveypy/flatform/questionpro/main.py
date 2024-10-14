@@ -11,6 +11,7 @@ def _fetch(url: str, headers: dict , payload: dict) -> list:
     return response.json()['response']
 
 def _process_respondent(response: Dict, result_dict: Dict, respondent_info: List) -> dict:
+    print(response)
     id = response.get('responseID', '')
     for key, value in response.items():
         if key in respondent_info:
