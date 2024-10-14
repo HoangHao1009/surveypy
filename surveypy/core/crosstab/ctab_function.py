@@ -153,9 +153,6 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
     if not config.total:
         pv = pv.loc[~pv.index.get_level_values(0).isin([f"{target.code}_Total"]),
                     ~pv.columns.get_level_values(0).isin(["Total"])]
-
-    if config.round_perc and config.perc:
-        pv = pv.map(lambda x: '0%' if x == 0 else x)
         
     if config.alpha:
         column_letter_mapping = {}
@@ -198,8 +195,16 @@ def _pivot_number(bases: List[BaseType], target: QuestionType, config: CtabConfi
             
         pv = pv.reindex(columns=pd.MultiIndex.from_tuples(desired_columns))
         
-    # if config.alpha:
-    #     pv = _add_letters_to_col(pv)
+    if config.alpha:
+        column_letter_mapping = {}
+        for q in bases + [target]:
+            for response in q.responses:
+                if response.value != '':
+                    column_letter_mapping[response.value] = str(response.value) + ' ' + f"({chr(64 + int(response.scale))})"
+                else:
+                    column_letter_mapping[response.value] = ''
+    
+        pv.rename(columns=lambda x: column_letter_mapping.get(x, ''), level=-1, inplace=True)
     return pv
 
 def _sig_test(crosstab: pd.DataFrame, alpha: float, perc: bool, round_perc: bool):
