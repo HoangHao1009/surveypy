@@ -101,6 +101,7 @@ class Survey(BaseModel):
             result.extend(question.invalid)
         return list(set(result))
     
+    @property
     def info(self):
         info = []
         for question in self.questions:
