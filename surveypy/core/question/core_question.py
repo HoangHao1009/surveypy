@@ -28,13 +28,11 @@ class Question(BaseModel):
 
     @property
     def root(self) -> str:
-        # split_part = self.code.split('_')
-        # root = '_'.join(split_part[:-2])
-        # return root
-        if 'DET' in self.code or 'OTHER' in self.code:
+        split_part = self.code.split('_')
+        if 'DET' in split_part or 'OTHER' in split_part:
             return self.code
         else:
-            return self.code.split('_')[0]
+            return split_part[0]
     
     def __or__(self, other):
         from ..crosstab import CrossTab
