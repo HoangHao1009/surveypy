@@ -145,8 +145,9 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
                 new = col + " " + f"({chr(chr_index)})"
                 chr_index += 1
             else:
-                new = col
+                new = ''
             name_letters[col] = new
+        print(name_letters)
         pv.rename(columns=lambda x: name_letters[x], level=-1, inplace=True)
         
     else:
@@ -207,7 +208,7 @@ def _pivot_number(bases: List[BaseType], target: QuestionType, config: CtabConfi
             else:
                 new = ''
             name_letters[col] = new
-            print(name_letters)
+        print(name_letters)
         pv.rename(columns=lambda x: name_letters[x], level=-1, inplace=True)
 
     return pv
