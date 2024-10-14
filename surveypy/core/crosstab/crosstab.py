@@ -63,7 +63,7 @@ class CrossTab(BaseModel):
         
     def to_ppt(self, ppt_path: str):
         self.config.total = False
-        self.config.sig = None
+        self.config.alpha = None
         self.config.round_perc = False
         df = self.dataframe
         if self.config.deep_by:
