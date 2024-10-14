@@ -37,7 +37,7 @@ class Question(BaseModel):
     @property
     def info(self) -> Dict:
         response_info = [{'code': r.code, 'text': r.value, 'scale': r.scale} for r in self.responses]
-        result = {
+        return {
             'root': self.root,
             'code': self.code,
             'type': self.type,
