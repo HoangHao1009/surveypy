@@ -49,4 +49,4 @@ class Number(Question):
         return df
     
 def _process_response(code: str, response: Response, config: DfConfig):
-    return [{'resp_id': respondent, code: float(response.value)} for respondent in response.respondents]
+    return [{'resp_id': respondent, code: float(response.scale)} for respondent in response.respondents]
