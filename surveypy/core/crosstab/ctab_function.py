@@ -78,18 +78,6 @@ def _df_parts(pv, deep_by, bases) -> Dict:
                 continue
     return result
 
-def _add_letters_to_col(pv):
-    name_letters = {}
-    chr_index = 65
-    for col in pv.columns.get_level_values(-1):
-        if col != '':
-            new = col + " " + f"({chr(chr_index)})"
-            chr_index += 1
-        else:
-            new = ''
-        name_letters[col] = new
-    return pv.rename(columns=lambda x: name_letters[x], level=-1)
-
 
 def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
     df = _custom_merge(bases, target, config.deep_by)
