@@ -28,7 +28,7 @@ class Question(BaseModel):
 
     @property
     def root(self) -> str:
-        split_part = self.code.split('_')[0]
+        split_part = self.code.split('_')
         root = '_'.join(split_part[:-2])
         return root
     
