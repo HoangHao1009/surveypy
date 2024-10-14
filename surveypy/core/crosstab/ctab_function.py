@@ -137,6 +137,18 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
             final_test[col] = ''
         final_test = final_test[pv.columns]
         pv = pd.concat([final_test, total_df])
+        
+        name_letters = {}
+        chr_index = 64
+        for col in df.columns.get_level_values(-1):
+            if col != '':
+                new = col + " " + f"({chr(chr_index)})"
+                chr_index += 1
+            else:
+                new = col
+            name_letters[col] = new
+        df.rename(columns=lambda x: name_letters[x], level=-1, inplace=True)
+        
     else:
         if config.perc:
             pv = pv.div(pv.sum(axis=0), axis=1).fillna(0)
@@ -184,6 +196,18 @@ def _pivot_number(bases: List[BaseType], target: QuestionType, config: CtabConfi
         pv = pd.concat([pv, new_columns], axis=1)
             
         pv = pv.reindex(columns=pd.MultiIndex.from_tuples(desired_columns))
+        
+    if config.alpha:
+        name_letters = {}
+        chr_index = 64
+        for col in df.columns.get_level_values(-1):
+            if col != '':
+                new = col + " " + f"({chr(chr_index)})"
+                chr_index += 1
+            else:
+                new = col
+            name_letters[col] = new
+        df.rename(columns=lambda x: name_letters[x], level=-1, inplace=True)
 
     return pv
 
