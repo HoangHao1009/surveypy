@@ -147,7 +147,7 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
             else:
                 new = col
             name_letters[col] = new
-        df.rename(columns=lambda x: name_letters[x], level=-1, inplace=True)
+        pv.rename(columns=lambda x: name_letters[x], level=-1, inplace=True)
         
     else:
         if config.perc:
@@ -207,7 +207,7 @@ def _pivot_number(bases: List[BaseType], target: QuestionType, config: CtabConfi
             else:
                 new = col
             name_letters[col] = new
-        df.rename(columns=lambda x: name_letters[x], level=-1, inplace=True)
+        pv.rename(columns=lambda x: name_letters[x], level=-1, inplace=True)
 
     return pv
 
