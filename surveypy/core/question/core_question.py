@@ -31,6 +31,8 @@ class Question(BaseModel):
         split_part = self.code.split('_')
         if 'DET' in split_part or 'OTHER' in split_part:
             return self.code
+        elif 'matrix' in self.type:
+            return '_'.join(split_part[0:2])
         else:
             return split_part[0]
         
