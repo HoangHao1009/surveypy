@@ -165,6 +165,8 @@ def _pivot_number(bases: List[BaseType], target: QuestionType, config: CtabConfi
     dropna=True
     ).T
     
+    pv.index = pd.MultiIndex.from_tuples([(i[-1], i[0]) for i in pv.index], names=['target_root', 'target_answer'])
+
     if not config.dropna:
         desired_columns = _desired_columns(deep_by=config.deep_by, total=False, bases=bases)
 
