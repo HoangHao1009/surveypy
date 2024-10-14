@@ -139,7 +139,7 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
         pv = pd.concat([final_test, total_df])
         
         name_letters = {}
-        chr_index = 64
+        chr_index = 65
         for col in pv.columns.get_level_values(-1):
             if col != '':
                 new = col + " " + f"({chr(chr_index)})"
