@@ -29,7 +29,7 @@ def _custom_merge(bases: List[BaseType], target: QuestionType, deep_by: List[Bas
     target_df.columns = ['resp_id', 'target_core', 'target_answer']
     target_df = target_df[target_df['target_answer'] != 0]
 
-    target_df = target_df.assign(target_root=target_df['target_core'].str.rsplit('_', n=1).str[0])
+    # target_df = target_df.assign(target_root=target_df['target_core'].str.rsplit('_', n=1).str[0])
 
     df = df.merge(target_df, on='resp_id', how='inner')
 
