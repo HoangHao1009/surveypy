@@ -11,7 +11,6 @@ def _fetch(url: str, headers: dict , payload: dict) -> list:
     return response.json()['response']
 
 def _process_respondent(response: Dict, result_dict: Dict, respondent_info: List) -> dict:
-    print(response)
     id = response.get('responseID', '')
     for key, value in response.items():
         if key in respondent_info:
@@ -151,7 +150,7 @@ class QuestionPro(BaseModel):
     _cached_standard_dict = None
 
 
-    @property
+    @property_
     def survey_url(self):
         return f'https://api.questionpro.{self.env}/a/api/v2/surveys/{self.survey_id}'
     
@@ -164,7 +163,8 @@ class QuestionPro(BaseModel):
     @property
     def response_info(self):
         if self._cached_response_info is None:
-            self._cached_response_info = self._get_response_info()
+            responses = self._get_response_info()
+            self._cached_response_info = [i for i in responses if not isinstance(i, str)]
         return self._cached_response_info
 
     @property
