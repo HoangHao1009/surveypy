@@ -137,7 +137,7 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
             test_result = _sig_test(test_df, config.alpha, config.perc, config.round_perc)
             dfs.append(test_result)
         final_test = pd.concat(dfs, axis=1)
-        
+                
         if config.perc:
             pv = pv.div(pv.sum(axis=0), axis=1).fillna(0)
             if config.round_perc:
@@ -150,7 +150,6 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
             final_test[col] = ''
         final_test = final_test[pv.columns]
         pv = pd.concat([final_test, total_df])
-        pv = _add_letters_to_col(pv)
         
     else:
         if config.perc:
@@ -200,8 +199,8 @@ def _pivot_number(bases: List[BaseType], target: QuestionType, config: CtabConfi
             
         pv = pv.reindex(columns=pd.MultiIndex.from_tuples(desired_columns))
         
-    if config.alpha:
-        pv = _add_letters_to_col(pv)
+    # if config.alpha:
+    #     pv = _add_letters_to_col(pv)
     return pv
 
 def _sig_test(crosstab: pd.DataFrame, alpha: float, perc: bool, round_perc: bool):
