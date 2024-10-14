@@ -159,7 +159,7 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
         
     if config.alpha:
         column_letter_mapping = {}
-        for q in bases + target:
+        for q in bases + [target]:
             column_letter_mapping[q.value] = q.value + ' ' + chr(64 + q.scale)
     
         pv.rename(columns=lambda x: column_letter_mapping[x], level=-1, inplace=True)
