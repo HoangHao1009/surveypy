@@ -140,7 +140,7 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
         
         name_letters = {}
         chr_index = 64
-        for col in df.columns.get_level_values(-1):
+        for col in pv.columns.get_level_values(-1):
             if col != '':
                 new = col + " " + f"({chr(chr_index)})"
                 chr_index += 1
@@ -201,7 +201,7 @@ def _pivot_number(bases: List[BaseType], target: QuestionType, config: CtabConfi
     if config.alpha:
         name_letters = {}
         chr_index = 64
-        for col in df.columns.get_level_values(-1):
+        for col in pv.columns.get_level_values(-1):
             if col != '':
                 new = col + " " + f"({chr(chr_index)})"
                 chr_index += 1
