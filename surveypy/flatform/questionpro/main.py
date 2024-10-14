@@ -149,8 +149,7 @@ class QuestionPro(BaseModel):
     _cached_respondent_info = None
     _cached_standard_dict = None
 
-
-    @property_
+    @property
     def survey_url(self):
         return f'https://api.questionpro.{self.env}/a/api/v2/surveys/{self.survey_id}'
     
