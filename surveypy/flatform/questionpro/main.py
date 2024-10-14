@@ -10,7 +10,7 @@ def _fetch(url: str, headers: dict , payload: dict) -> list:
     response = requests.request("GET", url, headers=headers, data=payload)
     return response.json()['response']
 
-def _process_respondent(response: dict, result_dict: dict, respondent_info: list) -> dict:
+def _process_respondent(response: Dict, result_dict: Dict, respondent_info: List) -> dict:
     id = response.get('responseID', '')
     for key, value in response.items():
         if key in respondent_info:
