@@ -25,12 +25,11 @@ def _custom_merge(bases: List[BaseType], target: QuestionType, deep_by: List[Bas
     df.columns = ['resp_id', 'core', 'root', 'answer']
     df = df[df['answer'] != 0]  # Lọc ra các giá trị khác 0 cho cột answer
 
-    # target_df = target.dataframe.stack().reset_index()
-    # target_df.columns = ['resp_id', 'target_core', 'target_answer']
     target_df = target.dataframe.stack().stack().reset_index()
     target_df.columns = ['resp_id', 'target_core', 'target_root', 'target_answer']
     target_df = target_df[target_df['target_answer'] != 0]
-
+    # target_df = target.dataframe.stack().reset_index()
+    # target_df.columns = ['resp_id', 'target_core', 'target_answer']
     # target_df = target_df.assign(target_root=target_df['target_core'].str.rsplit('_', n=1).str[0])
 
     df = df.merge(target_df, on='resp_id', how='inner')

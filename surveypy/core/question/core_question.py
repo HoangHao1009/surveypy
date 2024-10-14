@@ -33,6 +33,17 @@ class Question(BaseModel):
             return self.code
         else:
             return split_part[0]
+        
+    @property
+    def info(self) -> Dict:
+        response_info = [{'code': r.code, 'text': r.value, 'scale': r.scale} for r in self.responses]
+        result = {
+            'root': self.root,
+            'code': self.code,
+            'type': self.type,
+            'loop_on': self.loop_on,
+            'responses': response_info
+        }
     
     def __or__(self, other):
         from ..crosstab import CrossTab
