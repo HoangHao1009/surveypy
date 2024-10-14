@@ -130,8 +130,9 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
             pv = pv.div(pv.sum(axis=0), axis=1).fillna(0)
             if config.round_perc:
                 pv = pv.map(lambda x: f'{round(x*100)}%' if x != 0 else 0)
-        
-        final_test.loc[:, 'Total'] = pv.loc[:, 'Total']
+                
+        if config.total:
+            final_test.loc[:, 'Total'] = pv.loc[:, 'Total']
 
         missing_columns = pv.columns.difference(final_test.columns)
         for col in missing_columns:
