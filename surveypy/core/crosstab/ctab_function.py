@@ -143,7 +143,8 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
         
     else:
         if config.perc:
-            pv = pv.div(pv.sum(axis=0), axis=1).fillna(0)
+            # pv = pv.div(pv.sum(axis=0), axis=1).fillna(0)
+            pv = pv.div(total_df.values, axis=1)
             if config.round_perc:
                 pv = pv.map(lambda x: f'{round(x*100)}%' if x != 0 else 0)
         pv = pd.concat([pv, total_df])
