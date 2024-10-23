@@ -263,7 +263,7 @@ def _sig_test(crosstab: pd.DataFrame, alpha: float, perc: bool, round_perc: bool
     if perc:
         crosstab = crosstab.div(crosstab.sum(axis=0), axis=1)
         if round_perc:
-            crosstab = crosstab.map(lambda x: f'{round(x*100)}%' if x != 0 else 0)
+            crosstab = crosstab.map(lambda x: f'{round(x*100)}%' if x != 0 and not pd.isna(x) else 0)
                       
     final_df = crosstab.astype(str) + ' ' + test_df.astype(str)
     return final_df
