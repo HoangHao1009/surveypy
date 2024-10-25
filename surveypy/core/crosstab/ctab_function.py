@@ -93,7 +93,8 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
         aggfunc=config.cat_aggfunc, 
         fill_value=0, 
         margins=True, 
-        margins_name=total_label
+        margins_name=total_label,
+        dropna=False
     )
     
     return pv
