@@ -96,6 +96,7 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
         margins_name=total_label
     )
     
+    return pv
     fill = 0 
     
     if not config.dropna:
