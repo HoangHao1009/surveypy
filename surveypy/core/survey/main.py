@@ -335,9 +335,7 @@ class Survey(BaseModel):
             
         for question in self.questions:
             question.df_config.col_name = self.df_config.col_name
-            
-        print('config', self.df_config)
-
+        
         if self.df_config.loop_mode == 'part':
             with ThreadPoolExecutor() as executor:
                 futures = [executor.submit(_process_question, question, self.df_config.loop_on) for question in questions]

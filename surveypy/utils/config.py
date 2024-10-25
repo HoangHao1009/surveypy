@@ -11,7 +11,7 @@ class DfConfig(BaseModel):
     col_type: Literal['multi', 'single'] = 'multi'
     melt: bool = False
     loop_on: Optional[str] = None
-    loop_mode: Literal['part', 'stack'] = 'stack'
+    loop_mode: Literal['part', 'stack'] = 'part'
     dropna_col: List[str] = Field(default_factory=list)
     
     def to_default(self):
