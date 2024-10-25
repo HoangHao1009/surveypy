@@ -55,7 +55,6 @@ def _desired_columns(deep_by, total, bases):
             deep_repsonses.append([i.value for i in base.responses])
             pairs = list(itertools.product(*deep_repsonses))
             desired_columns.extend(pairs)
-        print(pairs)
     else:
         if total:
             desired_columns.append(('Total', ''))
