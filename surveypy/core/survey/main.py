@@ -617,7 +617,7 @@ def _process_question(loop_on: str, question_dict: Dict[str, dict]):
             elif question_info['type'] == 'matrix_text':
                 info_dict['type'] = 'text_matrix'
             else:
-                print(f'Not valid ma type: {question_info['type']}')
+                print(f"Not valid ma type: {question_info['type']}")
             construct_dict = {option: [option] for option in question_info['options']} if 'options' in question_info else {}
             question_obj = MultipleAnswer(**info_dict).reconstruct(construct_dict)
             
