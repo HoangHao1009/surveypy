@@ -347,11 +347,14 @@ class Survey(BaseModel):
                 futures = [executor.submit(_process_loop_wide, self.questions, loop) for loop in self.loop_list]
                 parts = [future.result() for future in as_completed(futures)]
             df = pd.concat(parts, axis=1)
-        elif self.df_config.loop_mode == 'wide':
+        elif self.df_config.loop_mode == 'long':
             with ThreadPoolExecutor() as executor:
                 futures = [executor.submit(_process_loop_long, self.questions, loop) for loop in self.loop_list]
                 parts = [future.result() for future in as_completed(futures)]
             df = pd.concat(parts, axis=0)
+        else:
+            print(f'Type {self.df_config.loop_mode} not valid')
+            df = pd.DataFrame()
 
         if self.df_config.col_type == 'single':
             df.columns = df.columns.get_level_values(-1)
