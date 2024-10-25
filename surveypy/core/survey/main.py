@@ -312,12 +312,14 @@ class Survey(BaseModel):
             question.df_config.melt = False
             loops = [None] if question.loop_on is None else [None, loop]
             if question.loop_on in loops:
-                print(question.loop_on)
+                print('in', question.loop_on)
                 try:
                     return question.dataframe
                 except Exception as e:
                     print(f'Invalid in: Question {question.code} with config: {question.df_config}. Error: {e}')
-            return None
+            else:
+                print('not in', question.loop_on)
+                return None
         def _process_loop(loop, questions: List[QuestionType]):
             data = []
             with ThreadPoolExecutor() as executor:
