@@ -323,7 +323,7 @@ class Survey(BaseModel):
         if self.df_config.loop_mode == 'wide':
             with ThreadPoolExecutor() as executor:
                 futures = [executor.submit(_process_question, question, self.df_config.loop_on) for question in self.questions]
-                data = [future.result() for future in as_completed(futures) if future.result() != None]
+                data = [future.result() for future in as_completed(futures) if future.result() is not None]
             
             df = pd.concat(data, axis=1)
 
