@@ -307,45 +307,51 @@ class Survey(BaseModel):
         
     @property
     def dataframe(self) -> pd.DataFrame:
-        def _process_question(question: QuestionType, loop_on: str):
+        def _process_question(question: QuestionType, loop: str, long=False):
             question.df_config.melt = False
-            if question.loop_on in loop_on:
+            if question.loop_on == loop:
                 try:
-                    if question.loop_on != None:
-                        question.code = question.code + f"LOOP{question.loop_on}"
+                    if not long and loop != None:
+                        question.code = f"{question.code}LOOP{question.loop_on}"
                     return question.dataframe
                 except Exception as e:
                     print(f'Invalid in: Question {question.code} with config: {question.df_config}. Error: {e}')
             else:
                 return None
-            
+
+        def _process_loop_wide(questions, loop):
+            data = []
+            with ThreadPoolExecutor() as executor:
+                futures = [executor.submit(_process_question, question, loop) for question in questions]
+                data = [future.result() for future in as_completed(futures) if future.result() is not None]
+            df = pd.concat(data, axis=1)
+            return df
+        
+        def _process_loop_long(questions, loop):
+            data = []
+            with ThreadPoolExecutor() as executor:
+                futures = [executor.submit(_process_question, question, loop, True) for question in questions]
+                data = [future.result() for future in as_completed(futures) if future.result() is not None]
+            part = pd.concat(data, axis=1)
+            loop_col = ('Loop', 'Loop')
+            part[loop_col] = loop
+            reorder_col = [loop_col] + [i for i in part.columns if i != loop_col]
+            part = part.loc[:, reorder_col]
+            return part
+
         for question in self.questions:
             question.df_config.col_name = self.df_config.col_name
         
         if self.df_config.loop_mode == 'wide':
             with ThreadPoolExecutor() as executor:
-                futures = [executor.submit(_process_question, question, self.df_config.loop_on) for question in self.questions]
-                data = [future.result() for future in as_completed(futures) if isinstance(future.result(), pd.DataFrame)]
-            
-            df = pd.concat(data, axis=1)
-
-        value_to_code = {}
-        for question in self.questions:
-            if isinstance(question, (SingleAnswer, Number)):
-                value_to_code[f'{question.root}_{question.code}'] = question.code
-            else:
-                for response in question.responses:
-                    value_to_code[f'{question.code}_{response.value}'] = response.code
-        
-        def get_sort_key(col):
-            if self.df_config.col_name == 'code':
-                return col[-1]
-            else:
-                return value_to_code[f'{col[0]}_{col[-1]}']
-        
-        sort_columns = sorted(df.columns, key=lambda col: str_function.custom_sort(get_sort_key(col), self.block_order))
-
-        df = df[sort_columns]
+                futures = [executor.submit(_process_loop_wide, self.questions, loop) for loop in self.loop_list]
+                parts = [future.result() for future in as_completed(futures)]
+            df = pd.concat(parts, axis=1)
+        elif self.df_config.loop_mode == 'wide':
+            with ThreadPoolExecutor() as executor:
+                futures = [executor.submit(_process_loop_long, self.questions, loop) for loop in self.loop_list]
+                parts = [future.result() for future in as_completed(futures)]
+            df = pd.concat(parts, axis=0)
 
         if self.df_config.col_type == 'single':
             df.columns = df.columns.get_level_values(-1)
