@@ -49,18 +49,19 @@ def _desired_columns(deep_by, total, bases):
             for i in range(len(deep_by)):
                 total_label += ('', )
             desired_columns.append(total_label)
-        for deep in deep_by:
-            for deep_response in deep.responses:
-                for base in bases:
-                    for response in base.responses:
-                        desired_columns.append((deep_response.value, base.code, response.value))
+        for base in bases:
+            deep_repsonses = [[i.value for i in deep.responses] for deep in deep_by]
+            deep_repsonses.append([base.code])
+            deep_repsonses.append([i.value for i in base.responses])
+            pairs = list(itertools.product(*deep_repsonses))
+            desired_columns.extend(pairs)
+        print(pairs)
     else:
         if total:
             desired_columns.append(('Total', ''))
         for base in bases:
             for response in base.responses:
                 desired_columns.append((base.code, response.value))
-
     return desired_columns
 
 def _df_parts(pv, deep_by, bases) -> Dict:
@@ -116,9 +117,6 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
                 
     total_df = pv.loc[[total_label],:]
     pv = pv.loc[~pv.index.get_level_values(0).isin([total_label])]
-    
-    return pv
-
        
     if config.alpha:
         dfs = []
