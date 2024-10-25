@@ -25,7 +25,6 @@ class Survey(BaseModel):
     ppt_config: PptConfig = PptConfig()
     control_variables: List = []
     removed: List[str] = []
-    resp_info_col: bool = True
     _working_dir: str = ''
     _block_order: List[str] = []
 
@@ -305,53 +304,29 @@ class Survey(BaseModel):
                     question.code += f'_{target_new.name}'
 
         self.questions.extend(target_new.questions)
-
+        
     @property
     def dataframe(self) -> pd.DataFrame:
-        def _process_question(question: QuestionType, loop: str):
+        def _process_question(question: QuestionType, loop_on: str):
             question.df_config.melt = False
-            loops = [None] if question.loop_on is None else [None, loop]
-            if question.loop_on in loops:
-                print('in', question.loop_on)
+            if question.loop_on in loop_on:
                 try:
                     return question.dataframe
                 except Exception as e:
                     print(f'Invalid in: Question {question.code} with config: {question.df_config}. Error: {e}')
             else:
-                print('not in', question.loop_on)
                 return None
-        def _process_loop(loop, questions: List[QuestionType]):
-            data = []
-            with ThreadPoolExecutor() as executor:
-                futures = [executor.submit(_process_question, question, loop) for question in questions]
-                data = [future.result() for future in as_completed(futures) if future.result() is not None]
-            part = pd.concat(data, axis=1)
-            loop_col = ('Loop', 'Loop')
-            part[loop_col] = loop
-            reorder_col = [loop_col] + [i for i in part.columns if i != loop_col]
-            part = part.loc[:, reorder_col]
-            return part
-                
-        if self.resp_info_col:
-            questions = self.questions
-        else:
-            questions = [question for question in self.questions if question.code not in resp_info]
             
         for question in self.questions:
             question.df_config.col_name = self.df_config.col_name
         
-        if self.df_config.loop_mode == 'part':
+        if self.df_config.loop_mode == 'wide':
             with ThreadPoolExecutor() as executor:
-                futures = [executor.submit(_process_question, question, self.df_config.loop_on) for question in questions]
-                data = [future.result() for future in as_completed(futures) if future.result() is not None]
+                futures = [executor.submit(_process_question, question, self.df_config.loop_on) for question in self.questions]
+                data = [future.result() for future in as_completed(futures) if future.result() != None]
             
             df = pd.concat(data, axis=1)
-        elif self.df_config.loop_mode == 'stack':
-            with ThreadPoolExecutor() as executor:
-                futures = [executor.submit(_process_loop, loop, questions) for loop in self.loop_list]
-                parts = [future.result() for future in as_completed(futures)]
-            df = pd.concat(parts, axis=0)
-            
+
         value_to_code = {}
         for question in self.questions:
             if isinstance(question, (SingleAnswer, Number)):
@@ -376,6 +351,78 @@ class Survey(BaseModel):
         if self.df_config.dropna_col:
             df.dropna(subset=self.df_config.dropna_col, inplace = True)
         return df
+
+
+    # @property
+    # def dataframe(self) -> pd.DataFrame:
+    #     def _process_question(question: QuestionType, loop: str):
+    #         question.df_config.melt = False
+    #         loops = [None] if question.loop_on is None else [None, loop]
+    #         if question.loop_on in loops:
+    #             print('in', question.loop_on)
+    #             try:
+    #                 return question.dataframe
+    #             except Exception as e:
+    #                 print(f'Invalid in: Question {question.code} with config: {question.df_config}. Error: {e}')
+    #         else:
+    #             print('not in', question.loop_on)
+    #             return None
+    #     def _process_loop(loop, questions: List[QuestionType]):
+    #         data = []
+    #         with ThreadPoolExecutor() as executor:
+    #             futures = [executor.submit(_process_question, question, loop) for question in questions]
+    #             data = [future.result() for future in as_completed(futures) if future.result() is not None]
+    #         part = pd.concat(data, axis=1)
+    #         loop_col = ('Loop', 'Loop')
+    #         part[loop_col] = loop
+    #         reorder_col = [loop_col] + [i for i in part.columns if i != loop_col]
+    #         part = part.loc[:, reorder_col]
+    #         return part
+                
+    #     if self.resp_info_col:
+    #         questions = self.questions
+    #     else:
+    #         questions = [question for question in self.questions if question.code not in resp_info]
+            
+    #     for question in self.questions:
+    #         question.df_config.col_name = self.df_config.col_name
+        
+    #     if self.df_config.loop_mode == 'part':
+    #         with ThreadPoolExecutor() as executor:
+    #             futures = [executor.submit(_process_question, question, self.df_config.loop_on) for question in questions]
+    #             data = [future.result() for future in as_completed(futures) if future.result() is not None]
+            
+    #         df = pd.concat(data, axis=1)
+    #     elif self.df_config.loop_mode == 'stack':
+    #         with ThreadPoolExecutor() as executor:
+    #             futures = [executor.submit(_process_loop, loop, questions) for loop in self.loop_list]
+    #             parts = [future.result() for future in as_completed(futures)]
+    #         df = pd.concat(parts, axis=0)
+            
+    #     value_to_code = {}
+    #     for question in self.questions:
+    #         if isinstance(question, (SingleAnswer, Number)):
+    #             value_to_code[f'{question.root}_{question.code}'] = question.code
+    #         else:
+    #             for response in question.responses:
+    #                 value_to_code[f'{question.code}_{response.value}'] = response.code
+        
+    #     def get_sort_key(col):
+    #         if self.df_config.col_name == 'code':
+    #             return col[-1]
+    #         else:
+    #             return value_to_code[f'{col[0]}_{col[-1]}']
+        
+    #     sort_columns = sorted(df.columns, key=lambda col: str_function.custom_sort(get_sort_key(col), self.block_order))
+
+    #     df = df[sort_columns]
+
+    #     if self.df_config.col_type == 'single':
+    #         df.columns = df.columns.get_level_values(-1)
+
+    #     if self.df_config.dropna_col:
+    #         df.dropna(subset=self.df_config.dropna_col, inplace = True)
+    #     return df
     
     @property
     def ctab(self) -> CrossTab:

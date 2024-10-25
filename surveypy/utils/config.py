@@ -10,8 +10,8 @@ class DfConfig(BaseModel):
     col_name: Literal['code', 'value'] = 'code'
     col_type: Literal['multi', 'single'] = 'multi'
     melt: bool = False
-    loop_on: Optional[str] = None
-    loop_mode: Literal['part', 'stack'] = 'part'
+    loop_on: List[str] = []
+    loop_mode: Literal['long', 'wide'] = 'long'
     dropna_col: List[str] = Field(default_factory=list)
     
     def to_default(self):
