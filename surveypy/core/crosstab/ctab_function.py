@@ -174,7 +174,7 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
     return pv
 
 def _pivot_number(bases: List[BaseType], target: QuestionType, config: CtabConfig):
-    df = _custom_merge(bases, target)
+    df = _custom_merge(bases, target, config.deep_by)
     
     deep_indexes = [f'deep_answer_{index}' for index in range(1, len(config.deep_by) + 1)]
 
@@ -190,15 +190,12 @@ def _pivot_number(bases: List[BaseType], target: QuestionType, config: CtabConfi
     
     pv.index = pd.MultiIndex.from_tuples([(i[-1], i[0]) for i in pv.index], names=['target_root', 'target_answer'])
 
+    fill = 0 
+
     if not config.dropna:
-        desired_columns = _desired_columns(deep_by=config.deep_by, total=False, bases=bases)
-
-        missing_cols = list((set(desired_columns)) - set(pv.columns))
-        new_columns = pd.DataFrame(0, index=pv.index, columns=missing_cols)
-
-        # Dùng pd.concat để thêm các cột mới vào DataFrame hiện tại
-        pv = pd.concat([pv, new_columns], axis=1)
-            
+        desired_columns = _desired_columns(config.deep_by, config.total, bases)
+        missing_cols = list(set(desired_columns) - set(pv.columns))
+        pv = pd.concat([pv, pd.DataFrame(fill, index=pv.index, columns=missing_cols)], axis=1)
         pv = pv.reindex(columns=pd.MultiIndex.from_tuples(desired_columns))
         
     if config.alpha:
