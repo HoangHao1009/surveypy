@@ -311,6 +311,8 @@ class Survey(BaseModel):
             question.df_config.melt = False
             if question.loop_on in loop_on:
                 try:
+                    if question.loop_on != None:
+                        question.code = question.code + f"LOOP{question.loop_on}"
                     return question.dataframe
                 except Exception as e:
                     print(f'Invalid in: Question {question.code} with config: {question.df_config}. Error: {e}')
