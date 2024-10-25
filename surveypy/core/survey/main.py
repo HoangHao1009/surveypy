@@ -312,6 +312,7 @@ class Survey(BaseModel):
             question.df_config.melt = False
             loops = [None] if question.loop_on is None else [None, loop]
             if question.loop_on in loops:
+                print(question.loop_on)
                 try:
                     return question.dataframe
                 except Exception as e:
