@@ -335,6 +335,8 @@ class Survey(BaseModel):
             
         for question in self.questions:
             question.df_config.col_name = self.df_config.col_name
+            
+        print('config', self.df_config)
 
         if self.df_config.loop_mode == 'part':
             with ThreadPoolExecutor() as executor:
