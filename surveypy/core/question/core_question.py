@@ -44,6 +44,8 @@ class Question(BaseModel):
             'code': self.code,
             'type': self.type,
             'loop_on': self.loop_on,
+            'num_respondent': len(self.respondents),
+            'invalid_respondent': self.invalid,
             'responses': response_info
         }
     
