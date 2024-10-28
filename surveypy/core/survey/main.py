@@ -352,6 +352,8 @@ class Survey(BaseModel):
                 reorder_col = [loop_col] + [i for i in part.columns if i != loop_col]
                 part = part.loc[:, reorder_col]
                 return part
+            
+        self.reset_question()
 
         if self.df_config.loop_mode == 'long':
             with ThreadPoolExecutor() as executor:
