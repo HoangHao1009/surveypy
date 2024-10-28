@@ -315,6 +315,9 @@ class Survey(BaseModel):
                         if loop != None:
                             question = deepcopy(question)
                             question.code = f"{question.code}LOOP{question.loop_on}"
+                            if question.df_config.col_type == 'single':
+                                for response in question.responses:
+                                    response.code = f"{response.code}LOOP{loop}"
                         return question.dataframe
                     except Exception as e:
                         print(f'Invalid in: Question {question.code} with config: {question.df_config}. Error: {e}')
