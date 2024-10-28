@@ -324,8 +324,9 @@ class Survey(BaseModel):
             with ThreadPoolExecutor() as executor:
                 futures = [executor.submit(_process_question_wide, question, loop) for question in questions]
                 data = [future.result() for future in as_completed(futures) if future.result() is not None]
-            df = pd.concat(data, axis=1)
-            return df
+            if data:
+                df = pd.concat(data, axis=1)
+                return df
 
         def _process_loop_long(questions: List[QuestionType], loop):
             def _process_question_long(question: QuestionType, loop):
@@ -341,12 +342,13 @@ class Survey(BaseModel):
             with ThreadPoolExecutor() as executor:
                 futures = [executor.submit(_process_question_long, question, loop) for question in questions]
                 data = [future.result() for future in as_completed(futures) if future.result() is not None]
-            part = pd.concat(data, axis=1)
-            loop_col = ('Loop', 'Loop')
-            part[loop_col] = loop
-            reorder_col = [loop_col] + [i for i in part.columns if i != loop_col]
-            part = part.loc[:, reorder_col]
-            return part
+            if data:
+                part = pd.concat(data, axis=1)
+                loop_col = ('Loop', 'Loop')
+                part[loop_col] = loop
+                reorder_col = [loop_col] + [i for i in part.columns if i != loop_col]
+                part = part.loc[:, reorder_col]
+                return part
 
         if self.df_config.loop_mode == 'long':
             with ThreadPoolExecutor() as executor:
