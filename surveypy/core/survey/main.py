@@ -307,30 +307,39 @@ class Survey(BaseModel):
         
     @property
     def dataframe(self) -> pd.DataFrame:
-        def _process_question(question: QuestionType, loop: str, long=False):
-            question.df_config.melt = False
-            if question.loop_on == loop:
-                try:
-                    if not long and loop != None:
-                        question.code = f"{question.code}LOOP{question.loop_on}"
-                    return question.dataframe
-                except Exception as e:
-                    print(f'Invalid in: Question {question.code} with config: {question.df_config}. Error: {e}')
-            else:
-                return None
-
-        def _process_loop_wide(questions, loop):
+        def _process_loop_wide(questions: List[QuestionType], loop):
+            def _process_question_wide(question: QuestionType, loop):
+                question.df_config.melt = False
+                if question.loop_on == loop:
+                    try:
+                        if loop != None:
+                            question = deepcopy(question)
+                            question.code = f"{question.code}LOOP{question.loop_on}"
+                        return question.dataframe
+                    except Exception as e:
+                        print(f'Invalid in: Question {question.code} with config: {question.df_config}. Error: {e}')
+                else:
+                    return None
             data = []
             with ThreadPoolExecutor() as executor:
-                futures = [executor.submit(_process_question, question, loop) for question in questions]
+                futures = [executor.submit(_process_question_wide, question, loop) for question in questions]
                 data = [future.result() for future in as_completed(futures) if future.result() is not None]
             df = pd.concat(data, axis=1)
             return df
-        
-        def _process_loop_long(questions, loop):
+
+        def _process_loop_long(questions: List[QuestionType], loop):
+            def _process_question_long(question: QuestionType, loop):
+                question.df_config.melt = False
+                if question.loop_on == loop:
+                    try:
+                        return question.dataframe
+                    except Exception as e:
+                        print(f'Invalid in: Question {question.code} with config: {question.df_config}. Error: {e}')
+                else:
+                    return None
             data = []
             with ThreadPoolExecutor() as executor:
-                futures = [executor.submit(_process_question, question, loop, True) for question in questions]
+                futures = [executor.submit(_process_question_long, question, loop) for question in questions]
                 data = [future.result() for future in as_completed(futures) if future.result() is not None]
             part = pd.concat(data, axis=1)
             loop_col = ('Loop', 'Loop')
@@ -339,19 +348,16 @@ class Survey(BaseModel):
             part = part.loc[:, reorder_col]
             return part
 
-        for question in self.questions:
-            question.df_config.col_name = self.df_config.col_name
-        
-        if self.df_config.loop_mode == 'wide':
-            with ThreadPoolExecutor() as executor:
-                futures = [executor.submit(_process_loop_wide, self.questions, loop) for loop in self.df_config.loop_on]
-                parts = [future.result() for future in as_completed(futures)]
-            df = pd.concat(parts, axis=1)
-        elif self.df_config.loop_mode == 'long':
+        if self.df_config.loop_mode == 'long':
             with ThreadPoolExecutor() as executor:
                 futures = [executor.submit(_process_loop_long, self.questions, loop) for loop in self.df_config.loop_on]
-                parts = [future.result() for future in as_completed(futures)]
-            df = pd.concat(parts, axis=0)
+                data = [future.result() for future in as_completed(futures) if future.result() is not None]
+            df = pd.concat(data, axis=0)
+        elif self.df_config.loop_mode == 'wide':
+            with ThreadPoolExecutor() as executor:
+                futures = [executor.submit(_process_loop_wide, self.questions, loop) for loop in self.df_config.loop_on]
+                data = [future.result() for future in as_completed(futures) if future.result() is not None]
+            df = pd.concat(data, axis=1)
         else:
             print(f'Type {self.df_config.loop_mode} not valid')
             df = pd.DataFrame()
@@ -359,10 +365,7 @@ class Survey(BaseModel):
         if self.df_config.col_type == 'single':
             df.columns = df.columns.get_level_values(-1)
 
-        if self.df_config.dropna_col:
-            df.dropna(subset=self.df_config.dropna_col, inplace = True)
         return df
-
 
     # @property
     # def dataframe(self) -> pd.DataFrame:

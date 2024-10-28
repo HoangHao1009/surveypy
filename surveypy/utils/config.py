@@ -12,7 +12,6 @@ class DfConfig(BaseModel):
     melt: bool = False
     loop_on: List[str] = []
     loop_mode: Literal['long', 'wide'] = 'long'
-    dropna_col: List[str] = Field(default_factory=list)
     
     def to_default(self):
         default_instance = type(self)()
