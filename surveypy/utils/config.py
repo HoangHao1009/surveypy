@@ -19,7 +19,6 @@ class DfConfig(BaseModel):
         
 class CtabConfig(BaseModel):
     perc: bool = True
-    perc_dimension: Literal['col', 'row'] = 'col'
     total: bool = False
     round_perc: bool = True
     cat_aggfunc: Union[str, Callable, List[Union[Callable, str]]] = pd.Series.nunique
