@@ -94,11 +94,13 @@ class Question(BaseModel):
         self._set_response()
         self.df_config.to_default()
         
-    def drop(self, value: str, by: Literal['value', 'scale']='value', rescale=True, inplace=False):
+    def drop(self, value: Union[List, str], by: Literal['value', 'scale']='value', rescale=True, inplace=False):
+        if isinstance(value, str):
+            value = [value]
         if by == 'value':
-            new_responses = [r for r in self.responses if r.value != value]
+            new_responses = [r for r in self.responses if r.value not in value]
         else:
-            new_responses = [r for r in self.responses if r.scale != value]
+            new_responses = [r for r in self.responses if r.scale not in value]
         if rescale:
             for index, response in enumerate(new_responses, 1):
                 response.scale = index
@@ -113,9 +115,10 @@ class Question(BaseModel):
         
     def sort(self, response_list: List[str], by: Literal['value', 'scale']='value', rescale=True, inplace=False):
         if by == 'value':
-            new_responses = self.responses.sort(key=lambda obj: response_list.index(obj.value))
+            new_responses = sorted(self.responses, key=lambda obj: response_list.index(obj.value))
         else:
-            new_responses = self.responses.sort(key=lambda obj: response_list.index(obj.scale))
+            new_responses = sorted(self.responses, key=lambda obj: response_list.index(obj.scale))
+            
         if rescale:
             for index, response in enumerate(new_responses, 1):
                 response.scale = index
