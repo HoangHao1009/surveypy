@@ -157,12 +157,12 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
         if config.perc_dimension == 'col':
             pv = pv.loc[~pv.index.get_level_values(0).isin([total_label])]
             pv = pv.div(total_row_df.values, axis=1)
-            pv = pd.concat([final_test, total_row_df], axis=0)
+            pv = pd.concat([pv, total_row_df], axis=0)
 
         elif config.perc_dimension == 'row':
             pv = pv.loc[~pv.columns.get_level_values(0).isin([total_label])]
             pv = pv.div(total_col_df.values, axis=0)
-            pv = pd.concat([final_test, total_col_df], axis=1)
+            pv = pd.concat([pv, total_col_df], axis=1)
         if config.round_perc:
             pv = pv.map(lambda x: f'{round(x*100)}%' if x != 0 and not pd.isna(x) else 0)
 
