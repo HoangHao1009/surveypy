@@ -308,7 +308,7 @@ class Survey(BaseModel):
             question.df_config.melt = False
             if question.loop_on == loop:
                 try:
-                    question.loop_in_col = False if long else False
+                    question.loop_in_col = False if long else True
                     return question.dataframe
                 except Exception as e:
                     print(f'Invalid in: Question {question.code} with config: {question.df_config}. Error: {e}')
