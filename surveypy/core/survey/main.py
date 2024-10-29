@@ -309,7 +309,6 @@ class Survey(BaseModel):
     def dataframe(self) -> pd.DataFrame:
         def _process_question(question: QuestionType, loop):
             question.df_config.melt = False
-            print(f"question loop: {question.loop_on} - current loop: {loop}")
             if question.loop_on == loop:
                 try:
                     return question.dataframe
