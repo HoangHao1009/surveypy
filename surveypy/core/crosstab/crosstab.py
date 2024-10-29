@@ -76,8 +76,9 @@ class CrossTab(BaseModel):
                         row = target.code
                         title = f'{row} x {column}'
                         try:
-                            part_df = df.loc[row, column].reset_index()
-                            part_df.rename({'target_answer': 'row_value'}, inplace = True, axis=1)
+                            # .T for correspond ppt chart format
+                            part_df = df.loc[row, column].T.reset_index()
+                            part_df.rename({'index': 'row_value'}, inplace = True, axis=1)
                             report_function.create_pptx_chart(
                                 template_path=ppt_path,
                                 dataframe=part_df,
