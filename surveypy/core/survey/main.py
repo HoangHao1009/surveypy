@@ -185,13 +185,13 @@ class Survey(BaseModel):
             for question in self.questions:
                 question_code = question.code
                 if code == question_code:
-                    if question.loop_on == None:
-                        return question
-                    else:
-                        for question in [question for question in self.questions if question.code == code]:
-                            if question.loop_on == loop:
-                                return question
-                        raise KeyError(f'{code} is loop question with loop on: {self.loop_list}. Your input loop is not valid: {loop}')
+                    # if question.loop_on == None:
+                    #     return question
+                    # else:
+                    for question in [question for question in self.questions if question.code == code]:
+                        if question.loop_on == loop:
+                            return question
+                    raise KeyError(f'{code} is loop question with loop on: {self.loop_list}. Your input loop is not valid: {loop}')
             question_list = []
             for question in self.questions:
                 if code == question.root:
