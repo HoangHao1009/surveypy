@@ -26,6 +26,9 @@ class Number(Question):
 
         if self.df_config.melt:
             df = _melt_dataframe(self.code, df)
+        else:
+            if self.loop_on is not None:
+                df.columns = df.columns.map(lambda x: tuple(f"{i}LOOP{self.loop_on}" for i in x))
 
         return df.fillna(0)
     

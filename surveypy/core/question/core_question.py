@@ -35,7 +35,7 @@ class Question(BaseModel):
             return '_'.join(split_part[0:2])
         else:
             return split_part[0]
-        
+
     @property
     def info(self) -> Dict:
         response_info = [{'code': r.code, 'text': r.value, 'scale': r.scale} for r in self.responses]
