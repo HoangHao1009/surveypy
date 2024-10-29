@@ -185,9 +185,6 @@ class Survey(BaseModel):
             for question in self.questions:
                 question_code = question.code
                 if code == question_code:
-                    # if question.loop_on == None:
-                    #     return question
-                    # else:
                     for question in [question for question in self.questions if question.code == code]:
                         if question.loop_on == loop:
                             return question
