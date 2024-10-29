@@ -57,7 +57,7 @@ class MultipleAnswer(Question):
         if self.df_config.melt:
             df = _melt_dataframe(self.code, df)
         else:
-            if self.loop_on != None:
+            if self.loop_on != None and self.loop_in_col:
                 df.columns = df.columns.map(lambda x: tuple(f"{i}LOOP{self.loop_on}" for i in x))
 
         return df.fillna(0)

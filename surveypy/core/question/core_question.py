@@ -20,6 +20,7 @@ class Question(BaseModel):
     text: str
     type: str
     loop_on: Optional[Union[str, int]] = None
+    loop_in_col: bool = True
     responses: List[Response] = []
     df_config: DfConfig = DfConfig()
     ppt_config: PptConfig = PptConfig()
