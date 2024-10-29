@@ -32,7 +32,7 @@ def custom_sort(item: str, priority_list: List[str] = None, loop_list: List[str]
                 numloop = loop_list.index(match.group(6)) if match.group(6) in loop_list else 0
             else:
                 numloop = 0
-            return (key, numlevel1, numlevel2, numlevel3, numrank, numloop)
+            return (key, numloop, numlevel1, numlevel2, numlevel3, numrank)
         else:
             # Trả về giá trị mặc định để tránh lỗi khi giải nén
             return (None, 0, 0, 0, 0, 0)
