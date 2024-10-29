@@ -317,7 +317,7 @@ class Survey(BaseModel):
         def _process_loop_wide(questions: List[QuestionType], loop):
             data = []
             with ThreadPoolExecutor() as executor:
-                futures = [executor.submit(_process_question, question, loop, True) for question in questions]
+                futures = [executor.submit(_process_question, question, loop, False) for question in questions]
                 data = [future.result() for future in as_completed(futures) if future.result() is not None]
             if data:
                 df = pd.concat(data, axis=1)
@@ -326,7 +326,7 @@ class Survey(BaseModel):
         def _process_loop_long(questions: List[QuestionType], loop):
             data = []
             with ThreadPoolExecutor() as executor:
-                futures = [executor.submit(_process_question, question, loop) for question in questions]
+                futures = [executor.submit(_process_question, question, loop, True) for question in questions]
                 data = [future.result() for future in as_completed(futures) if future.result() is not None]
             if data:
                 part = pd.concat(data, axis=1)
