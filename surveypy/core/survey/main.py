@@ -368,7 +368,7 @@ class Survey(BaseModel):
             else:
                 return value_to_code[f'{col[0]}_{col[-1]}']
         
-        sort_columns = sorted(df.columns, key=lambda col: str_function.custom_sort(get_sort_key(col), self.block_order))
+        sort_columns = sorted(df.columns, key=lambda col: str_function.custom_sort(get_sort_key(col), self.block_order, self.loop_list))
 
         df = df[sort_columns]
 
