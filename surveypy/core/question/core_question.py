@@ -94,20 +94,24 @@ class Question(BaseModel):
         self._set_response()
         self.df_config.to_default()
         
-    def drop(self, value: str, by: Literal['value', 'scale']='value', rescale=True):
-        new_responses = []
-        for resp in self.responses:
-            resp_value = resp.value if by == 'code' else resp.scale
-            if resp_value == value:
-                continue
-            new_responses.append(resp)
+    def drop(self, value: str, by: Literal['value', 'scale']='value', rescale=True, inplace=False):
+        if by == 'value':
+            new_responses = [r for r in self.responses if r.value != value]
+        else:
+            new_responses = [r for r in self.responses if r.scale != value]
         if rescale:
             for index, response in enumerate(new_responses, 1):
                 response.scale = index
-        self.responses = new_responses
-        self._set_response()
+        if inplace:
+            self.responses = new_responses
+            self._set_response()
+        else:
+            new_question = deepcopy(self)
+            new_question.responses = new_responses
+            new_question._set_response()
+            return new_question
         
-    def sort(self, response_list: List[str], by: Literal['value', 'scale']='value', rescale=True):
+    def sort(self, response_list: List[str], by: Literal['value', 'scale']='value', rescale=True, inplace=False):
         if by == 'value':
             new_responses = self.responses.sort(key=lambda obj: response_list.index(obj.value))
         else:
@@ -115,8 +119,14 @@ class Question(BaseModel):
         if rescale:
             for index, response in enumerate(new_responses, 1):
                 response.scale = index
-        self.responses = new_responses
-        self._set_response()
+        if inplace:
+            self.responses = new_responses
+            self._set_response()
+        else:
+            new_question = deepcopy(self)
+            new_question.responses = new_responses
+            new_question._set_response()
+            return new_question
         
     def reconstruct(
         self, construct_dict: Dict, 
