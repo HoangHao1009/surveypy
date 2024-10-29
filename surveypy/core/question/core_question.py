@@ -109,15 +109,15 @@ class Question(BaseModel):
             self._set_response()
         else:
             new_question = deepcopy(self)
-            new_question.responses = new_responses
+            new_question.responses = deepcopy(new_responses)
             new_question._set_response()
             return new_question
         
     def sort(self, response_list: List[str], by: Literal['value', 'scale']='value', rescale=True, inplace=False):
         if by == 'value':
-            new_responses = sorted(self.responses, key=lambda obj: response_list.index(obj.value))
+            new_responses = deepcopy(sorted(self.responses, key=lambda obj: response_list.index(obj.value)))
         else:
-            new_responses = sorted(self.responses, key=lambda obj: response_list.index(obj.scale))
+            new_responses = deepcopy(sorted(self.responses, key=lambda obj: response_list.index(obj.scale)))
         if rescale:
             for index, response in enumerate(new_responses, 1):
                 response.scale = index
@@ -126,7 +126,7 @@ class Question(BaseModel):
             self._set_response()
         else:
             new_question = deepcopy(self)
-            new_question.responses = deepcopy(new_responses)
+            new_question.responses = new_responses
             new_question._set_response()
             return new_question
         
