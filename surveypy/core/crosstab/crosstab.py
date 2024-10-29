@@ -61,10 +61,11 @@ class CrossTab(BaseModel):
             sheet_name = 'CrossTab1'
         report_function.df_to_excel(self.dataframe, excel_path, sheet_name)
         
-    def to_ppt(self, ppt_path: str):
+    def to_ppt(self, ppt_path: str, perc: bool=True):
         self.config.total = False
         self.config.alpha = None
         self.config.round_perc = False
+        self.config.perc = perc
         df = self.dataframe
         if self.config.deep_by:
             deep_repsonses = [[i.value for i in deep.responses] for deep in self.config.deep_by]
