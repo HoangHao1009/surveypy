@@ -477,6 +477,7 @@ class Survey(BaseModel):
                         for respondent in response.respondents:
                             d = {'id': str(respondent) + str(response.code),
                                 'resp_id': respondent,
+                                'loop': question.loop_on,
                                 'question_code': question.code,
                                 'answer_code': response.code}
                             response_data.append(d)
