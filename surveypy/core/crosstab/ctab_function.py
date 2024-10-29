@@ -97,7 +97,6 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
         dropna=False
     )
     
-    # return pv
     fill = 0 
     
     if not config.dropna:
@@ -114,8 +113,9 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
                 
         pv = pd.concat([pv, new_rows]).sort_index(level=1, key=lambda x: pd.Categorical(x, categories=desired_indexes, ordered=True))
                 
-    total_df = pv.loc[[total_label],:]
-    pv = pv.loc[~pv.index.get_level_values(0).isin([total_label])]
+    total_row_df = pv.loc[[total_label],:]
+    total_col_df = pv.loc[:,[total_label]]
+    # pv = pv.loc[~pv.index.get_level_values(0).isin([total_label])]
        
     if config.alpha:
         dfs = []
@@ -130,8 +130,12 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
         final_test = pd.concat(dfs, axis=1)
                 
         if config.perc:
-            # pv = pv.div(pv.sum(axis=0), axis=1).fillna(0)
-            pv = pv.div(total_df.values, axis=1)
+            if config.perc_dimension == 'col':
+                pv = pv.loc[~pv.index.get_level_values(0).isin([total_label])]
+                pv = pv.div(total_row_df.values, axis=1)
+            elif config.perc_dimension == 'row':
+                pv = pv.loc[~pv.columns.get_level_values(0).isin([total_label])]
+                pv = pv.div(total_col_df.values, axis=0)
             if config.round_perc:
                 pv = pv.map(lambda x: f'{round(x*100)}%' if x != 0 and not pd.isna(x) else 0)
                 
@@ -142,15 +146,32 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
         for col in missing_columns:
             final_test[col] = ''
         final_test = final_test[pv.columns]
-        pv = pd.concat([final_test, total_df])
+        if config.perc_dimension == 'col':
+            pv = pd.concat([final_test, total_row_df], axis=0)
+        elif config.perc_dimension == 'row':
+            pv = pd.concat([final_test, total_col_df], axis=1)
+
+        # pv = pd.concat([final_test, total_df])
         
     else:
-        if config.perc:
-            # pv = pv.div(pv.sum(axis=0), axis=1).fillna(0)
-            pv = pv.div(total_df.values, axis=1)
-            if config.round_perc:
-                pv = pv.map(lambda x: f'{round(x*100)}%' if x != 0 and not pd.isna(x) else 0)
-        pv = pd.concat([pv, total_df])
+        if config.perc_dimension == 'col':
+            pv = pv.loc[~pv.index.get_level_values(0).isin([total_label])]
+            pv = pv.div(total_row_df.values, axis=1)
+            pv = pd.concat([final_test, total_row_df], axis=0)
+
+        elif config.perc_dimension == 'row':
+            pv = pv.loc[~pv.columns.get_level_values(0).isin([total_label])]
+            pv = pv.div(total_col_df.values, axis=0)
+            pv = pd.concat([final_test, total_col_df], axis=1)
+        if config.round_perc:
+            pv = pv.map(lambda x: f'{round(x*100)}%' if x != 0 and not pd.isna(x) else 0)
+
+        # if config.perc:
+        #     # pv = pv.div(pv.sum(axis=0), axis=1).fillna(0)
+        #     pv = pv.div(total_df.values, axis=1)
+        #     if config.round_perc:
+        #         pv = pv.map(lambda x: f'{round(x*100)}%' if x != 0 and not pd.isna(x) else 0)
+        # pv = pd.concat([pv, total_df])
         
     pv.rename(columns={total_label: "Total"}, index={total_label: f"{target.code}_Total"}, inplace=True)
     pv = pv.fillna(0)
