@@ -57,7 +57,11 @@ class Survey(BaseModel):
                 try:
                     new_questions.append(self[i])
                 except:
+                    pass
+                try:
                     new_questions.extend([self[f'{i}loop{loop}'] for loop in self.loop_list])
+                except:
+                    pass
             self.questions = new_questions
 
     @property
@@ -114,7 +118,7 @@ class Survey(BaseModel):
         return info
     
     @property
-    def parts(self):
+    def parts(self) -> Dict:
         mapping = {
             'main': ['sa', 'ma', 'sa_matrix', 'ma_matrix', 'rank', 'number'],
             'info': ['respondent_info'],
