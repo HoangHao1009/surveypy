@@ -94,6 +94,30 @@ class Question(BaseModel):
         self._set_response()
         self.df_config.to_default()
         
+    def drop(self, value: str, by: Literal['value', 'scale']='value', rescale=True):
+        new_responses = []
+        for resp in self.responses:
+            resp_value = resp.value if by == 'code' else resp.scale
+            if resp_value == value:
+                continue
+            new_responses.append(resp)
+        if rescale:
+            for index, response in enumerate(new_responses, 1):
+                response.scale = index
+        self.responses = new_responses
+        self._set_response()
+        
+    def sort(self, response_list: List[str], by: Literal['value', 'scale']='value', rescale=True):
+        if by == 'value':
+            new_responses = self.responses.sort(key=lambda obj: response_list.index(obj.value))
+        else:
+            new_responses = self.responses.sort(key=lambda obj: response_list.index(obj.scale))
+        if rescale:
+            for index, response in enumerate(new_responses, 1):
+                response.scale = index
+        self.responses = new_responses
+        self._set_response()
+        
     def reconstruct(
         self, construct_dict: Dict, 
         method: Literal['cluster', 'classify']='cluster', 
