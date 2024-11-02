@@ -123,8 +123,9 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
         for key, value in df_parts.items():
             column = value['column']
             test_df = value['df']
+            test_total_df = total_df.loc[:, test_df.columns]
             test_df.columns = pd.MultiIndex.from_tuples([column + (col,) for col in test_df.columns])
-            test_result = _sig_test(test_df, config.alpha, config.perc, config.round_perc)
+            test_result = _sig_test(test_df, test_total_df, config.alpha, config.perc, config.round_perc)
             dfs.append(test_result)
         final_test = pd.concat(dfs, axis=1)
                 
@@ -207,7 +208,7 @@ def _pivot_number(bases: List[BaseType], target: QuestionType, config: CtabConfi
         pv.rename(columns=lambda x: column_letter_mapping.get(x, ''), level=-1, inplace=True)
     return pv
 
-def _sig_test(crosstab: pd.DataFrame, alpha: float, perc: bool, round_perc: bool):
+def _sig_test(crosstab: pd.DataFrame, total_df: pd.DataFrame, alpha: float, perc: bool, round_perc: bool):
     
     num_cols = crosstab.shape[1]
 
@@ -225,7 +226,7 @@ def _sig_test(crosstab: pd.DataFrame, alpha: float, perc: bool, round_perc: bool
             count2 = crosstab.iloc[:, j].values
 
             # Tổng số cho các cột
-            n = crosstab.sum(axis=0).values
+            n = total_df.values[0]
 
             p_vals = []
             for row in range(len(count1)):
