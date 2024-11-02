@@ -242,9 +242,9 @@ def _sig_test(crosstab: pd.DataFrame, total_df: pd.DataFrame, alpha: float, perc
             for row in range(len(count1)):
                 if reject[row]:
                     if count1[row] / total1 > count2[row] / total2:
-                        test_df.iloc[row, i] = f'{col2_letter}'
+                        test_df.iloc[row, i] += f'{col2_letter}'
                     else:
-                        test_df.iloc[row, j] = f'{col1_letter}'
+                        test_df.iloc[row, j] += f'{col1_letter}'
                             
     if perc:
         crosstab = crosstab.div(crosstab.sum(axis=0), axis=1)
