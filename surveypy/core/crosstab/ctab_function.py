@@ -211,53 +211,40 @@ def _pivot_number(bases: List[BaseType], target: QuestionType, config: CtabConfi
 def _sig_test(crosstab: pd.DataFrame, total_df: pd.DataFrame, alpha: float, perc: bool, round_perc: bool):
     
     num_cols = crosstab.shape[1]
-
     test_df = pd.DataFrame('', index=crosstab.index, columns=crosstab.columns)
+    letters = [chr(65 + i) for i in range(num_cols)]
 
     for i in range(num_cols):
         for j in range(i + 1, num_cols):
-            # col1_letter = letters[i]
-            # col2_letter = letters[j]
-            col1_letter = chr(65 + i)
-            col2_letter = chr(65 + j)
-
-            # Lấy số lượng cho từng hàng của cột i và j
-            count1 = crosstab.iloc[:, i].values
-            count2 = crosstab.iloc[:, j].values
-
-            # Tổng số cho các cột
             n = total_df.values[0]
+            col1_letter, col2_letter = letters[i], letters[j]
+            count1, count2 = crosstab.iloc[:, i].values, crosstab.iloc[:, j].values
+            total1, total2 = n[i], n[j]
 
             p_vals = []
             for row in range(len(count1)):
-                current_col1 = count1[row]
-                current_col2 = count2[row]
-                total_col1 = n[i]
-                total_col2 = n[j]
-                
+                current_col1, current_col2 = count1[row], count2[row]
+                                
                 # Kiểm tra nếu tổng bằng 0 để tránh chia cho 0
-                if total_col1 == 0 or total_col2 == 0:
+                if total1 == 0 or total2 == 0:
                     p_vals.append(np.nan)  # Bỏ qua nếu không có dữ liệu
-                    continue                
-
-                col1_proportion = current_col1 / total_col1
-                col2_proportion = current_col2 / total_col2
+                    continue
+                
+                # col1_proportion = current_col1 / total_col1
+                # col2_proportion = current_col2 / total_col2
                 if current_col1 + current_col2 > 0:  # Kiểm tra có đủ dữ liệu không
-                    z_stat, p_val = proportions_ztest([current_col1, current_col2], [total_col1, total_col2])
+                    z_stat, p_val = proportions_ztest([current_col1, current_col2], [total1, total2])
                     p_vals.append(p_val)
                 else:
                     p_vals.append(np.nan)  # Không có dữ liệu cho hàng này
 
             reject, p_adjusted, _, _ = multipletests(p_vals, method='bonferroni', alpha=alpha)
             for row in range(len(count1)):
-                row_reject = reject[row]
-                row_p_adjusted = p_adjusted[row]
-                if row_reject:
-                    if row_p_adjusted < alpha:
-                        if col1_proportion > col2_proportion:
-                            test_df.iloc[row, i] = f'{col2_letter}'
-                        else:
-                            test_df.iloc[row, j] = f'{col1_letter}'
+                if reject[row]:
+                    if count1[row] / total1 > count2[row] / total2:
+                        test_df.iloc[row, i] = f'{col2_letter}'
+                    else:
+                        test_df.iloc[row, j] = f'{col1_letter}'
                             
     if perc:
         crosstab = crosstab.div(crosstab.sum(axis=0), axis=1)
