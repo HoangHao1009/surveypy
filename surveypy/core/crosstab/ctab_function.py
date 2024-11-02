@@ -238,7 +238,7 @@ def _sig_test(crosstab: pd.DataFrame, total_df: pd.DataFrame, alpha: float, perc
                 else:
                     p_vals.append(np.nan)  # Không có dữ liệu cho hàng này
 
-            if adjust:
+            if adjust != 'none':
                 reject, p_adjusted, _, _ = multipletests(p_vals, method=adjust, alpha=alpha)
             else:
                 reject = [p < alpha for p in p_vals]
