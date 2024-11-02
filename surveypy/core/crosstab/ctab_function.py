@@ -226,7 +226,7 @@ def _sig_test(crosstab: pd.DataFrame, total_df: pd.DataFrame, alpha: float, perc
                 current_col1, current_col2 = count1[row], count2[row]
                                 
                 # Kiểm tra nếu tổng bằng 0 để tránh chia cho 0
-                if total1 == 0 or total2 == 0:
+                if total1 == 0 or total2 == 0 or current_col1 == 0 or current_col2 == 0 or current_col1 == total1 or current_col2 == total2:
                     p_vals.append(np.nan)  # Bỏ qua nếu không có dữ liệu
                     continue
                 
