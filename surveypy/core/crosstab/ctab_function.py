@@ -128,10 +128,10 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
             dfs.append(test_result)
         final_test = pd.concat(dfs, axis=1)
                 
-        if config.perc:
-            pv = pv.div(total_df.values, axis=1)
-            if config.round_perc:
-                pv = pv.map(lambda x: f'{round(x*100)}%' if x != 0 and not pd.isna(x) else 0)
+        # if config.perc:
+        #     pv = pv.div(total_df.values, axis=1)
+        #     if config.round_perc:
+        #         pv = pv.map(lambda x: f'{round(x*100)}%' if x != 0 and not pd.isna(x) else 0)
                 
         if config.total:
             final_test.loc[:, 'Total'] = pv.loc[:, 'Total']
