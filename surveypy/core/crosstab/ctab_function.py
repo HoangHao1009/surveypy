@@ -123,7 +123,7 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
         for key, value in df_parts.items():
             column = value['column']
             test_df = value['df']
-            test_total_df = total_df.loc[:, test_df.columns]
+            test_total_df = total_df.loc[:, column]
             test_df.columns = pd.MultiIndex.from_tuples([column + (col,) for col in test_df.columns])
             test_result = _sig_test(test_df, test_total_df, config.alpha, config.perc, config.round_perc)
             dfs.append(test_result)
