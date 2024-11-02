@@ -10,8 +10,8 @@ class DfConfig(BaseModel):
     col_name: Literal['code', 'value'] = 'code'
     col_type: Literal['multi', 'single'] = 'multi'
     melt: bool = False
-    loop_on: List[str] = []
-    loop_mode: Literal['long', 'wide'] = 'long'
+    loop_on: List[str] = [None]
+    loop_mode: Literal['long', 'wide'] = 'wide'
     
     def to_default(self):
         default_instance = type(self)()
