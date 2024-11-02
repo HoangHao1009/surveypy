@@ -1,6 +1,6 @@
 from ..question import MultipleAnswer, SingleAnswer, Number, Rank, Response
 from ...utils import CtabConfig
-from typing import Union, List, Tuple, Dict
+from typing import Union, List, Tuple, Dict, Literal
 import pandas as pd
 import itertools
 import numpy as np
@@ -125,7 +125,7 @@ def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
             test_df = value['df']
             test_total_df = total_df.loc[:, column]
             test_df.columns = pd.MultiIndex.from_tuples([column + (col,) for col in test_df.columns])
-            test_result = _sig_test(test_df, test_total_df, config.alpha, config.perc, config.round_perc)
+            test_result = _sig_test(test_df, test_total_df, config.alpha, config.perc, config.round_perc, config.adjust)
             dfs.append(test_result)
         final_test = pd.concat(dfs, axis=1)
                 
@@ -208,7 +208,7 @@ def _pivot_number(bases: List[BaseType], target: QuestionType, config: CtabConfi
         pv.rename(columns=lambda x: column_letter_mapping.get(x, ''), level=-1, inplace=True)
     return pv
 
-def _sig_test(crosstab: pd.DataFrame, total_df: pd.DataFrame, alpha: float, perc: bool, round_perc: bool):
+def _sig_test(crosstab: pd.DataFrame, total_df: pd.DataFrame, alpha: float, perc: bool, round_perc: bool, adjust: Literal['none', 'bonferroni']='none'):
     
     num_cols = crosstab.shape[1]
     test_df = pd.DataFrame('', index=crosstab.index, columns=crosstab.columns)
@@ -238,13 +238,26 @@ def _sig_test(crosstab: pd.DataFrame, total_df: pd.DataFrame, alpha: float, perc
                 else:
                     p_vals.append(np.nan)  # Không có dữ liệu cho hàng này
 
-            reject, p_adjusted, _, _ = multipletests(p_vals, method='bonferroni', alpha=alpha)
+            if adjust:
+                reject, p_adjusted, _, _ = multipletests(p_vals, method=adjust, alpha=alpha)
+            else:
+                reject = [p < alpha for p in p_vals]
+                p_adjusted = p_vals
+                
+            # Ghi kết quả vào test_df
             for row in range(len(count1)):
                 if reject[row]:
                     if count1[row] / total1 > count2[row] / total2:
                         test_df.iloc[row, i] += f'{col2_letter}'
                     else:
                         test_df.iloc[row, j] += f'{col1_letter}'
+            # reject, p_adjusted, _, _ = multipletests(p_vals, method='bonferroni', alpha=alpha)
+            # for row in range(len(count1)):
+            #     if reject[row]:
+            #         if count1[row] / total1 > count2[row] / total2:
+            #             test_df.iloc[row, i] += f'{col2_letter}'
+            #         else:
+            #             test_df.iloc[row, j] += f'{col1_letter}'
                             
     if perc:
         crosstab = crosstab.div(crosstab.sum(axis=0), axis=1)

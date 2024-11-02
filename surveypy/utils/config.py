@@ -24,6 +24,7 @@ class CtabConfig(BaseModel):
     cat_aggfunc: Union[str, Callable, List[Union[Callable, str]]] = pd.Series.nunique
     num_aggfunc: List[Union[str, Callable]] = ['mean', 'median', 'count', 'min', 'max', 'std', 'var']
     alpha: Union[float, None] = Field(None, ge=0, le=1, allow_none=True)
+    adjust: Literal['none', 'bonferroni'] = 'none'
     dropna: bool=False
     deep_by: List = []
 
