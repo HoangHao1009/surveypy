@@ -69,7 +69,7 @@ class Chart(BaseModel):
             row = (index // cols) + 1
             col = (index % cols) + 1
             for trace in px_chart.data:
+                trace.showlegend = True if index == 0 else False
                 fig.add_trace(trace, row=row, col=col)
-        fig.update_layout(title_text=f"{self.base.code} x {self.target.code}", showlegend=False)
-        fig.show()    
-    
+        fig.update_layout(title_text=f"{self.base.code} x {self.target.code}", showlegend=True)
+        fig.show()
