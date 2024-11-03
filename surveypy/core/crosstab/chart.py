@@ -31,7 +31,7 @@ class Chart(BaseModel):
             key = 'x'.join(pair)
             data = df.loc[:, pair].reset_index().melt(id_vars=['target_root', 'target_answer'])
             if self.perc:
-                data['value'] = data['value'].map(lambda x: round(x, 1))
+                data['value'] = data['value'].map(lambda x: round(x, 2))
 
             if self.x_in_base:
                 x = 'variable_1'
