@@ -213,10 +213,10 @@ def _sig_test(crosstab: pd.DataFrame, total_df: pd.DataFrame, alpha: float, perc
     num_cols = crosstab.shape[1]
     test_df = pd.DataFrame('', index=crosstab.index, columns=crosstab.columns)
     letters = [chr(65 + i) for i in range(num_cols)]
+    n = total_df.values[0]
 
     for i in range(num_cols):
         for j in range(i + 1, num_cols):
-            n = total_df.values[0]
             col1_letter, col2_letter = letters[i], letters[j]
             count1, count2 = crosstab.iloc[:, i].values, crosstab.iloc[:, j].values
             total1, total2 = n[i], n[j]
@@ -260,7 +260,7 @@ def _sig_test(crosstab: pd.DataFrame, total_df: pd.DataFrame, alpha: float, perc
             #             test_df.iloc[row, j] += f'{col1_letter}'
                             
     if perc:
-        crosstab = crosstab.div(crosstab.sum(axis=0), axis=1)
+        crosstab = crosstab.div(n, axis=1)
         if round_perc:
             crosstab = crosstab.map(lambda x: f'{round(x*100)}%' if x != 0 and not pd.isna(x) else 0)
                       
