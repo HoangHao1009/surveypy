@@ -18,7 +18,7 @@ class Chart(BaseModel):
     def _info(self, **kwargs):
         ctab = self.base | self.target
         ctab.config.round_perc = False
-        ctab.config.perc = self.perc
+        ctab.config.perc = self.config.perc
         ctab.config.deep_by = self.deep_by
         df = ctab.dataframe
         result = {}
