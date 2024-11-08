@@ -67,9 +67,9 @@ class ChartConfig(BaseModel):
     grid: List = [1, 1]
     chart_type: Literal['bar', 'line'] = 'bar'
     barmode: Literal['stack', 'cluster', 'relative', 'overlay'] = 'cluster'
+    orientation: Literal['h', 'v'] = 'v'
     x_in_base: bool = True
     perc: bool = True
-    data_labels: bool = True
 
 class SpssConfig(BaseModel):
     perc: bool = True
