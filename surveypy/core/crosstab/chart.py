@@ -55,7 +55,7 @@ class Chart(BaseModel):
         chart_data = self._info()
         titles = list(chart_data.keys())
         rows, cols = self.config.grid[0], self.config.grid[1]
-        fig = make_subplots(rows=rows, cols=cols, subplot_titles=titles)
+        fig = make_subplots(rows=rows, cols=cols, subplot_titles=titles, shared_xaxes=True, shared_yaxes=True)
 
         for key, values in chart_data.items():
             index = values['index']
