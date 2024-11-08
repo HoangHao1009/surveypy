@@ -1,4 +1,5 @@
 from ..question import MultipleAnswer, SingleAnswer, Number, Rank
+from ...utils import ChartConfig
 from pydantic import BaseModel
 from typing import Union, List, Literal
 import plotly.express as px
@@ -12,11 +13,7 @@ class Chart(BaseModel):
     base: BaseType
     target: QuestionType
     deep_by: List[BaseType] = []
-    grid: List[int] = []
-    chart_type: Literal['bar', 'line'] = 'bar'
-    x_in_base: bool = True
-    perc: bool = False
-    data_labels: bool = True
+    config = ChartConfig()
 
     def _info(self, **kwargs):
         ctab = self.base | self.target
@@ -30,7 +27,7 @@ class Chart(BaseModel):
         for index, pair in enumerate(pairs):
             key = 'x'.join(pair)
             data = df.loc[:, pair].reset_index().melt(id_vars=['target_root', 'target_answer'])
-            if self.perc:
+            if self.config.perc:
                 data['value'] = data['value'].map(lambda x: round(x, 2))
 
             if self.x_in_base:
@@ -44,11 +41,11 @@ class Chart(BaseModel):
             if kwargs.get('orientation') == 'h':
                 x, y, color = y, x, color
 
-            if self.data_labels:
+            if self.config.data_labels:
                 kwargs['text'] = 'value'
-            if self.chart_type == 'bar':
+            if self.config.chart_type == 'bar':
                 chart = px.bar(data, x=x, y=y, color=color, **kwargs)
-            elif self.chart_type == 'line':
+            elif self.config.chart_type == 'line':
                 chart = px.line(data, x=x, y=y, color=color, **kwargs)
             result[key] = {}
             result[key]['data'] = data
@@ -59,7 +56,7 @@ class Chart(BaseModel):
     def show_grid(self, **kwargs):
         chart_data = self._info(**kwargs)
         titles = list(chart_data.keys())
-        rows, cols = self.grid[0], self.grid[1]
+        rows, cols = self.config.grid[0], self.config.grid[1]
         fig = make_subplots(rows=rows, cols=cols, subplot_titles=titles)
 
         for key, values in chart_data.items():
@@ -71,5 +68,5 @@ class Chart(BaseModel):
             for trace in px_chart.data:
                 trace.showlegend = True if index == 0 else False
                 fig.add_trace(trace, row=row, col=col)
-        # fig.update_layout(title_text=f"{self.base.code} x {self.target.code}", showlegend=True)
+        fig.update_layout(title_text=f"{self.base.code} x {self.target.code}", showlegend=True, barmode=self.config.barmode)
         fig.show()

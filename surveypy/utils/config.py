@@ -62,6 +62,14 @@ class CtabConfig(BaseModel):
                 'cat_aggfunc': self.cat_aggfunc,
                 'alpha': self.alpha,
                 'dropna': self.dropna}
+        
+class ChartConfig(BaseModel):
+    grid: List = [1, 1]
+    chart_type: Literal['bar', 'line'] = 'bar'
+    barmode: Literal['stack', 'cluster', 'relative', 'overlay'] = 'cluster'
+    x_in_base: bool = True
+    perc: bool = True
+    data_labels: bool = True
 
 class SpssConfig(BaseModel):
     perc: bool = True
