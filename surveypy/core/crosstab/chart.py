@@ -30,7 +30,7 @@ class Chart(BaseModel):
             if self.config.perc:
                 data['value'] = data['value'].map(lambda x: round(x, 2))
 
-            if self.x_in_base:
+            if self.config.x_in_base:
                 x = 'variable_1'
                 y = 'value'
                 color = 'target_answer'
