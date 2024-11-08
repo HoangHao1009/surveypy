@@ -13,7 +13,7 @@ class Chart(BaseModel):
     base: BaseType
     target: QuestionType
     deep_by: List[BaseType] = []
-    config = ChartConfig()
+    config: ChartConfig = ChartConfig()
 
     def _info(self, **kwargs):
         ctab = self.base | self.target

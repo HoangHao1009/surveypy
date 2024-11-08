@@ -1,5 +1,5 @@
 from ..question import MultipleAnswer, SingleAnswer, Number, Rank
-from ...utils import report_function, CtabConfig, PptConfig
+from ...utils import report_function, CtabConfig, PptConfig, ChartConfig
 from pydantic import BaseModel
 from typing import Union, List, Literal
 import pandas as pd
@@ -15,6 +15,7 @@ class CrossTab(BaseModel):
     bases: List[BaseType]
     targets: List[QuestionType] = []
     config: CtabConfig = CtabConfig()
+    chart_config: ChartConfig = ChartConfig()
     ppt_config: PptConfig = PptConfig()
 
     @property
@@ -76,11 +77,7 @@ class CrossTab(BaseModel):
                 for target_question in self.targets:
                     if target_question.code == target_query:
                         target = target_question
-        return Chart(
-                base=base, target=target, deep_by=self.config.deep_by,
-                grid=grid, chart_type=chart_type, x_in_base=x_in_base, 
-                perc=perc, data_labels=data_labels
-            )
+        return Chart(base=base, target=target, deep_by=self.config.deep_by, config=self.chart_config)
                 
     def to_excel(self, excel_path: str, sheet_name: str=None):
         if not sheet_name:
