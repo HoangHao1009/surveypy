@@ -55,7 +55,7 @@ class Chart(BaseModel):
         chart_data = self._info()
         titles = list(chart_data.keys())
         rows, cols = self.config.grid[0], self.config.grid[1]
-        fig = make_subplots(rows=rows, cols=cols, subplot_titles=titles, shared_xaxes=True, shared_yaxes=True)
+        fig = make_subplots(rows=rows, cols=cols, subplot_titles=titles, shared_xaxes=self.config.shared_xaxes, shared_yaxes=self.config.shared_yaxes)
 
         for key, values in chart_data.items():
             index = values['index']
@@ -66,5 +66,8 @@ class Chart(BaseModel):
             for trace in px_chart.data:
                 trace.showlegend = True if index == 0 else False
                 fig.add_trace(trace, row=row, col=col)
-        fig.update_layout(title_text=f"{self.base.code} x {self.target.code}", showlegend=True, barmode=self.config.barmode, **kwargs)
+        fig.update_layout(title_text=f"{self.base.code} x {self.target.code}", 
+                          showlegend=True, barmode=self.config.barmode, 
+                          height=self.config.height, width=self.config.width,
+                          **kwargs)
         fig.show()
