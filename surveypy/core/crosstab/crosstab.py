@@ -1,13 +1,12 @@
 from ..question import MultipleAnswer, SingleAnswer, Number, Rank
 from ...utils import report_function, CtabConfig, PptConfig
 from pydantic import BaseModel
-from typing import Union, List
+from typing import Union, List, Literal
 import pandas as pd
 import multiprocessing as mp
 import itertools
 from .ctab_function import _pivot_target_with_args
-import concurrent.futures
-
+from .chart import Chart
 
 BaseType = Union[SingleAnswer, MultipleAnswer, Rank]
 QuestionType = Union[SingleAnswer, MultipleAnswer, Rank, Number]
@@ -55,7 +54,34 @@ class CrossTab(BaseModel):
             targets=self.targets,
             **self.config.format
         )
-
+        
+    def to_chart(self, chart_query: str = None, grid: List[int] = [], chart_type: Literal['bar', 'line'] = 'bar', x_in_base: bool = True, perc: bool = False, data_labels: bool = True):
+        """
+        chart_query example: Q1xQ2
+        """
+        base = None
+        target = None
+        if len(self.bases) == 1 and len(self.targets) == 1:
+            base = self.bases[0]
+            target = self.targets[0]
+        else:
+            if chart_query == None:
+                raise KeyError(f'Len bases is {len(self.bases)} - targets is {len(self.targets)}. Required chart_query')
+            else:
+                base_query = chart_query.split('x')[0]
+                target_query = chart_query.split('x')[-1]
+                for base_question in self.bases:
+                    if base_question.code == base_query:
+                        base = base_question
+                for target_question in self.targets:
+                    if target_question.code == target_query:
+                        target = target_question
+        return Chart(
+                base=base, target=target, deep_by=self.config.deep_by,
+                grid=grid, chart_type=chart_type, x_in_base=x_in_base, 
+                perc=perc, data_labels=data_labels
+            )
+                
     def to_excel(self, excel_path: str, sheet_name: str=None):
         if not sheet_name:
             sheet_name = 'CrossTab1'
