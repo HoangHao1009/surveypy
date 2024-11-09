@@ -629,7 +629,7 @@ def _process_question(loop_on: str, question_dict: Dict[str, dict]):
             for index, response in enumerate(question_obj.responses, 1):
                 response.scale = index
         else:
-            print(f"Question type {question_info['type']} is not processed yet")
+            print(f"Question type {question_info['type']} at {question_code} is not processed")
             question_obj = None
 
         if question_obj:
