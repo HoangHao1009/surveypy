@@ -547,7 +547,7 @@ class Survey(BaseModel):
             
         return dataset
     
-    def take_all(self, datasets_to: Literal['csv', 'excel']='csv'):
+    def to_all(self, datasets_to: Literal['csv', 'excel']='csv'):
         self.to_excel()
         self.to_spss()
         self.to_ppt()
