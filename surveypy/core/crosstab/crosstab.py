@@ -56,7 +56,7 @@ class CrossTab(BaseModel):
             **self.config.format
         )
         
-    def to_chart(self, chart_query: str = None, grid: List[int] = [], chart_type: Literal['bar', 'line'] = 'bar', x_in_base: bool = True, perc: bool = False, data_labels: bool = True):
+    def to_chart(self, chart_query: str = None):
         """
         chart_query example: Q1xQ2
         """
