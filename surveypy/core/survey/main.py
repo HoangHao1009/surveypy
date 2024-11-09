@@ -587,8 +587,8 @@ def _process_question(loop_on: str, question_dict: Dict[str, dict]):
             responses=all_info['responses'],
         )
     
-        if question_info['type'] in ['multiplechoice_radio', 'multiplechoice_dropdown', 
-                                     'multiplechoice_smiley', 'matrix_slider', 'matrix_radio']:
+        if question_info['type'] in ['multiplechoice_radio', 'multiplechoice_dropdown', 'multiplechoice_smiley', 
+                                     'matrix_slider', 'matrix_radio', 'matrix_dropdown']:
             info_dict['type'] = 'sa' if 'matrix' not in question_info['type'] else 'sa_matrix'
             question_obj = SingleAnswer(**info_dict)
             construct_dict = {option: [option] for option in question_info['options']} if 'options' in question_info else {}
@@ -619,7 +619,7 @@ def _process_question(loop_on: str, question_dict: Dict[str, dict]):
         elif question_info['type'] == 'numeric_slider':
             info_dict['type'] = 'number'
             question_obj = Number(**info_dict)
-        elif question_info['type'] == 'rank_order_dropdown':
+        elif question_info['type'] in ['rank_order_dropdown', 'rank_order_drag_drop']:
             #? Need to reconstruct?
             info_dict['type'] = 'rank'
             question_obj = Rank(**info_dict)
