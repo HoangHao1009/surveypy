@@ -77,6 +77,8 @@ class CrossTab(BaseModel):
                 for target_question in self.targets:
                     if target_question.code == target_query:
                         target = target_question
+        print(type(base))
+        print(type((target)))
         chart = Chart(base=base, target=target, deep_by=self.config.deep_by, config=self.chart_config)
         chart.show_grid(**kwargs)
                 
