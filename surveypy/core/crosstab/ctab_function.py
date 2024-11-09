@@ -78,9 +78,11 @@ def _df_parts(pv, deep_by, bases) -> Dict:
                 continue
     return result
 
-
 def _pivot_sm(bases: List[BaseType], target: QuestionType, config: CtabConfig):
-    df = _custom_merge(bases, target, config.deep_by)
+    try:
+        df = _custom_merge(bases, target, config.deep_by)
+    except:
+        return None
 
     deep_indexes = [f'deep_answer_{index}' for index in range(1, len(config.deep_by) + 1)]
     total_label = 'Total'
