@@ -56,7 +56,7 @@ class CrossTab(BaseModel):
             **self.config.format
         )
         
-    def to_chart(self, chart_query: str = None):
+    def to_chart(self, chart_query: str = None, **kwargs):
         """
         chart_query example: Q1xQ2
         """
@@ -77,7 +77,8 @@ class CrossTab(BaseModel):
                 for target_question in self.targets:
                     if target_question.code == target_query:
                         target = target_question
-        return Chart(base=base, target=target, deep_by=self.config.deep_by, config=self.chart_config)
+        chart = Chart(base=base, target=target, deep_by=self.config.deep_by, config=self.chart_config)
+        chart.show_grid(**kwargs)
                 
     def to_excel(self, excel_path: str, sheet_name: str=None):
         if not sheet_name:
