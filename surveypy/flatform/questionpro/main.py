@@ -56,7 +56,7 @@ def _process_question(question: dict):
                     options = [str_function.parse_html(col['text']) for col in question['columns']]
                 except Exception as e:
                     options = None
-                    print(f'{q_code} - {question_type} [ROW] is not have any option. Question text: {q_text}\n')
+                    print(f'{q_code} - {question_type} [ROW] have no option. Question text: {q_text}\n')
                 result[q_code] = {'text': q_text, 'type': question_type, 'options': options}
 
         else:
