@@ -68,7 +68,7 @@ class ChartConfig(BaseModel):
     height: int = 600
     width: int = 800
     chart_type: Literal['bar', 'line'] = 'bar'
-    barmode: Literal['stack', 'cluster', 'relative', 'overlay'] = 'cluster'
+    barmode: Literal['stack', 'group', 'relative', 'overlay'] = 'group'
     orientation: Literal['h', 'v'] = 'v'
     x_in_base: bool = True
     perc: bool = True

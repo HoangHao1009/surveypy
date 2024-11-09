@@ -378,14 +378,17 @@ class Survey(BaseModel):
     
     @property
     def ctab(self) -> CrossTab:
-        for i in self.questions:
-            i.reset()
-        ctab = CrossTab(
-            bases = deepcopy([self[var] for var in self.control_variables]),
-            targets = deepcopy([question for question in self.questions])
-        )
-        ctab.config = self.ctab_config
-        return ctab
+        if self.control_variables:
+            for i in self.questions:
+                i.reset()
+            ctab = CrossTab(
+                bases = deepcopy([self[var] for var in self.control_variables]),
+                targets = deepcopy([question for question in self.questions])
+            )
+            ctab.config = self.ctab_config
+            return ctab
+        else:
+            raise ValueError('Set control variables for create ctab')
     
     @property
     def spss_syntaxs(self) -> List[str]:
