@@ -31,7 +31,7 @@ def _process_question(question: dict):
             options = [str_function.parse_html(answer['text']) for answer in question['answers']]
         except Exception as e:
             options = None
-            print(f'{question_code} - {question_type} [ANSWER] is not have any option. Question text: {question_text}. Error: {e}')
+            print(f'{question_code} - {question_type} [ANSWER] is not have any option. Question text: {question_text}. Error: {e}\n')
         return {question_code: {'text': question_text, 'type': question_type, 'options': options}}
 
     elif 'rows' in question:
@@ -42,7 +42,7 @@ def _process_question(question: dict):
                 options = [str_function.parse_html(col['text']) for col in question['columns']]
             except Exception as e:
                 options = None
-                print(f'{question_code} - {question_type} [ROW] is not have any option. Question text: {question_text}')
+                print(f'{question_code} - {question_type} [ROW] is not have any option. Question text: {question_text}\n')
             result[question_code] = {'text': str_function.parse_html(question['rows'][0]['text']),
                                     'type': question_type, 
                                     'options': options}
@@ -56,15 +56,15 @@ def _process_question(question: dict):
                     options = [str_function.parse_html(col['text']) for col in question['columns']]
                 except Exception as e:
                     options = None
-                    print(f'{q_code} - {question_type} [ROW] is not have any option. Question text: {q_text}')
+                    print(f'{q_code} - {question_type} [ROW] is not have any option. Question text: {q_text}\n')
                 result[q_code] = {'text': q_text, 'type': question_type, 'options': options}
 
         else:
-            print(f"Error in {question['code']} with len: {len(question['rows'])}")            
+            print(f"Error in {question['code']} with len: {len(question['rows'])}\n")            
         return result
     
     else:
-        print(question['code'], "have not both answers or rows")
+        print(question['code'], "have not both answers or rows\n")
         return {question_code: {'text': question_text, 'type': question_type}}
     
 def _process_responses(responses: List[Dict], result_dict: defaultdict, question_dict: dict):
