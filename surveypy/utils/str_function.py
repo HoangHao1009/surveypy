@@ -1,7 +1,11 @@
 import re
 from bs4 import BeautifulSoup
+from bs4 import MarkupResemblesLocatorWarning
 import pandas as pd
 from typing import List, Union, Tuple
+import warnings
+warnings.filterwarnings("ignore", category=MarkupResemblesLocatorWarning)
+
 
 def _parse_timestamp(timestamp):
     
