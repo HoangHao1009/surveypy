@@ -86,12 +86,13 @@ def _process_responses(responses: List[Dict], result_dict: defaultdict, question
     
     for resp in responses:
         for q in resp['responseSet']:
-            question_code = q['questionCode']
+            raw_question_code = q['questionCode']
             for a in q['answerValues']:
                 if a['answerText'] != '' and a['value']['text'] != '':
-                    question_code = f"{question_code}text{a['answerText']}"
+                    question_code = f"{raw_question_code}text{a['answerText']}"
                     value = a['value']['text']
                 else:
+                    question_code = raw_question_code
                     value = a['answerText'] if a['answerText'] != '' else a['value']['text']
                 value = str_function.parse_html(value)
                 scale = a['value']['scale']
