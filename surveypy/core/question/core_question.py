@@ -247,7 +247,7 @@ class Question(BaseModel):
         from .singleanswer import SingleAnswer
         if isinstance(self, (SingleAnswer, MultipleAnswer)):
             df = self.summarize(perc)
-            if df:
+            if df is not None:
                 report_function.create_pptx_chart(ppt_path, df, 'pie', title=self.code, config=self.ppt_config)
         else:
             print(f'Question with type {type(self)} can not be to_ppt')
