@@ -76,13 +76,16 @@ class MultipleAnswer(Question):
     def summarize(self, perc: bool=False) -> pd.DataFrame:
         self.df_config.col_name = 'code'
         self.df_config.melt = True
-        df = self.dataframe
-        df = df.groupby(df.columns[-1]).count().reset_index()
-        df = df.loc[:, ['resp_id', f'{self.code}_value']]
-        df.columns = ['count', 'category']
-        if perc:
-            df['count'] = df['count'] / sum(df['count'])
-        return df
+        if self.dataframe:
+            df = self.dataframe
+            df = df.groupby(df.columns[-1]).count().reset_index()
+            df = df.loc[:, ['resp_id', f'{self.code}_value']]
+            df.columns = ['count', 'category']
+            if perc:
+                df['count'] = df['count'] / sum(df['count'])
+            return df
+        else:
+            return None
 
 def _process_response(code: str, response: Response, config: DfConfig):
     v = 1 if config.value == 'num' else response.value
