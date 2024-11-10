@@ -76,7 +76,7 @@ class MultipleAnswer(Question):
     def summarize(self, perc: bool=False) -> pd.DataFrame:
         self.df_config.col_name = 'code'
         self.df_config.melt = True
-        if self.dataframe:
+        if self.dataframe is not None:
             df = self.dataframe
             df = df.groupby(df.columns[-1]).count().reset_index()
             df = df.loc[:, ['resp_id', f'{self.code}_value']]
