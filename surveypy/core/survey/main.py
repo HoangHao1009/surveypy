@@ -427,6 +427,22 @@ class Survey(BaseModel):
         return syntaxs
         
     def to_spss(self, folder_path: str=None, dropna: List[str]=[], dataframe=None):
+        def add_suffix_to_duplicates(my_list):
+            count = {}
+            result = []
+            
+            for item in my_list:
+                if item in count:
+                    # Tăng số lần xuất hiện của phần tử này và thêm hậu tố
+                    count[item] += 1
+                    result.append(f"{item}_{chr(96 + count[item])}")
+                else:
+                    # Nếu phần tử mới gặp lần đầu, thêm vào và khởi tạo đếm là 1
+                    count[item] = 1
+                    result.append(item)
+            
+            return result
+
         folder_path = folder_path if folder_path else self.working_dir 
         sav_path = os.path.join(folder_path, f'{self.name}.sav')
         sps_path = os.path.join(folder_path, f'{self.name}.sps')
@@ -438,7 +454,7 @@ class Survey(BaseModel):
             self.df_config.value = 'num'
             self.reset_question()
             df = self.dataframe.reset_index().dropna(subset=dropna)
-        df.columns = [re.sub(r'[^\w]', 'x', i)[0:64] for i in df.columns] 
+        df.columns = add_suffix_to_duplicates([re.sub(r'[^\w]', 'x', i)[0:64] for i in df.columns]) 
         pyreadstat.write_sav(df, sav_path)            
         spss_syntaxs = '\n'.join(self.spss_syntaxs)
         with open(sps_path, 'w') as file:
