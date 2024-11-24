@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 import os
-from typing import List, ClassVar
+from typing import List
 
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import PyPDFLoader
@@ -24,24 +24,22 @@ class Analyzer(BaseModel):
     survey: Survey
     db_dir: str
     folder_path: str
-    ctab_data: ClassVar = tool(args_schema=QuestionCodeInput)(
-        lambda self, bases, targets: self._ctab_data(bases, targets)
-    )
-    
-    def _ctab_data(self, bases: List[str], targets: List[str]):
-        """Get crosstab data between base questions and target questions"""
-        base_questions = [self.survey[question_code] for question_code in bases]
-        target_questions = [self.survey[question_code] for question_code in targets]
-        ctab = CrossTab(
-            bases=base_questions,
-            targets=target_questions,   
-        )
-        ctab_data = ctab.dataframe.to_string()
-        return f"Here is crosstab data between {bases} and targets {targets}: {ctab_data}"
     
     @property
     def ctab_agent(self):
-        tools = [self.ctab_data]
+        @tool(args_schema=QuestionCodeInput)
+        def ctab_data(bases: List[str], targets: List[str]):
+            """Get crosstab data between base questions and target questions"""
+            base_questions = [self.survey[question_code] for question_code in bases]
+            target_questions = [self.survey[question_code] for question_code in targets]
+            ctab = CrossTab(
+                bases=base_questions,
+                targets=target_questions,   
+            )
+            ctab_data = ctab.dataframe.to_string()
+            return f"Here is crosstab data between {bases} and targets {targets}: {ctab_data}"
+
+        tools = [ctab_data]
         prompt = hub.pull('hwchase17/react')
         llm = ChatOpenAI(openai_api_key=self.api_key, temperature=0)
         
