@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 import os
-from typing import List
+from typing import List, ClassVar
 
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import PyPDFLoader
@@ -24,9 +24,11 @@ class Analyzer(BaseModel):
     survey: Survey
     db_dir: str
     folder_path: str
+    ctab_data: ClassVar = tool(args_schema=QuestionCodeInput)(
+        lambda self, bases, targets: self._ctab_data(bases, targets)
+    )
     
-    @tool(args_schema=QuestionCodeInput)
-    def ctab_data(self, bases: List[str], targets: List[str]):
+    def _ctab_data(self, bases: List[str], targets: List[str]):
         """Get crosstab data between base questions and target questions"""
         base_questions = [self.survey[question_code] for question_code in bases]
         target_questions = [self.survey[question_code] for question_code in targets]
