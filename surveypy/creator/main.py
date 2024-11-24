@@ -1,3 +1,4 @@
+import openai
 from typing import List
 from pydantic import BaseModel, Field
 from langchain.utils.openai_functions import convert_pydantic_to_openai_function
@@ -31,6 +32,7 @@ class Extract_Chain(BaseModel):
     model: str = "gpt-3.5-turbo"
 
     def extract(self, pages):
+        openai.api_key = self.api_key
         model = ChatOpenAI(model="gpt-3.5-turbo", temperature=0)
         extraction_functions = [convert_pydantic_to_openai_function(Info)]
         extraction_model = model.bind(functions=extraction_functions, function_call={"name": "Info"})
