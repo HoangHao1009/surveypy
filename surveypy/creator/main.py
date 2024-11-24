@@ -95,7 +95,6 @@ class Questionnaire_Creator(BaseModel):
         responses = []
         url = f"https://api.questionpro.com/a/api/v2/surveys/{survey_id}/questions"
         for question in self.standard_info:
-            print(question)
             payload = json.dumps(question)
             headers = {
             'Content-Type': 'application/json',
