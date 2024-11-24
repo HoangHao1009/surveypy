@@ -86,6 +86,8 @@ class Questionnaire_Creator(BaseModel):
                 question_type = 'multiplechoice_radio'
             elif question_info['type'] == 'ma':
                 question_type = 'multiplechoice_checkbox'
+            elif question_info['type'] == 'oe':
+                question_type = 'text_single_row'
             standard_info['type'] = question_type
             standard_info['required'] = True
             standard_question_info.append(standard_info)
