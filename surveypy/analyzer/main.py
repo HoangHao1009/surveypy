@@ -100,25 +100,44 @@ class Analyzer(BaseModel):
             
     @property
     def db(self):
-        if not os.path.exists(self.db_dir):
-            all_docs = []
-            text_splitter = RecursiveCharacterTextSplitter(
-                chunk_size=500, 
-                chunk_overlap=100,
-            )
+        all_docs = []
+        text_splitter = RecursiveCharacterTextSplitter(
+            chunk_size=500, 
+            chunk_overlap=100,
+        )
 
-            for filename in os.listdir(self.folder_path):
-                if filename.endswith(".pdf"):
-                    pdf_file_path = os.path.join(self.folder_path, filename)
-                    loader = PyPDFLoader(pdf_file_path)
-                    docs = loader.load_and_split(text_splitter)
-                    all_docs.extend(docs)
-                
-            vector_db = Chroma.from_documents(all_docs, self.emb_model, persist_directory=self.db_dir)
-            survey_info_docs = text_splitter.split_text(self.survey_info)
-            vector_db.add_documents(survey_info_docs)
+        for filename in os.listdir(self.folder_path):
+            if filename.endswith(".pdf"):
+                pdf_file_path = os.path.join(self.folder_path, filename)
+                loader = PyPDFLoader(pdf_file_path)
+                docs = loader.load_and_split(text_splitter)
+                all_docs.extend(docs)
             
-            return vector_db
-        else:
-            print('Db existed')
+        vector_db = Chroma.from_documents(all_docs, self.emb_model, persist_directory=self.db_dir)
+        survey_info_docs = text_splitter.split_text(self.survey_info)
+        vector_db.add_documents(survey_info_docs)
+        
+        return vector_db
+
+        # if not os.path.exists(self.db_dir):
+        #     all_docs = []
+        #     text_splitter = RecursiveCharacterTextSplitter(
+        #         chunk_size=500, 
+        #         chunk_overlap=100,
+        #     )
+
+        #     for filename in os.listdir(self.folder_path):
+        #         if filename.endswith(".pdf"):
+        #             pdf_file_path = os.path.join(self.folder_path, filename)
+        #             loader = PyPDFLoader(pdf_file_path)
+        #             docs = loader.load_and_split(text_splitter)
+        #             all_docs.extend(docs)
+                
+        #     vector_db = Chroma.from_documents(all_docs, self.emb_model, persist_directory=self.db_dir)
+        #     survey_info_docs = text_splitter.split_text(self.survey_info)
+        #     vector_db.add_documents(survey_info_docs)
+            
+        #     return vector_db
+        # else:
+        #     print('Db existed')
         
