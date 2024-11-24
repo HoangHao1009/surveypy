@@ -76,7 +76,7 @@ class Analyzer(BaseModel):
         
         info = []
         for i in question_info + external_info:
-            info += f'Document: {i.page_content} Source: {i.metadata['source']}\n'
+            info += f"Document: {i.page_content} Source: {i.metadata['source']}\n"
         
         info += ctab_data
         return info
