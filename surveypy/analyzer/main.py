@@ -36,7 +36,7 @@ class Analyzer(BaseModel):
         analysis_info = self.analysis_info(query)
         analysis_request = self.llm.invoke(f"Synthesis this question to a request for input in further step: {query}. You can also you below information if there is relavant:\n{analysis_info}")
         answer = self.ctab_agent.invoke(
-            {"input": f"{analysis_request['output']}"},
+            {"input": f"{analysis_request.content}"},
         )
         return answer
 
