@@ -19,7 +19,7 @@ class Answer(BaseModel):
 class Question(BaseModel):
     """Information about question."""
     code: str = Field(description="Question code like Q1, Q2, S1, S2.1")
-    type: str = Field(description="Question type like ma (multiple answer), sa (single answer), oe (open-end answer)")
+    type: str = Field(description="Question type like MA (multiple answer), SA (single answer), OE (open-end answer)")
     text: str = Field(description="Question content like 'how old are you?'")
     answers: List[Answer] = Field(description="List of answer options")
 
@@ -58,9 +58,8 @@ class Questionnaire_Creator(BaseModel):
     @property
     def pages(self):
         text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=4096,  # Mỗi đoạn có tối đa 50 ký tự
-            chunk_overlap=100,  # Các đoạn trùng nhau 10 ký tự
-            separators=["New page"]
+            chunk_size=4096,
+            chunk_overlap=1000, 
         )
         loader = PyPDFLoader(self.questionnaire_design_path)
         pages = loader.load_and_split(text_splitter)
