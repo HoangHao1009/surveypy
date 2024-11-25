@@ -19,7 +19,7 @@ class Answer(BaseModel):
 class Question(BaseModel):
     """Information about question."""
     code: str = Field(description="Question code like Q1, Q2, S1, S2.1")
-    type: str = Field(description="Question type like MA (multiple answer), SA (single answer), OE (open-end answer)")
+    type: str = Field(description="Question type like sa (multiple answer), ma (single answer), oe (open-end answer)")
     text: str = Field(description="Question content like 'how old are you?'")
     answers: List[Answer] = Field(description="List of answer options")
 
