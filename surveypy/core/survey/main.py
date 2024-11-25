@@ -465,7 +465,7 @@ class Survey(BaseModel):
             self.df_config.value = 'num'
             self.reset_question()
             df = self.dataframe.reset_index().dropna(subset=dropna)
-        df.columns = add_suffix_to_duplicates([re.sub(r'[^\w]', 'x', i)[0:60] for i in df.columns]) 
+        df.columns = add_suffix_to_duplicates([re.sub(r'[^\w]', 'x', i)[0:32] for i in df.columns]) 
         pyreadstat.write_sav(df, sav_path)            
         spss_syntaxs = '\n'.join(self.spss_syntaxs)
         with open(sps_path, 'w') as file:
