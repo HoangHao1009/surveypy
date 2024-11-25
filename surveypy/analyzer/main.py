@@ -34,8 +34,10 @@ class Analyzer(BaseModel):
 
     def chat(self, query):
         analysis_info = self.analysis_info(query)
-        analysis = self.llm.invoke(f"Analyze data for question: {query} with below information:\n {analysis_info}")
-        return analysis.content
+        answer = self.ctab_agent.invoke(
+            {"input": f"Answer question: {query}. You can use relevant information if needed {analysis_info}"},
+        )
+        return answer
 
     @property
     def llm(self):
@@ -45,7 +47,7 @@ class Analyzer(BaseModel):
     def ctab_agent(self):
         @tool(args_schema=QuestionCodeInput)
         def ctab_data(base: str, target: str) -> str:
-            """Get crosstab data between base question and target question."""
+            """Get crosstab data between base question and target question. Use when analyzing relationship between variables"""
 
             base_question_list = [self.survey[base]]
             target_question_list = [self.survey[target]]
@@ -57,14 +59,12 @@ class Analyzer(BaseModel):
             return f"Here is crosstab data between {base} and targets {target}: {ctab_data}"
 
         tools = [ctab_data]
-        prompt = hub.pull('hwchase17/react')
         llm = self.llm
-
 
         functions = [format_tool_to_openai_function(f) for f in tools]
         model = llm.bind(functions=functions)
         prompt = ChatPromptTemplate.from_messages([
-            ("system", "You are helpful assistant"),
+            ("system", "You are survey analyzer who professional in market research."),
             ("user", "{input}"),
             MessagesPlaceholder(variable_name="agent_scratchpad")
         ])
@@ -82,27 +82,11 @@ class Analyzer(BaseModel):
             search_type="similarity_score_threshold",
             search_kwargs={'k': 3, 'score_threshold': 0.1}
         )
-        question_info = retriever.invoke(analysis_query)
+        relevant_info_docs = retriever.invoke(analysis_query)
         
-        question_info_text = analysis_query + '\n'.join([i.page_content for i in question_info])
-
-
-        question_code = self.llm.invoke(f"From these information, indicate base question code and target question code (question code is just a string of code like 'Q1', 'Q2'): {question_info_text}")
-        
-        ctab_data = self.ctab_agent.invoke(
-            {"input": f"Crosstab by question code: {question_code}"},
-        )
-        
-        external_query = f"Return relevant information for analysis: '{analysis_query} for question: {question_info}'"
-        
-        external_info = retriever.invoke(external_query)
-        
-        info = []
-        for i in question_info + external_info:
-            info.append(f"Document: {i.page_content}")
-        
-        info.append(ctab_data['output'])
-        return '\n'.join(info)
+        relevant_info_text = analysis_query + '\n'.join([i.page_content for i in relevant_info_docs])
+                        
+        return relevant_info_text
         
     @property
     def emb_model(self):
