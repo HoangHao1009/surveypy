@@ -11,75 +11,98 @@ from langchain.prompts import ChatPromptTemplate
 from langchain_openai import ChatOpenAI
 from langchain_openai import OpenAIEmbeddings
 from langchain.tools import tool
+from langchain.schema import Document
 
-from ..core.survey import Survey
-from ..core.crosstab import CrossTab
+from surveypy.core.survey import Survey
+from surveypy.core.crosstab import CrossTab
+import ast
+from langchain.tools.render import format_tool_to_openai_function
+from langchain.agents.output_parsers import OpenAIFunctionsAgentOutputParser
+from langchain.prompts import MessagesPlaceholder
+from langchain.schema.runnable import RunnablePassthrough
+from langchain.agents.format_scratchpad import format_to_openai_functions
 
 class QuestionCodeInput(BaseModel):
-    bases: List[str] = Field(description="List of base questions code with base mean control variables")
-    targerts: List[str] = Field(description="List of target questions code with target mean target variables")
-
+    base: str = Field(description="Base question code (e.g., Q3 for control variables).")
+    target: str = Field(description="Target question code (e.g., Q1 for dependent variables).")
+    
 class Analyzer(BaseModel):
     api_key: str
     survey: Survey
     db_dir: str
     folder_path: str
+
+    def chat(self, query):
+        analysis_info = self.analysis_info(query)
+        analysis = self.llm.invoke(f"Analyze data for question: {query} with below information:\n {analysis_info}")
+        return analysis.content
+
+    @property
+    def llm(self):
+        return ChatOpenAI(openai_api_key=self.api_key, temperature=0)
     
     @property
     def ctab_agent(self):
         @tool(args_schema=QuestionCodeInput)
-        def ctab_data(bases: List[str], targets: List[str]):
-            """Get crosstab data between base questions and target questions"""
-            base_questions = [self.survey[question_code] for question_code in bases]
-            target_questions = [self.survey[question_code] for question_code in targets]
+        def ctab_data(base: str, target: str) -> str:
+            """Get crosstab data between base question and target question."""
+
+            base_question_list = [self.survey[base]]
+            target_question_list = [self.survey[target]]
             ctab = CrossTab(
-                bases=base_questions,
-                targets=target_questions,   
+                bases=base_question_list,
+                targets=target_question_list,   
             )
             ctab_data = ctab.dataframe.to_string()
-            return f"Here is crosstab data between {bases} and targets {targets}: {ctab_data}"
+            return f"Here is crosstab data between {base} and targets {target}: {ctab_data}"
 
         tools = [ctab_data]
         prompt = hub.pull('hwchase17/react')
-        llm = ChatOpenAI(openai_api_key=self.api_key, temperature=0)
-        
-        agent = create_react_agent(
-            llm=llm,
-            prompt=prompt,
-            tools=tools,
-            stop_sequence=True
-        )
-        agent_executor = AgentExecutor.from_agent_and_tools(
-            agent=agent,
-            tools=tools,
-            verbose=True
-        )
-        
+        llm = self.llm
+
+
+        functions = [format_tool_to_openai_function(f) for f in tools]
+        model = llm.bind(functions=functions)
+        prompt = ChatPromptTemplate.from_messages([
+            ("system", "You are helpful assistant"),
+            ("user", "{input}"),
+            MessagesPlaceholder(variable_name="agent_scratchpad")
+        ])
+        chain = prompt | model | OpenAIFunctionsAgentOutputParser()
+
+        agent_chain = RunnablePassthrough.assign(
+            agent_scratchpad= lambda x: format_to_openai_functions(x["intermediate_steps"])
+        ) | chain
+
+        agent_executor = AgentExecutor(agent=agent_chain, tools=tools, verbose=True)
         return agent_executor
     
     def analysis_info(self, analysis_query):
         retriever = self.db.as_retriever(
-            search_type="similarity_score_threshhold",
-            search_kwargs={'k': 3, 'score_threshhold': 0.1}
+            search_type="similarity_score_threshold",
+            search_kwargs={'k': 3, 'score_threshold': 0.1}
         )
         question_info = retriever.invoke(analysis_query)
         
-        question_info_text = '\n'.join([i.page_content for i in question_info])
+        question_info_text = analysis_query + '\n'.join([i.page_content for i in question_info])
+
+
+        question_code = self.llm.invoke(f"From these information, indicate base question code and target question code (question code is just a string of code like 'Q1', 'Q2'): {question_info_text}")
         
         ctab_data = self.ctab_agent.invoke(
-            {"input": f"From these information, take bases question code and targets question code for taking crosstab data: {question_info_text}"}
+            {"input": f"Crosstab by question code: {question_code}"},
         )
         
-        external_query = f"Return relavent information for analysis: '{analysis_query} for question: {question_info}'"
+        external_query = f"Return relevant information for analysis: '{analysis_query} for question: {question_info}'"
         
         external_info = retriever.invoke(external_query)
         
         info = []
         for i in question_info + external_info:
-            info += f"Document: {i.page_content} Source: {i.metadata['source']}\n"
+            info.append(f"Document: {i.page_content}")
         
-        info += ctab_data
-        return info
+        info.append(ctab_data['output'])
+        return '\n'.join(info)
         
     @property
     def emb_model(self):
@@ -87,7 +110,7 @@ class Analyzer(BaseModel):
     
     @property
     def survey_info(self):
-        info = ''
+        all_info = []
         for question in self.survey.questions:
             info = f"Here is question code {question.code} with\n"
             info += f"Question text is '{question.text}'\n"
@@ -96,48 +119,30 @@ class Analyzer(BaseModel):
             for response in question.responses:
                 info += f"{response.scale} - {response.value}\n"
             info += '------------------------------------------'
-        return info
+            all_info.append(info)
+        return all_info
             
     @property
     def db(self):
         all_docs = []
         text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=500, 
+            chunk_size=4096, 
             chunk_overlap=100,
         )
 
-        for filename in os.listdir(self.folder_path):
-            if filename.endswith(".pdf"):
-                pdf_file_path = os.path.join(self.folder_path, filename)
-                loader = PyPDFLoader(pdf_file_path)
-                docs = loader.load_and_split(text_splitter)
-                all_docs.extend(docs)
-            
-        vector_db = Chroma.from_documents(all_docs, self.emb_model, persist_directory=self.db_dir)
-        survey_info_docs = text_splitter.split_text(self.survey_info)
-        vector_db.add_documents(survey_info_docs)
-        
-        return vector_db
+        files = os.listdir(self.folder_path)
+        survey_info_documents = [Document(page_content=text) for text in self.survey_info]
 
-        # if not os.path.exists(self.db_dir):
-        #     all_docs = []
-        #     text_splitter = RecursiveCharacterTextSplitter(
-        #         chunk_size=500, 
-        #         chunk_overlap=100,
-        #     )
-
-        #     for filename in os.listdir(self.folder_path):
-        #         if filename.endswith(".pdf"):
-        #             pdf_file_path = os.path.join(self.folder_path, filename)
-        #             loader = PyPDFLoader(pdf_file_path)
-        #             docs = loader.load_and_split(text_splitter)
-        #             all_docs.extend(docs)
-                
-        #     vector_db = Chroma.from_documents(all_docs, self.emb_model, persist_directory=self.db_dir)
-        #     survey_info_docs = text_splitter.split_text(self.survey_info)
-        #     vector_db.add_documents(survey_info_docs)
+        if len(files) > 0:
+            for filename in files:
+                if filename.endswith(".pdf"):
+                    pdf_file_path = os.path.join(self.folder_path, filename)
+                    loader = PyPDFLoader(pdf_file_path)
+                    docs = loader.load_and_split(text_splitter)
+                    all_docs.extend(docs)
             
-        #     return vector_db
-        # else:
-        #     print('Db existed')
-        
+            vector_db = Chroma.from_documents(all_docs, self.emb_model, persist_directory=self.db_dir)
+            vector_db.add_documents(survey_info_documents)
+        else:
+            vector_db = Chroma.from_documents(survey_info_documents, self.emb_model, persist_directory=self.db_dir)        
+        return vector_db        
