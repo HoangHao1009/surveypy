@@ -79,6 +79,7 @@ class Questionnaire_Creator(BaseModel):
         standard_question_info = []
         extracted_info = self.extracted_info
         for question_info in extracted_info:
+            print(question_info)
             standard_info = question_info
             question_type = None
             if question_info['type'] == 'sa':
@@ -96,7 +97,6 @@ class Questionnaire_Creator(BaseModel):
         responses = []
         url = f"https://api.questionpro.com/a/api/v2/surveys/{survey_id}/questions"
         for question in self.standard_info:
-            print(question)
             payload = json.dumps(question)
             headers = {
             'Content-Type': 'application/json',
