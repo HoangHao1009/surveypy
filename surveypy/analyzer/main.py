@@ -34,8 +34,9 @@ class Analyzer(BaseModel):
 
     def chat(self, query):
         analysis_info = self.analysis_info(query)
+        analysis_request = self.llm.invoke(f"Synthesis this question to a request for input in further step: {query}. You can also you below information if there is relavant:\n{analysis_info}")
         answer = self.ctab_agent.invoke(
-            {"input": f"Answer question: {query}. You can use relevant information if needed. There is information maybe relevent: {analysis_info}"},
+            {"input": f"{analysis_request['output']}"},
         )
         return answer
 
