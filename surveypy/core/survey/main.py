@@ -308,6 +308,15 @@ class Survey(BaseModel):
         
     @property
     def dataframe(self) -> pd.DataFrame:
+        def _valid_data(list_data: List[pd.DataFrame]):
+            result = []
+            for df in list_data:
+                if df.index.is_unique:
+                    result.append(df)
+                else:
+                    print(f'duplicate at {df.columns}')
+            return result
+        
         def _process_question(question: QuestionType, loop, long=False):
             question.df_config.melt = False
             if question.loop_on == loop:
@@ -324,6 +333,7 @@ class Survey(BaseModel):
                 futures = [executor.submit(_process_question, question, loop, False) for question in questions]
                 data = [future.result() for future in as_completed(futures) if future.result() is not None]
             if data:
+                data = _valid_data(data)
                 df = pd.concat(data, axis=1)
                 return df
 
@@ -333,6 +343,7 @@ class Survey(BaseModel):
                 futures = [executor.submit(_process_question, question, loop, True) for question in questions]
                 data = [future.result() for future in as_completed(futures) if future.result() is not None]
             if data:
+                data = _valid_data(data)
                 part = pd.concat(data, axis=1)
                 loop_col = ('Loop', 'Loop')
                 part[loop_col] = loop
