@@ -35,7 +35,7 @@ class Analyzer(BaseModel):
     def chat(self, query):
         analysis_info = self.analysis_info(query)
         answer = self.ctab_agent.invoke(
-            {"input": f"Answer question: {query}. You can use relevant information if needed {analysis_info}"},
+            {"input": f"Answer question: {query}. You can use relevant information if needed. There is information maybe relevent: {analysis_info}"},
         )
         return answer
 
@@ -61,18 +61,18 @@ class Analyzer(BaseModel):
         tools = [ctab_data]
         llm = self.llm
 
-        functions = [format_tool_to_openai_function(f) for f in tools]
-        model = llm.bind(functions=functions)
         prompt = ChatPromptTemplate.from_messages([
             ("system", "You are survey analyzer who professional in market research."),
             ("user", "{input}"),
             MessagesPlaceholder(variable_name="agent_scratchpad")
         ])
-        chain = prompt | model | OpenAIFunctionsAgentOutputParser()
+        
+        functions = [format_tool_to_openai_function(f) for f in tools]
+        model = llm.bind(functions=functions)
 
         agent_chain = RunnablePassthrough.assign(
             agent_scratchpad= lambda x: format_to_openai_functions(x["intermediate_steps"])
-        ) | chain
+        ) | prompt | model | OpenAIFunctionsAgentOutputParser()
 
         agent_executor = AgentExecutor(agent=agent_chain, tools=tools, verbose=True)
         return agent_executor
